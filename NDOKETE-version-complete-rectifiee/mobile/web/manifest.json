@@ -1,0 +1,9 @@
+{
+  "name": "NDOKETE",
+  "short_name": "NDOKETE",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0F1117",
+  "theme_color": "#0F1117",
+  "description": "Gestion d’atelier et marketplace pour artisans sénégalais"
+}

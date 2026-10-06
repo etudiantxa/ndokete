@@ -1,0 +1,458 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  phone         String         @unique
+  passwordHash  String
+  role          Role           @default(CLIENT)
+  isVerified    Boolean        @default(false)
+  isActive      Boolean        @default(true)
+  fcmToken      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  artisan       Artisan?
+  client        Client?
+  notifications Notification[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Artisan {
+  id                String        @id @default(uuid())
+  userId            String        @unique
+  businessName      String
+  specialty         String[]
+  description       String?
+  quarter           String
+  city              String        @default("Dakar")
+  latitude          Float?
+  longitude         Float?
+  profilePhoto      String?
+  coverPhoto        String?
+  waveNumber        String?
+  orangeMoneyNumber String?
+  isVerified        Boolean       @default(false)
+  rating            Float         @default(0)
+  reviewCount       Int           @default(0)
+  qrCode            String?
+  shareUrl          String?
+  isPublic          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  analytics         Analytics?
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  autoReminders     AutoReminder?
+  customers         Customer[]
+  orders            Order[]
+  products          Product[]
+  reviews           Review[]
+  stockItems        StockItem[]
+  subscription      Subscription?
+  transactions      Transaction[]
+
+  @@map("artisans")
+}
+
+model Subscription {
+  id         String             @id @default(uuid())
+  artisanId  String             @unique
+  plan       SubscriptionPlan   @default(FREE)
+  status     SubscriptionStatus @default(ACTIVE)
+  startDate  DateTime           @default(now())
+  endDate    DateTime?
+  price      Int                @default(0)
+  paymentRef String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  artisan    Artisan            @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model Client {
+  id                String             @id @default(uuid())
+  userId            String             @unique
+  createdAt         DateTime           @default(now())
+  cart              Cart?
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  marketplaceOrders MarketplaceOrder[]
+  reviews           Review[]
+
+  @@map("clients")
+}
+
+model Customer {
+  id           String    @id @default(uuid())
+  artisanId    String
+  name         String
+  phone        String
+  email        String?
+  address      String?
+  notes        String?
+  isVip        Boolean   @default(false)
+  totalOrders  Int       @default(0)
+  totalSpent   Int       @default(0)
+  lastOrderAt  DateTime?
+  measurements Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  artisan      Artisan   @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id          String       @id @default(uuid())
+  orderNumber String       @unique
+  artisanId   String
+  customerId  String
+  title       String
+  description String?
+  status      OrderStatus  @default(EN_ATTENTE)
+  amount      Int
+  deposit     Int          @default(0)
+  dueDate     DateTime?
+  deliveredAt DateTime?
+  notes       String?
+  photos      String[]
+  isUrgent    Boolean      @default(false)
+  progressPct Int          @default(0)
+  localId     String?
+  syncStatus  SyncStatus   @default(SYNCED)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  artisan     Artisan      @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  customer    Customer     @relation(fields: [customerId], references: [id])
+  payments    Payment[]
+  transaction Transaction?
+
+  @@map("orders")
+}
+
+model StockItem {
+  id             String          @id @default(uuid())
+  artisanId      String
+  name           String
+  category       String
+  unit           String
+  quantity       Float
+  alertThreshold Float           @default(5)
+  costPerUnit    Int             @default(0)
+  supplier       String?
+  supplierPhone  String?
+  photo          String?
+  syncStatus     SyncStatus      @default(SYNCED)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  artisan        Artisan         @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  movements      StockMovement[]
+
+  @@map("stock_items")
+}
+
+model StockMovement {
+  id          String            @id @default(uuid())
+  stockItemId String
+  type        StockMovementType
+  quantity    Float
+  reason      String?
+  orderId     String?
+  createdAt   DateTime          @default(now())
+  stockItem   StockItem         @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+
+  @@map("stock_movements")
+}
+
+model Transaction {
+  id            String          @id @default(uuid())
+  artisanId     String
+  orderId       String?         @unique
+  type          TransactionType
+  amount        Int
+  category      String
+  description   String?
+  date          DateTime        @default(now())
+  receipt       String?
+  paymentMethod PaymentMethod?
+  syncStatus    SyncStatus      @default(SYNCED)
+  localId       String?
+  createdAt     DateTime        @default(now())
+  artisan       Artisan         @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  order         Order?          @relation(fields: [orderId], references: [id])
+
+  @@map("transactions")
+}
+
+model Payment {
+  id                 String            @id @default(uuid())
+  orderId            String?
+  marketplaceOrderId String?
+  amount             Int
+  method             PaymentMethod
+  status             PaymentStatus     @default(EN_ATTENTE)
+  reference          String?
+  webhookData        Json?
+  commission         Int               @default(0)
+  commissionPct      Float             @default(10)
+  paidAt             DateTime?
+  createdAt          DateTime          @default(now())
+  marketplaceOrder   MarketplaceOrder? @relation(fields: [marketplaceOrderId], references: [id])
+  order              Order?            @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Product {
+  id          String                 @id @default(uuid())
+  artisanId   String
+  name        String
+  description String?
+  price       Int
+  category    String
+  photos      String[]
+  stock       Int                    @default(0)
+  status      ProductStatus          @default(ACTIF)
+  viewCount   Int                    @default(0)
+  orderCount  Int                    @default(0)
+  tags        String[]
+  isVitrine   Boolean                @default(false)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  cartItems   CartItem[]
+  orderItems  MarketplaceOrderItem[]
+  artisan     Artisan                @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  @@map("products")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  clientId  String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+  client    Client     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int     @default(1)
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model MarketplaceOrder {
+  id          String                 @id @default(uuid())
+  orderNumber String                 @unique
+  clientId    String
+  totalAmount Int
+  status      OrderStatus            @default(EN_ATTENTE)
+  address     String?
+  notes       String?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  items       MarketplaceOrderItem[]
+  client      Client                 @relation(fields: [clientId], references: [id])
+  payments    Payment[]
+  reviews     Review[]
+
+  @@map("marketplace_orders")
+}
+
+model MarketplaceOrderItem {
+  id                 String           @id @default(uuid())
+  marketplaceOrderId String
+  productId          String
+  quantity           Int
+  unitPrice          Int
+  artisanId          String
+  order              MarketplaceOrder @relation(fields: [marketplaceOrderId], references: [id], onDelete: Cascade)
+  product            Product          @relation(fields: [productId], references: [id])
+
+  @@map("marketplace_order_items")
+}
+
+model Review {
+  id                 String            @id @default(uuid())
+  artisanId          String
+  clientId           String
+  marketplaceOrderId String?
+  rating             Int
+  comment            String?
+  isVisible          Boolean           @default(true)
+  createdAt          DateTime          @default(now())
+  artisan            Artisan           @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  client             Client            @relation(fields: [clientId], references: [id])
+  marketplaceOrder   MarketplaceOrder? @relation(fields: [marketplaceOrderId], references: [id])
+
+  @@map("reviews")
+}
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  type      NotificationType
+  channel   NotificationChannel @default(IN_APP)
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean             @default(false)
+  sentAt    DateTime?
+  createdAt DateTime            @default(now())
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AutoReminder {
+  id                  String   @id @default(uuid())
+  artisanId           String   @unique
+  whatsappEnabled     Boolean  @default(true)
+  smsEnabled          Boolean  @default(false)
+  hoursBeforeDelivery Int      @default(24)
+  messageTemplate     String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  artisan             Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  @@map("auto_reminders")
+}
+
+model Analytics {
+  id             String   @id @default(uuid())
+  artisanId      String   @unique
+  totalRevenue   Int      @default(0)
+  totalOrders    Int      @default(0)
+  totalCustomers Int      @default(0)
+  totalProducts  Int      @default(0)
+  mrr            Int      @default(0)
+  avgOrderValue  Int      @default(0)
+  updatedAt      DateTime @updatedAt
+  artisan        Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+}
+
+model SyncQueue {
+  id          String     @id @default(uuid())
+  artisanId   String
+  entity      String
+  localId     String
+  action      String
+  payload     Json
+  status      SyncStatus @default(PENDING)
+  retries     Int        @default(0)
+  error       String?
+  createdAt   DateTime   @default(now())
+  processedAt DateTime?
+
+  @@map("sync_queue")
+}
+
+enum Role {
+  ARTISAN
+  CLIENT
+  ADMIN
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+  PREMIUM_PLUS
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  EN_ATTENTE
+  EN_COURS
+  PRET
+  LIVRE
+  ANNULE
+}
+
+enum PaymentStatus {
+  EN_ATTENTE
+  PAYE
+  ECHOUE
+  REMBOURSE
+}
+
+enum PaymentMethod {
+  WAVE
+  ORANGE_MONEY
+  ESPECES
+}
+
+enum TransactionType {
+  ENTREE
+  DEPENSE
+}
+
+enum ProductStatus {
+  ACTIF
+  INACTIF
+  EN_RUPTURE
+}
+
+enum StockMovementType {
+  ENTREE
+  SORTIE
+  AJUSTEMENT
+}
+
+enum NotificationType {
+  COMMANDE
+  PAIEMENT
+  RAPPEL_LIVRAISON
+  STOCK_ALERTE
+  NOUVEAU_AVIS
+  SYSTEME
+}
+
+enum NotificationChannel {
+  PUSH
+  SMS
+  WHATSAPP
+  IN_APP
+}
+
+enum SyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+  CONFLICT
+}
