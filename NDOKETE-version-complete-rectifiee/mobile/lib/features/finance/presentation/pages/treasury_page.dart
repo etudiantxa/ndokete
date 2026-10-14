@@ -80,7 +80,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                   // Période
                   Text(
                     DateFormat('MMMM yyyy', 'fr_FR').format(DateTime.now()),
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
 
@@ -135,7 +135,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
-                                color: _getHealthColor().withOpacity(0.15),
+                                color: _getHealthColor().withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
@@ -161,11 +161,11 @@ class _TreasuryPageState extends State<TreasuryPage> {
                   const SizedBox(height: 24),
 
                   // Graphique évolution hebdomadaire
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('ÉVOLUTION HEBDOMADAIRE', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1)),
-                      const Text('À CONSULTER BRAQUAGE', style: TextStyle(color: AppColors.primary, fontSize: 10)),
+                      Text('ÉVOLUTION HEBDOMADAIRE', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1)),
+                      Text('À CONSULTER BRAQUAGE', style: TextStyle(color: AppColors.primary, fontSize: 10)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -205,7 +205,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                                   dotData: const FlDotData(show: false),
                                   belowBarData: BarAreaData(
                                     show: true,
-                                    color: AppColors.success.withOpacity(0.1),
+                                    color: AppColors.success.withValues(alpha: 0.1),
                                   ),
                                 ),
                               ],
@@ -215,9 +215,9 @@ class _TreasuryPageState extends State<TreasuryPage> {
                   const SizedBox(height: 24),
 
                   // Transactions récentes
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
+                    children: [
                       Text('TRANSACTIONS RÉCENTES', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1)),
                       Text('VOIR TOUT', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
                     ],
@@ -319,7 +319,7 @@ class _TransactionItem extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (isIncome ? AppColors.success : AppColors.error).withOpacity(0.1),
+              color: (isIncome ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(

@@ -191,7 +191,7 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 4)),
                       ],
@@ -229,7 +229,7 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
                                       fontWeight: FontWeight.w700,
                                       fontSize: 14),
                                 ),
-                                Text(
+                                const Text(
                                   'Rapport d\'activité mensuel',
                                   style: TextStyle(
                                       color: Colors.black54, fontSize: 11),
@@ -237,7 +237,7 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
                                 Text(
                                   DateFormat('dd MMM yyyy', 'fr_FR')
                                       .format(DateTime.now()),
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: Colors.black38, fontSize: 10),
                                 ),
                               ],
@@ -311,11 +311,11 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
                         const Divider(color: Color(0xFFE0E0E0)),
 
                         const SizedBox(height: 12),
-                        Row(
+                        const Row(
                           children: [
-                            const Icon(Icons.info_outline,
+                            Icon(Icons.info_outline,
                                 color: Color(0xFF9E9E9E), size: 14),
-                            const SizedBox(width: 6),
+                            SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 'Ce rapport est idéal à partager avec votre comptable ou banque. Il peut être exporté en PDF ou partagé via WhatsApp.',
@@ -351,7 +351,7 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
                         child: ElevatedButton.icon(
                           onPressed: _openWhatsAppShare,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.success.withOpacity(0.2),
+                            backgroundColor: AppColors.success.withValues(alpha: 0.2),
                             foregroundColor: AppColors.success,
                           ),
                           icon: const Icon(Icons.message_outlined, size: 18),

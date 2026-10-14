@@ -340,7 +340,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                               horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
                             color: _selectedCategory == cat
-                                ? AppColors.primary.withOpacity(0.2)
+                                ? AppColors.primary.withValues(alpha: 0.2)
                                 : AppColors.cardDark,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(

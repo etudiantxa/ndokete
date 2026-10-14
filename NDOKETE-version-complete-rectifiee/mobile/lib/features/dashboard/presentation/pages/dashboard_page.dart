@@ -82,7 +82,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'NDOKETE WORKSPACE',
                 style: TextStyle(color: AppColors.primary, fontSize: 10, letterSpacing: 1.5),
               ),
@@ -292,7 +292,7 @@ class _KpiItem extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: Colors.white, size: 18),
@@ -336,7 +336,7 @@ class _QuickAction extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: color, size: 22),
@@ -427,7 +427,7 @@ class _OrderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: _statusColor.withOpacity(0.15),
+              color: _statusColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -448,14 +448,14 @@ class _OrderCard extends StatelessWidget {
 class _EmptyOrders extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32),
         child: Column(
           children: [
-            const Icon(Icons.receipt_long_outlined, color: AppColors.textDisabled, size: 64),
-            const SizedBox(height: 16),
-            const Text(
+            Icon(Icons.receipt_long_outlined, color: AppColors.textDisabled, size: 64),
+            SizedBox(height: 16),
+            Text(
               'Pas encore de commandes',
               style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),

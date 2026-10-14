@@ -41,7 +41,7 @@ class ClientsRemoteDatasource {
     if (values.isEmpty) return [];
     return [
       MeasurementModel(
-        id: '${clientId}-current',
+        id: '$clientId-current',
         clientId: clientId,
         type: 'TAILLEUR',
         values: values.map((key, value) => MapEntry(
@@ -61,7 +61,7 @@ class ClientsRemoteDatasource {
         (resp.data as Map<String, dynamic>)['data'] as Map<String, dynamic>;
     final values = customer['measurements'] as Map<String, dynamic>? ?? {};
     return MeasurementModel(
-      id: '${clientId}-current',
+      id: '$clientId-current',
       clientId: clientId,
       type: 'TAILLEUR',
       values: values.map((key, value) => MapEntry(

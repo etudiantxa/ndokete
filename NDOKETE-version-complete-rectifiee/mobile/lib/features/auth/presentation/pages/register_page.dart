@@ -175,7 +175,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                   // Spécialité dropdown
                   DropdownButtonFormField<String>(
-                    value: _selectedSpecialty,
+                    initialValue: _selectedSpecialty,
                     dropdownColor: AppColors.cardDark,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
@@ -261,7 +261,7 @@ class _RoleChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary.withOpacity(0.2) : AppColors.cardDark,
+          color: selected ? AppColors.primary.withValues(alpha: 0.2) : AppColors.cardDark,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? AppColors.primary : AppColors.dividerDark,

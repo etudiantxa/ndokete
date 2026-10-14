@@ -126,11 +126,11 @@ class _NdoketeAppState extends State<NdoketeApp> {
       defaultValue: false,
     );
     if (diagnosticPreview) {
-      return MaterialApp(
+      return const MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          backgroundColor: const Color(0xFF0F1117),
-          body: const Center(
+          backgroundColor: Color(0xFF0F1117),
+          body: Center(
             child: Text(
               'NDOKETE Flutter Web est démarré',
               style: TextStyle(color: Colors.white, fontSize: 24),

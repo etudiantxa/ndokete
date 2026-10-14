@@ -20,6 +20,8 @@ export class CreateProductDto {
   tags?: string[];
   @IsOptional() @IsBoolean()
   isVitrine?: boolean;
+  @IsOptional() @IsString()
+  status?: 'ACTIF' | 'INACTIF' | 'EN_RUPTURE';
 }
 
 @Injectable()
@@ -28,34 +30,50 @@ export class ProductsService {
 
   // Accueil marketplace public (clients & diaspora)
   async getMarketplace(search?: string, category?: string, page = 1, limit = 20) {
-    const skip = (page - 1) * limit;
-    const where = {
-      status: 'ACTIF' as ProductStatus,
-      ...(category && { category }),
-      ...(search && {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { artisan: { businessName: { contains: search, mode: 'insensitive' as const } } },
-        ],
-      }),
-    };
+    try {
+      const skip = (page - 1) * limit;
+      
+      // Construire la clause where
+      const where: any = {
+        status: ProductStatus.ACTIF,
+      };
 
-    const [products, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        include: {
-          artisan: {
-            select: { id: true, businessName: true, quarter: true, rating: true, profilePhoto: true },
+      if (category) {
+        where.category = category;
+      }
+
+      if (search) {
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { artisan: { businessName: { contains: search, mode: 'insensitive' } } },
+        ];
+      }
+
+      const [products, total] = await Promise.all([
+        this.prisma.product.findMany({
+          where,
+          include: {
+            artisan: {
+              select: { id: true, businessName: true, quarter: true, rating: true, profilePhoto: true },
+            },
           },
-        },
-        orderBy: [{ isVitrine: 'desc' }, { viewCount: 'desc' }],
-        skip,
-        take: limit,
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+          orderBy: [{ isVitrine: 'desc' }, { viewCount: 'desc' }],
+          skip: skip,  // Explicitly provide skip parameter
+          take: limit,
+        }),
+        this.prisma.product.count({ where }),
+      ]);
 
-    return { data: products, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+      return { data: products, meta: { total, page, limit, totalPages: Math.ceil(total / limit) } };
+    } catch (error) {
+      console.error('❌ Error in getMarketplace:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      });
+      throw error;
+    }
   }
 
   // Boutique de l'artisan (ses propres produits)
@@ -68,7 +86,7 @@ export class ProductsService {
 
   async getProductById(productId: string) {
     const product = await this.prisma.product.findFirst({
-      where: { id: productId, status: 'ACTIF' },
+      where: { id: productId, status: ProductStatus.ACTIF },
       include: {
         artisan: {
           select: { id: true, businessName: true, quarter: true, rating: true, profilePhoto: true },
@@ -110,6 +128,7 @@ export class ProductsService {
         stock: dto.stock,
         tags: dto.tags ?? [],
         isVitrine: dto.isVitrine ?? false,
+        status: ProductStatus.ACTIF, // Produit actif par défaut
       },
     });
 
@@ -120,9 +139,15 @@ export class ProductsService {
     const product = await this.prisma.product.findFirst({ where: { id: productId, artisanId } });
     if (!product) throw new NotFoundException('Produit non trouvé');
 
+    // Convertir le statut de chaîne vers enum Prisma si nécessaire
+    const dataToUpdate: any = { ...dto };
+    if (dto.status && typeof dto.status === 'string') {
+      dataToUpdate.status = ProductStatus[dto.status as keyof typeof ProductStatus];
+    }
+
     const updated = await this.prisma.product.update({
       where: { id: productId },
-      data: dto as any,
+      data: dataToUpdate,
     });
     return { data: updated, message: 'Produit mis à jour' };
   }

@@ -34,6 +34,21 @@ class ProductCreateRequested extends MarketplaceEvent {
   List<Object?> get props => [data];
 }
 
+class ProductUpdateRequested extends MarketplaceEvent {
+  final String id;
+  final Map<String, dynamic> data;
+  const ProductUpdateRequested(this.id, this.data);
+  @override
+  List<Object?> get props => [id, data];
+}
+
+class ProductDeleteRequested extends MarketplaceEvent {
+  final String id;
+  const ProductDeleteRequested(this.id);
+  @override
+  List<Object?> get props => [id];
+}
+
 class MarketplaceOrderRequested extends MarketplaceEvent {
   final String productId;
   final int quantity;
@@ -98,6 +113,8 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     on<MarketplaceLoadRequested>(_onLoad);
     on<ProductDetailRequested>(_onDetail);
     on<ProductCreateRequested>(_onCreate);
+    on<ProductUpdateRequested>(_onUpdate);
+    on<ProductDeleteRequested>(_onDelete);
     on<MarketplaceOrderRequested>(_onOrder);
   }
 
@@ -129,6 +146,24 @@ class MarketplaceBloc extends Bloc<MarketplaceEvent, MarketplaceState> {
     result.fold(
       (error) => emit(MarketplaceError(error)),
       (_) => emit(const MarketplaceActionSuccess('Produit mis en ligne')),
+    );
+  }
+
+  Future<void> _onUpdate(
+      ProductUpdateRequested event, Emitter<MarketplaceState> emit) async {
+    final result = await _repository.updateProduct(event.id, event.data);
+    result.fold(
+      (error) => emit(MarketplaceError(error)),
+      (_) => emit(const MarketplaceActionSuccess('Produit mis à jour')),
+    );
+  }
+
+  Future<void> _onDelete(
+      ProductDeleteRequested event, Emitter<MarketplaceState> emit) async {
+    final result = await _repository.deleteProduct(event.id);
+    result.fold(
+      (error) => emit(MarketplaceError(error)),
+      (_) => emit(const MarketplaceActionSuccess('Produit supprimé')),
     );
   }
 

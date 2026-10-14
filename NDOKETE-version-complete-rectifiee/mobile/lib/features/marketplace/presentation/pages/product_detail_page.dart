@@ -1,115 +1,202 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
-import '../bloc/marketplace_bloc.dart';
-import '../../domain/entities/product_entity.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProductDetailPage extends StatelessWidget {
+class ProductDetailPage extends StatefulWidget {
   final String productId;
   const ProductDetailPage({super.key, required this.productId});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<MarketplaceBloc>()
-        ..add(ProductDetailRequested(productId)),
-      child: const _ProductDetailView(),
-    );
-  }
+  State<ProductDetailPage> createState() => _ProductDetailPageState();
 }
 
-class _ProductDetailView extends StatelessWidget {
-  const _ProductDetailView();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<MarketplaceBloc, MarketplaceState>(
-      listener: (ctx, state) {
-        if (state is MarketplaceActionSuccess) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.success,
-            ),
-          );
-        }
-        if (state is MarketplaceError) {
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-            ),
-          );
-        }
-      },
-      builder: (ctx, state) {
-        if (state is MarketplaceLoading) {
-          return const Scaffold(
-            backgroundColor: AppColors.backgroundDark,
-            body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          );
-        }
-        if (state is ProductDetailLoaded) {
-          return _ProductContent(product: state.product);
-        }
-        if (state is MarketplaceError) {
-          return Scaffold(
-            backgroundColor: AppColors.backgroundDark,
-            body: Center(
-              child: Text(state.message,
-                  style: const TextStyle(color: AppColors.textPrimary)),
-            ),
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
-}
-
-class _ProductContent extends StatefulWidget {
-  final ProductEntity product;
-  const _ProductContent({required this.product});
-
-  @override
-  State<_ProductContent> createState() => _ProductContentState();
-}
-
-class _ProductContentState extends State<_ProductContent> {
+class _ProductDetailPageState extends State<ProductDetailPage> {
+  Map<String, dynamic>? _product;
+  bool _loading = true;
   int _selectedImage = 0;
   int _quantity = 1;
   final _currency = NumberFormat('#,###', 'fr_FR');
 
   @override
+  void initState() {
+    super.initState();
+    _loadProduct();
+  }
+
+  Future<void> _loadProduct() async {
+    setState(() => _loading = true);
+    try {
+      final client = getIt<ApiClient>();
+      final response = await client.get('/marketplace/${widget.productId}');
+      if (mounted) {
+        setState(() {
+          _product = (response.data as Map)['data'] as Map<String, dynamic>;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur de chargement: ${e.toString()}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        context.pop();
+      }
+    }
+  }
+
+  // Vérifier si l'utilisateur connecté est le propriétaire du produit
+  bool _isOwner() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && _product != null) {
+      final artisan = _product!['artisan'] as Map<String, dynamic>?;
+      return authState.user.artisanId == artisan?['id'];
+    }
+    return false;
+  }
+
+  void _showEditDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        title: const Text('Modifier le produit', 
+            style: TextStyle(color: AppColors.textPrimary)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit, color: AppColors.primary),
+              title: const Text('Modifier les informations',
+                  style: TextStyle(color: AppColors.textPrimary)),
+              onTap: () {
+                Navigator.pop(ctx);
+                // Naviguer vers la page d'édition avec l'ID du produit
+                context.push('/marketplace/edit/${widget.productId}');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete, color: AppColors.error),
+              title: const Text('Supprimer le produit',
+                  style: TextStyle(color: AppColors.error)),
+              onTap: () {
+                Navigator.pop(ctx);
+                // Confirmer la suppression
+                showDialog(
+                  context: context,
+                  builder: (ctx2) => AlertDialog(
+                    backgroundColor: AppColors.cardDark,
+                    title: const Text('Confirmer la suppression',
+                        style: TextStyle(color: AppColors.textPrimary)),
+                    content: const Text('Êtes-vous sûr de vouloir supprimer ce produit ?',
+                        style: TextStyle(color: AppColors.textSecondary)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx2),
+                        child: const Text('Annuler',
+                            style: TextStyle(color: AppColors.textSecondary)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(ctx2);
+                          try {
+                            final client = getIt<ApiClient>();
+                            await client.delete('/marketplace/products/${widget.productId}');
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Produit supprimé avec succès'),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                              context.pop();
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Erreur: ${e.toString()}'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                        ),
+                        child: const Text('Supprimer',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Fermer',
+                style: TextStyle(color: AppColors.textSecondary)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final product = widget.product;
+    final product = _product;
+    final isOwner = _isOwner();
+    
+    // Calculer isAvailable manuellement car le backend ne le renvoie pas
+    final isAvailable = product != null && 
+        product['status'] == 'ACTIF' && 
+        (product['stock'] == null || product['stock'] > 0);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
+      appBar: AppBar(
+        backgroundColor: AppColors.surfaceDark,
+        elevation: 0,
+        leading: GestureDetector(
+          onTap: () => context.pop(),
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark.withValues(alpha: 0.8),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          ),
+        ),
+        actions: [
+          // AJOUT: Bouton de modification visible uniquement pour le propriétaire
+          if (isOwner)
+            IconButton(
+              icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+              onPressed: () => _showEditDialog(context),
+            ),
+        ],
+      ),
       body: CustomScrollView(
         slivers: [
-          // ── AppBar avec galerie photo ────────────────────────────────────
-          SliverAppBar(
-            expandedHeight: 320,
-            pinned: true,
-            backgroundColor: AppColors.surfaceDark,
-            leading: GestureDetector(
-              onTap: () => context.pop(),
-              child: Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.cardDark.withOpacity(0.8),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: product.imageUrls.isEmpty
+          // ── Galerie photo ────────────────────────────────────
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height: 320,
+              child: product == null
                   ? Container(
                       color: AppColors.cardDark,
                       child: const Icon(Icons.image_not_supported,
@@ -118,11 +205,11 @@ class _ProductContentState extends State<_ProductContent> {
                   : Stack(
                       children: [
                         PageView.builder(
-                          itemCount: product.imageUrls.length,
+                          itemCount: product['photos'].length,
                           onPageChanged: (i) =>
                               setState(() => _selectedImage = i),
                           itemBuilder: (_, i) => CachedNetworkImage(
-                            imageUrl: product.imageUrls[i],
+                            imageUrl: product['photos'][i],
                             fit: BoxFit.cover,
                             placeholder: (_, __) => Container(
                               color: AppColors.cardDark,
@@ -138,7 +225,7 @@ class _ProductContentState extends State<_ProductContent> {
                             ),
                           ),
                         ),
-                        if (product.imageUrls.length > 1)
+                        if (product['photos'].length > 1)
                           Positioned(
                             bottom: 16,
                             left: 0,
@@ -146,7 +233,7 @@ class _ProductContentState extends State<_ProductContent> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: List.generate(
-                                product.imageUrls.length,
+                                product['photos'].length,
                                 (i) => Container(
                                   margin: const EdgeInsets.symmetric(horizontal: 3),
                                   width: i == _selectedImage ? 20 : 6,
@@ -174,27 +261,27 @@ class _ProductContentState extends State<_ProductContent> {
                 // Catégorie + badge
                 Row(
                   children: [
-                    if (product.category != null)
+                    if (product != null && product['category'] != null)
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          product.category!,
+                          product['category'],
                           style: const TextStyle(
                               color: AppColors.primary, fontSize: 11),
                         ),
                       ),
                     const Spacer(),
-                    if (!product.isAvailable)
+                    if (product != null && !isAvailable)
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.15),
+                          color: AppColors.error.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
@@ -209,7 +296,7 @@ class _ProductContentState extends State<_ProductContent> {
 
                 // Titre & prix
                 Text(
-                  product.name,
+                  product?['name'] ?? '',
                   style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 22,
@@ -218,7 +305,7 @@ class _ProductContentState extends State<_ProductContent> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${_currency.format(product.price)} FCFA',
+                  '${_currency.format(product?['price'] ?? 0)} FCFA',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 24,
@@ -228,15 +315,15 @@ class _ProductContentState extends State<_ProductContent> {
                 const SizedBox(height: 16),
 
                 // Note & avis
-                if (product.rating != null)
+                if (product != null && product['rating'] != null)
                   Row(
                     children: [
                       ...List.generate(
                         5,
                         (i) => Icon(
-                          i < product.rating!.floor()
+                          i < product['rating'].floor()
                               ? Icons.star
-                              : i < product.rating!
+                              : i < product['rating']
                                   ? Icons.star_half
                                   : Icons.star_border,
                           color: AppColors.primary,
@@ -245,7 +332,7 @@ class _ProductContentState extends State<_ProductContent> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${product.rating!.toStringAsFixed(1)} (${product.reviewsCount} avis)',
+                        '${product['rating'].toStringAsFixed(1)} (${product['reviewsCount']} avis)',
                         style: const TextStyle(
                             color: AppColors.textSecondary, fontSize: 13),
                       ),
@@ -266,10 +353,12 @@ class _ProductContentState extends State<_ProductContent> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: AppColors.surfaceDark,
-                        backgroundImage: product.artisanAvatarUrl != null
-                            ? NetworkImage(product.artisanAvatarUrl!)
+                        backgroundImage: product != null &&
+                                product['artisanAvatarUrl'] != null
+                            ? NetworkImage(product['artisanAvatarUrl'])
                             : null,
-                        child: product.artisanAvatarUrl == null
+                        child: product == null ||
+                                product['artisanAvatarUrl'] == null
                             ? const Icon(Icons.person, color: AppColors.textSecondary)
                             : null,
                       ),
@@ -279,21 +368,21 @@ class _ProductContentState extends State<_ProductContent> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              product.artisanName,
+                              product?['artisanName'] ?? '',
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
                               ),
                             ),
-                            if (product.location != null)
+                            if (product != null && product['location'] != null)
                               Row(
                                 children: [
                                   const Icon(Icons.location_on_outlined,
                                       color: AppColors.textSecondary, size: 13),
                                   const SizedBox(width: 2),
                                   Text(
-                                    product.location!,
+                                    product['location'],
                                     style: const TextStyle(
                                         color: AppColors.textSecondary,
                                         fontSize: 12),
@@ -315,7 +404,7 @@ class _ProductContentState extends State<_ProductContent> {
                 const SizedBox(height: 20),
 
                 // Description
-                if (product.description != null) ...[
+                if (product != null && product['description'] != null) ...[
                   const Text(
                     'Description',
                     style: TextStyle(
@@ -325,7 +414,7 @@ class _ProductContentState extends State<_ProductContent> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    product.description!,
+                    product['description'],
                     style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
@@ -335,7 +424,7 @@ class _ProductContentState extends State<_ProductContent> {
                 ],
 
                 // Quantité
-                if (product.isAvailable) ...[
+                if (product != null && isAvailable) ...[
                   Row(
                     children: [
                       const Text(
@@ -348,7 +437,7 @@ class _ProductContentState extends State<_ProductContent> {
                       const Spacer(),
                       _QuantitySelector(
                         value: _quantity,
-                        max: product.stockQuantity ?? 99,
+                        max: product['stock'] ?? 99,
                         onChanged: (v) => setState(() => _quantity = v),
                       ),
                     ],
@@ -361,7 +450,7 @@ class _ProductContentState extends State<_ProductContent> {
                           style: TextStyle(
                               color: AppColors.textSecondary, fontSize: 14)),
                       Text(
-                        '${_currency.format(product.price * _quantity)} FCFA',
+                        '${_currency.format(product['price'] * _quantity)} FCFA',
                         style: const TextStyle(
                             color: AppColors.primary,
                             fontSize: 18,
@@ -376,7 +465,7 @@ class _ProductContentState extends State<_ProductContent> {
           ),
         ],
       ),
-      bottomNavigationBar: product.isAvailable
+      bottomNavigationBar: product != null && isAvailable
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -408,14 +497,46 @@ class _ProductContentState extends State<_ProductContent> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {
-                          context.read<MarketplaceBloc>().add(
-                                MarketplaceOrderRequested(
-                                    product.id, _quantity),
+                        onPressed: () async {
+                          try {
+                            final client = getIt<ApiClient>();
+                            await client.post('/orders', data: {
+                              'items': [
+                                {
+                                  'productId': product['id'],
+                                  'quantity': _quantity,
+                                }
+                              ],
+                            });
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Commande créée avec succès'),
+                                  backgroundColor: AppColors.success,
+                                ),
                               );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              String errorMessage = 'Erreur de commande';
+                              if (e.toString().contains('Profil client non trouvé')) {
+                                errorMessage = 'Vous devez avoir un profil client pour commander';
+                              } else if (e.toString().contains('Stock insuffisant')) {
+                                errorMessage = 'Stock insuffisant pour ce produit';
+                              } else {
+                                errorMessage = 'Erreur: ${e.toString()}';
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(errorMessage),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          }
                         },
                         child: Text(
-                          'Commander — ${_currency.format(product.price * _quantity)} FCFA',
+                          'Commander — ${_currency.format(product['price'] * _quantity)} FCFA',
                           style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 15),
                         ),
@@ -430,45 +551,69 @@ class _ProductContentState extends State<_ProductContent> {
   }
 }
 
+// Widget pour le sélecteur de quantité
 class _QuantitySelector extends StatelessWidget {
   final int value;
   final int max;
   final ValueChanged<int> onChanged;
-  const _QuantitySelector(
-      {required this.value, required this.max, required this.onChanged});
+
+  const _QuantitySelector({
+    required this.value,
+    required this.max,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardDark,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.dividerDark),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: value > 1 ? () => onChanged(value - 1) : null,
-            icon: const Icon(Icons.remove, size: 18),
-            color: AppColors.primary,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              '$value',
-              style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: value > 1 ? () => onChanged(value - 1) : null,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.dividerDark),
+            ),
+            child: Icon(
+              Icons.remove,
+              size: 18,
+              color: value > 1 ? AppColors.textPrimary : AppColors.textSecondary,
             ),
           ),
-          IconButton(
-            onPressed: value < max ? () => onChanged(value + 1) : null,
-            icon: const Icon(Icons.add, size: 18),
-            color: AppColors.primary,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            value.toString(),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ],
-      ),
+        ),
+        GestureDetector(
+          onTap: value < max ? () => onChanged(value + 1) : null,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.dividerDark),
+            ),
+            child: Icon(
+              Icons.add,
+              size: 18,
+              color: value < max ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

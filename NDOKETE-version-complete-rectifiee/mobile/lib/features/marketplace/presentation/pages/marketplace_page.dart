@@ -79,7 +79,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
       _selectedNav = 2;
     });
     try {
-      final response = await getIt<ApiClient>().get('/marketplace/orders');
+      final response = await getIt<ApiClient>().get('/orders');
       if (!mounted) return;
       setState(() {
         _marketplaceOrders = (response.data as Map)['data'] as List? ?? [];

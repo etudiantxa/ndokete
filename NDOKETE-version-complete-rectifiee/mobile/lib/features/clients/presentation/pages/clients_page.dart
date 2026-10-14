@@ -89,7 +89,7 @@ class _ClientsPageState extends State<ClientsPage> {
                                   CircleAvatar(
                                     radius: 24,
                                     backgroundColor:
-                                        AppColors.primary.withOpacity(0.15),
+                                        AppColors.primary.withValues(alpha: 0.15),
                                     child: Text(
                                       (c['name'] as String)[0],
                                       style: const TextStyle(
@@ -121,7 +121,7 @@ class _ClientsPageState extends State<ClientsPage> {
                                                         vertical: 2),
                                                 decoration: BoxDecoration(
                                                     color: AppColors.primary
-                                                        .withOpacity(0.2),
+                                                        .withValues(alpha: 0.2),
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             4)),

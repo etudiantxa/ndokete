@@ -5,7 +5,6 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -175,7 +174,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
           ? 'ndokete-note-vocale.webm'
           : '${(await getTemporaryDirectory()).path}/ndokete-note-${DateTime.now().millisecondsSinceEpoch}.m4a';
       await _recorder.start(
-        RecordConfig(
+        const RecordConfig(
           encoder: kIsWeb ? AudioEncoder.opus : AudioEncoder.aacLc,
           bitRate: 16000,
           sampleRate: 24000,
@@ -202,8 +201,9 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
     _recordingLimit?.cancel();
     try {
       final path = await _recorder.stop();
-      if (path == null || path.isEmpty)
+      if (path == null || path.isEmpty) {
         throw Exception('Aucun audio n’a été enregistré.');
+      }
       final bytes = await XFile(path).readAsBytes();
       if (bytes.isEmpty) throw Exception('L’enregistrement est vide.');
       if (bytes.length > 65000) {
@@ -400,7 +400,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.15),
+                                    color: AppColors.primary.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: const Text(
@@ -431,7 +431,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.15),
+                              color: AppColors.secondary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(Icons.phone,
@@ -447,7 +447,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.12),
+                      color: AppColors.secondary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -570,8 +570,7 @@ class _MeasurementSpec {
   final String section;
   final String unit;
 
-  const _MeasurementSpec(this.key, this.label, this.section,
-      {this.unit = 'CM'});
+  const _MeasurementSpec(this.key, this.label, this.section) : unit = 'CM';
 }
 
 class _MeasurementSection extends StatelessWidget {

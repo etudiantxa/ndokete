@@ -6,11 +6,11 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@ApiTags('marketplace')
+@ApiTags('marketplace-orders')
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('CLIENT')
-@Controller('marketplace/orders')
+@Controller('orders')
 export class MarketplaceOrdersController {
   constructor(private ordersService: MarketplaceOrdersService) {}
 

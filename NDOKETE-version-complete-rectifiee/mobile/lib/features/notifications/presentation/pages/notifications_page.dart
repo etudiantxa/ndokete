@@ -71,13 +71,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _notifications.isEmpty
-              ? Center(
+              ? const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.notifications_none, color: AppColors.textDisabled, size: 80),
-                      const SizedBox(height: 16),
-                      const Text('Aucune notification', style: TextStyle(color: AppColors.textSecondary)),
+                      Icon(Icons.notifications_none, color: AppColors.textDisabled, size: 80),
+                      SizedBox(height: 16),
+                      Text('Aucune notification', style: TextStyle(color: AppColors.textSecondary)),
                     ],
                   ),
                 )
@@ -101,10 +101,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: isRead ? AppColors.cardDark : AppColors.primary.withOpacity(0.08),
+                          color: isRead ? AppColors.cardDark : AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: isRead ? AppColors.dividerDark : AppColors.primary.withOpacity(0.3),
+                            color: isRead ? AppColors.dividerDark : AppColors.primary.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -114,7 +114,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: _typeColor(n['type'] as String).withOpacity(0.15),
+                                color: _typeColor(n['type'] as String).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(22),
                               ),
                               child: Icon(

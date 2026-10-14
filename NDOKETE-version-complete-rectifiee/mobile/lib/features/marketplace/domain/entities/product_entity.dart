@@ -17,6 +17,8 @@ class ProductEntity extends Equatable {
   final double? rating;
   final int reviewsCount;
   final String? location;
+  final List<String>? tags;
+  final bool isVitrine;
   final DateTime createdAt;
 
   const ProductEntity({
@@ -34,6 +36,8 @@ class ProductEntity extends Equatable {
     this.rating,
     this.reviewsCount = 0,
     this.location,
+    this.tags,
+    this.isVitrine = false,
     required this.createdAt,
   });
 

@@ -14,7 +14,7 @@ class RemindersConfigPage extends StatefulWidget {
 class _RemindersConfigPageState extends State<RemindersConfigPage> {
   bool _whatsappEnabled = true;
   bool _smsEnabled = false;
-  int _hoursBeforeDelivery = 24;
+  final int _hoursBeforeDelivery = 24;
   final _templateCtrl = TextEditingController(
     text: 'Bonjour [Nom Client], votre commande de [Article] chez Ndokete est presque prête ! Livraison prévue le [Date].',
   );
@@ -132,9 +132,9 @@ class _RemindersConfigPageState extends State<RemindersConfigPage> {
               children: ['[NOM CLIENT]', '[ARTICLE]', '[DATE]'].map((tag) => Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                 ),
                 child: Text(tag, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.w500)),
               )).toList(),
@@ -222,7 +222,7 @@ class _ChannelToggle extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -239,7 +239,7 @@ class _ChannelToggle extends StatelessWidget {
           ),
           Switch(
             value: value && available,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             onChanged: available ? onChanged : null,
           ),
         ],

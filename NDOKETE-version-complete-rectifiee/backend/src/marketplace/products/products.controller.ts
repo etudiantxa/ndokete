@@ -25,7 +25,9 @@ export class ProductsController {
     @Query('category') category?: string,
     @Query('page') page?: number,
   ) {
-    return this.productsService.getMarketplace(search, category, page);
+    // Ensure page is a valid number, default to 1
+    const pageNum = page && !isNaN(Number(page)) ? Number(page) : 1;
+    return this.productsService.getMarketplace(search, category, pageNum);
   }
 
   @ApiBearerAuth('access-token')

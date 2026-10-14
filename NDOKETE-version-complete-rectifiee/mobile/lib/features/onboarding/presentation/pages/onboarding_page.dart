@@ -60,7 +60,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               alignment: Alignment.topRight,
               child: TextButton(
                 onPressed: () => context.go('/login'),
-                child: Text(
+                child: const Text(
                   'Passer',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                 ),
@@ -117,13 +117,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                const Text(
                   'Déjà un compte ? ',
                   style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                 ),
                 GestureDetector(
                   onTap: () => context.go('/login'),
-                  child: Text(
+                  child: const Text(
                     'Se connecter',
                     style: TextStyle(
                       color: AppColors.primary,

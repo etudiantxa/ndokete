@@ -108,9 +108,9 @@ class _OrdersPageState extends State<OrdersPage> {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.15),
+                color: AppColors.warning.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+                border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -447,7 +447,7 @@ class _OrderListItem extends StatelessWidget {
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
           border: isUrgent
-              ? Border.all(color: AppColors.error.withOpacity(0.4))
+              ? Border.all(color: AppColors.error.withValues(alpha: 0.4))
               : Border.all(color: AppColors.dividerDark),
         ),
         child: Column(
@@ -490,7 +490,7 @@ class _OrderListItem extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.15),
+                                color: AppColors.error.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
@@ -515,7 +515,7 @@ class _OrderListItem extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _statusColor.withOpacity(0.15),
+                    color: _statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(

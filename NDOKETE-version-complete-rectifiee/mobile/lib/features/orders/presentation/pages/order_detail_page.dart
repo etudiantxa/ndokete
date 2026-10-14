@@ -191,10 +191,11 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading)
+    if (_loading) {
       return const Scaffold(
           body: Center(
               child: CircularProgressIndicator(color: AppColors.primary)));
+    }
 
     final order = _order!;
     final customer = order['customer'] as Map<String, dynamic>?;
@@ -251,7 +252,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppColors.primary.withOpacity(0.2),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                     child: Text(
                       (customer?['name'] as String? ?? 'C')[0],
                       style: const TextStyle(
@@ -295,7 +296,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Text('Mesures',

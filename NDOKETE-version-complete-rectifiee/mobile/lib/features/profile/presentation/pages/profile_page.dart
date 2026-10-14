@@ -276,13 +276,13 @@ class _PlanCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: isPremium
-              ? [AppColors.primary.withOpacity(0.3), AppColors.secondary.withOpacity(0.2)]
+              ? [AppColors.primary.withValues(alpha: 0.3), AppColors.secondary.withValues(alpha: 0.2)]
               : [AppColors.cardDark, AppColors.surfaceDark],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isPremium
-              ? AppColors.primary.withOpacity(0.5)
+              ? AppColors.primary.withValues(alpha: 0.5)
               : AppColors.dividerDark,
         ),
       ),
@@ -537,7 +537,7 @@ class _ActionSection extends StatelessWidget {
             label: 'Se déconnecter',
             color: AppColors.error,
             onTap: () {
-              outerCtx.read<AuthBloc>().add(AuthLogoutRequested());
+              outerCtx.read<AuthBloc>().add(const AuthLogoutRequested());
             },
           ),
         ],

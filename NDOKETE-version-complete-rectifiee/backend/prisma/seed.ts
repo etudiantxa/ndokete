@@ -194,9 +194,115 @@ async function main() {
     },
   });
 
+  // ── Produits Marketplace de démo ─────────────────────────────────────────
+  await prisma.product.createMany({
+    skipDuplicates: true,
+    data: [
+      {
+        id: 'seed-product-1',
+        artisanId: artisan.id,
+        name: 'Boubou Traditionnel Bleu Royal',
+        description: 'Magnifique boubou 3 pièces en tissu bazin riche avec broderie or faite main. Idéal pour les cérémonies et fêtes traditionnelles.',
+        price: 45000,
+        category: 'Vêtements',
+        photos: [
+          'https://images.unsplash.com/photo-1598532163257-ae3c6b2524b6?w=800',
+          'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800',
+        ],
+        stock: 5,
+        tags: ['boubou', 'traditionnel', 'broderie', 'bazin'],
+        isVitrine: true,
+        status: 'ACTIF',
+        viewCount: 124,
+      },
+      {
+        id: 'seed-product-2',
+        artisanId: artisan.id,
+        name: 'Caftan Homme Brodé Or',
+        description: 'Caftan élégant avec broderies dorées artisanales. Tissu de qualité supérieure, parfait pour les occasions spéciales.',
+        price: 78000,
+        category: 'Vêtements',
+        photos: [
+          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=800',
+        ],
+        stock: 3,
+        tags: ['caftan', 'luxe', 'broderie', 'or'],
+        isVitrine: true,
+        status: 'ACTIF',
+        viewCount: 89,
+      },
+      {
+        id: 'seed-product-3',
+        artisanId: artisan.id,
+        name: 'Robe Wax Africaine Moderne',
+        description: 'Robe moderne en tissu wax aux motifs colorés. Coupe ajustée et confortable pour un look africain contemporain.',
+        price: 35000,
+        category: 'Vêtements',
+        photos: [
+          'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800',
+          'https://images.unsplash.com/photo-1595777457583-95e059d58b8d?w=800',
+        ],
+        stock: 8,
+        tags: ['robe', 'wax', 'moderne', 'femme'],
+        isVitrine: false,
+        status: 'ACTIF',
+        viewCount: 67,
+      },
+      {
+        id: 'seed-product-4',
+        artisanId: artisan.id,
+        name: 'Sac Artisanal en Cuir',
+        description: 'Sac à main fait main en cuir véritable. Design unique inspiré des motifs traditionnels sénégalais.',
+        price: 25000,
+        category: 'Accessoires',
+        photos: [
+          'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800',
+        ],
+        stock: 12,
+        tags: ['sac', 'cuir', 'artisanal', 'accessoires'],
+        isVitrine: true,
+        status: 'ACTIF',
+        viewCount: 156,
+      },
+      {
+        id: 'seed-product-5',
+        artisanId: artisan.id,
+        name: 'Parure de Lit Bazin',
+        description: 'Ensemble parure de lit en tissu bazin de qualité. Housse de couette + 2 taies d\'oreiller brodées main.',
+        price: 55000,
+        category: 'Maison',
+        photos: [
+          'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=800',
+        ],
+        stock: 4,
+        tags: ['maison', 'bazin', 'broderie', 'literie'],
+        isVitrine: false,
+        status: 'ACTIF',
+        viewCount: 43,
+      },
+      {
+        id: 'seed-product-6',
+        artisanId: artisan.id,
+        name: 'Sandales Traditionnelles Cuir',
+        description: 'Sandales artisanales en cuir tanné naturellement. Confortables et durables, fabriquées selon les techniques ancestrales.',
+        price: 15000,
+        category: 'Chaussures',
+        photos: [
+          'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=800',
+        ],
+        stock: 20,
+        tags: ['sandales', 'cuir', 'chaussures', 'traditionnel'],
+        isVitrine: false,
+        status: 'ACTIF',
+        viewCount: 98,
+      },
+    ],
+  });
+
   console.log('✅ Seed terminé !');
   console.log('📧 Artisan: moussa@ndokete.sn / Demo1234!');
   console.log('📧 Client: client@ndokete.sn / Demo1234!');
+  console.log('🛍️  6 produits marketplace créés');
 }
 
 main()

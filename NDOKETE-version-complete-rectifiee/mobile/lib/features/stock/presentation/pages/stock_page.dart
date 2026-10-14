@@ -55,7 +55,7 @@ class _StockPageState extends State<StockPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedCategory,
+                initialValue: selectedCategory,
                 dropdownColor: AppColors.cardDark,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: const InputDecoration(labelText: 'Catégorie'),
@@ -275,7 +275,7 @@ class _StockItemCard extends StatelessWidget {
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: _isCritical ? AppColors.error.withOpacity(0.4) : AppColors.dividerDark,
+            color: _isCritical ? AppColors.error.withValues(alpha: 0.4) : AppColors.dividerDark,
           ),
         ),
         child: Row(
@@ -337,9 +337,9 @@ class _StockItemCard extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'NIVEAU DE STOCK',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 10, letterSpacing: 0.5),
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10, letterSpacing: 0.5),
                         ),
                         const SizedBox(height: 4),
                         ClipRRect(
@@ -359,7 +359,7 @@ class _StockItemCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: (_isCritical ? AppColors.error : AppColors.warning).withOpacity(0.15),
+                            color: (_isCritical ? AppColors.error : AppColors.warning).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -392,7 +392,7 @@ class _StockItemCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.15),
+                  color: AppColors.success.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(

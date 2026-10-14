@@ -189,10 +189,11 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading)
+    if (_loading) {
       return const Scaffold(
           body: Center(
               child: CircularProgressIndicator(color: AppColors.primary)));
+    }
 
     final c = _customer!;
     final orders = c['orders'] as List? ?? [];
@@ -224,7 +225,7 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: AppColors.primary.withOpacity(0.2),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.2),
                     child: Text(
                       (c['name'] as String)[0],
                       style: const TextStyle(
@@ -252,7 +253,7 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.2),
+                                color: AppColors.primary.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(4)),
                             child: const Text('CLIENT FIDÈLE',
                                 style: TextStyle(
@@ -299,7 +300,7 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
                     color: AppColors.cardDark,
                     borderRadius: BorderRadius.circular(14),
                     border:
-                        Border.all(color: AppColors.primary.withOpacity(0.3)),
+                        Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
                   ),
                   child: const Row(
                     children: [
@@ -365,7 +366,7 @@ class _ClientDetailPageState extends State<ClientDetailPage> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.info.withOpacity(0.1),
+                                color: AppColors.info.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(order['status'] as String,

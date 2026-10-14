@@ -160,7 +160,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _customers.any((c) =>
+                initialValue: _customers.any((c) =>
                         (c as Map)['id'] == _selectedCustomerId &&
                         (_customerSearch.isEmpty ||
                             '${c['name']} ${c['phone']}'
@@ -257,15 +257,18 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                           style: const TextStyle(color: AppColors.textPrimary),
                           decoration: const InputDecoration(hintText: '0'),
                           validator: (value) {
-                            if (value == null || value.trim().isEmpty)
+                            if (value == null || value.trim().isEmpty) {
                               return null;
+                            }
                             final deposit = int.tryParse(value.trim());
                             final amount =
                                 int.tryParse(_amountCtrl.text.trim());
-                            if (deposit == null || deposit < 0)
+                            if (deposit == null || deposit < 0) {
                               return 'Acompte invalide';
-                            if (amount != null && deposit > amount)
+                            }
+                            if (amount != null && deposit > amount) {
                               return 'Supérieur au total';
+                            }
                             return null;
                           },
                         ),
@@ -318,7 +321,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _isUrgent
-                        ? AppColors.error.withOpacity(0.4)
+                        ? AppColors.error.withValues(alpha: 0.4)
                         : AppColors.dividerDark,
                   ),
                 ),
@@ -335,7 +338,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
                     ),
                     Switch(
                       value: _isUrgent,
-                      activeColor: AppColors.error,
+                      activeThumbColor: AppColors.error,
                       onChanged: (v) => setState(() => _isUrgent = v),
                     ),
                   ],

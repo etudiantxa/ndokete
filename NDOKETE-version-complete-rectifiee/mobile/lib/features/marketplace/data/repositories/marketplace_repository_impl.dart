@@ -29,9 +29,9 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
   }
 
   @override
-  Future<Either<String, List<ProductEntity>>> getMyProducts() async {
+  Future<Either<String, List<ProductEntity>>> getMyProducts({String? category, String? search}) async {
     try {
-      return Right(await _remote.getMyProducts());
+      return Right(await _remote.getMyProducts(category: category, search: search));
     } catch (e) {
       return Left(e.toString());
     }

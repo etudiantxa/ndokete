@@ -183,7 +183,7 @@ class _StockDetailPageState extends State<StockDetailPage> {
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: _adjustType == type
-                                    ? AppColors.primary.withOpacity(0.2)
+                                    ? AppColors.primary.withValues(alpha: 0.2)
                                     : AppColors.surfaceDark,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
@@ -240,10 +240,11 @@ class _StockDetailPageState extends State<StockDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading)
+    if (_loading) {
       return const Scaffold(
           body: Center(
               child: CircularProgressIndicator(color: AppColors.primary)));
+    }
 
     final item = _item!;
     final qty = (item['quantity'] as num).toDouble();
@@ -263,7 +264,7 @@ class _StockDetailPageState extends State<StockDetailPage> {
               color: AppColors.cardDark,
               child: Stack(
                 children: [
-                  Center(
+                  const Center(
                     child: Icon(Icons.texture,
                         color: AppColors.textDisabled, size: 80),
                   ),
@@ -277,7 +278,7 @@ class _StockDetailPageState extends State<StockDetailPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.9),
+                            color: AppColors.primary.withValues(alpha: 0.9),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -380,15 +381,15 @@ class _StockDetailPageState extends State<StockDetailPage> {
                   const SizedBox(height: 24),
 
                   // Historique récent
-                  Row(
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Historique récent',
+                      Text('Historique récent',
                           style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w600)),
-                      const Text('Voir tout',
+                      Text('Voir tout',
                           style: TextStyle(
                               color: AppColors.primary, fontSize: 13)),
                     ],
@@ -410,7 +411,7 @@ class _StockDetailPageState extends State<StockDetailPage> {
                               color: (isEntry
                                       ? AppColors.success
                                       : AppColors.error)
-                                  .withOpacity(0.15),
+                                  .withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: Icon(
@@ -505,15 +506,16 @@ class _StockDetailPageState extends State<StockDetailPage> {
                                 final phone = (item['supplierPhone'] as String)
                                     .replaceAll(' ', '');
                                 final uri = Uri(scheme: 'tel', path: phone);
-                                if (await canLaunchUrl(uri))
+                                if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri);
+                                }
                               },
                               child: Container(
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
                                     color:
-                                        AppColors.secondary.withOpacity(0.15),
+                                        AppColors.secondary.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(18)),
                                 child: const Icon(Icons.phone,
                                     color: AppColors.secondary, size: 18),
@@ -526,15 +528,16 @@ class _StockDetailPageState extends State<StockDetailPage> {
                                     .replaceAll(' ', '')
                                     .replaceAll('+', '');
                                 final uri = Uri.parse('https://wa.me/$phone');
-                                if (await canLaunchUrl(uri))
+                                if (await canLaunchUrl(uri)) {
                                   await launchUrl(uri,
                                       mode: LaunchMode.externalApplication);
+                                }
                               },
                               child: Container(
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                    color: AppColors.info.withOpacity(0.15),
+                                    color: AppColors.info.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(18)),
                                 child: const Icon(Icons.message,
                                     color: AppColors.info, size: 18),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 
@@ -21,6 +20,7 @@ import '../../features/finance/presentation/pages/new_transaction_page.dart';
 import '../../features/finance/presentation/pages/financial_report_page.dart';
 import '../../features/marketplace/presentation/pages/marketplace_page.dart';
 import '../../features/marketplace/presentation/pages/product_detail_page.dart';
+import '../../features/marketplace/presentation/pages/add_edit_product_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/notifications/presentation/pages/reminders_config_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -133,9 +133,20 @@ class AppRouter {
             builder: (_, __) => const MarketplacePage(),
             routes: [
               GoRoute(
+                path: 'add',
+                builder: (_, __) => const AddEditProductPage(),
+              ),
+              GoRoute(
                 path: ':id',
                 builder: (_, state) =>
                     ProductDetailPage(productId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: 'edit/:id',
+                builder: (_, state) {
+                  final productId = state.pathParameters['id']!;
+                  return AddEditProductPage(productId: productId);
+                },
               ),
             ],
           ),
