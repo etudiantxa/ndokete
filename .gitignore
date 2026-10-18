@@ -1,0 +1,52 @@
+# ============================================
+# NDOKETE - Git Ignore Configuration
+# ============================================
+
+# ─── ENVIRONNEMENT & SECRETS ──────────────
+**/.env
+**/.env.local
+**/.env.production
+**/*.secret
+**/*.key
+**/google-services.json
+**/GoogleService-Info.plist
+
+# ─── BACKEND (NestJS) ─────────────────────
+backend/node_modules/
+backend/dist/
+backend/backups/
+backend/logs/
+backend/*.log
+backend/package-lock.backup.json
+backend/prisma/migrations/*/migration.sql
+
+# ─── MOBILE (Flutter) ─────────────────────
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/ios/Flutter/.last_build_id
+mobile/.metadata
+
+# ─── IDE & ÉDITEURS ───────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── SYSTÈME & TEMPORAIRES ────────────────
+*.tmp
+*.temp
+.cache/
+coverage/
+
+# ─── DÉPENDANCES ──────────────────────────
+node_modules/
+.pub-cache/
+.packages
