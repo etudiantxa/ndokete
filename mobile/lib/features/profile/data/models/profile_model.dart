@@ -24,7 +24,7 @@ class ProfileModel extends ProfileEntity {
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     final artisan = json['artisan'] as Map<String, dynamic>?;
     final client = json['client'] as Map<String, dynamic>?;
-    final sub = json['subscription'] as Map<String, dynamic>?;
+    final sub = (artisan?['subscription'] ?? json['subscription']) as Map<String, dynamic>?;
     final email = json['email'] as String? ?? '';
     final role = json['role'] as String? ?? (artisan != null ? 'ARTISAN' : 'CLIENT');
     final fallbackName = email.contains('@') ? email.split('@').first : 'Utilisateur';
@@ -38,6 +38,9 @@ class ProfileModel extends ProfileEntity {
     } else if (json['name'] != null) {
       profileName = json['name'].toString();
     }
+
+    final plan = _parsePlan(sub?['plan'] as String? ?? json['plan'] as String?);
+    final isPremium = plan != SubscriptionPlan.FREE;
 
     return ProfileModel(
       id: json['id'] as String? ?? '',
@@ -55,15 +58,15 @@ class ProfileModel extends ProfileEntity {
           : (client?['address'] as String?),
       bio: artisan?['description'] as String?,
       role: role,
-      plan: _parsePlan(sub?['plan'] as String? ?? json['plan'] as String?),
+      plan: plan,
       planExpiresAt: (sub?['endDate'] ?? sub?['expiresAt']) != null
           ? DateTime.tryParse(
               (sub?['endDate'] ?? sub?['expiresAt']) as String)
           : null,
       clientsCount: artisan?['_count']?['customers'] as int? ?? 0,
-      clientsLimit: 20,
+      clientsLimit: isPremium ? 999999 : 20,
       productsCount: artisan?['_count']?['products'] as int? ?? 0,
-      productsLimit: 5,
+      productsLimit: isPremium ? 999999 : 5,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
     );

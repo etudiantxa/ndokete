@@ -857,7 +857,8 @@ class _UsageBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isNearLimit = percent > 0.8;
+    final isUnlimited = max >= 99999;
+    final isNearLimit = !isUnlimited && percent > 0.8;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -867,7 +868,7 @@ class _UsageBar extends StatelessWidget {
             Text(label,
                 style: const TextStyle(
                     color: AppColors.textSecondary, fontSize: 13)),
-            Text('$current / $max',
+            Text(isUnlimited ? '$current / Illimité' : '$current / $max',
                 style: TextStyle(
                     color: isNearLimit ? AppColors.warning : AppColors.textPrimary,
                     fontSize: 13,
@@ -878,13 +879,15 @@ class _UsageBar extends StatelessWidget {
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
-            value: percent,
+            value: isUnlimited ? 0.1 : percent,
             backgroundColor: AppColors.surfaceDark,
-            color: isNearLimit
-                ? AppColors.warning
-                : percent >= 1
-                    ? AppColors.error
-                    : AppColors.primary,
+            color: isUnlimited
+                ? AppColors.primary
+                : isNearLimit
+                    ? AppColors.warning
+                    : percent >= 1
+                        ? AppColors.error
+                        : AppColors.primary,
             minHeight: 6,
           ),
         ),
