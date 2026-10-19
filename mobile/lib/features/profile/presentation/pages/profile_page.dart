@@ -734,15 +734,57 @@ class _ProfileContent extends StatelessWidget {
                 bottom: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: () async {
-                    final picker = ImagePicker();
-                    final img = await picker.pickImage(
-                        source: ImageSource.gallery, imageQuality: 80);
-                    if (img != null && context.mounted) {
-                      context.read<ProfileBloc>().add(
-                            ProfileAvatarUploadRequested(img.path),
-                          );
-                    }
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: AppColors.surfaceDark,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(16)),
+                      ),
+                      builder: (bottomCtx) => SafeArea(
+                        child: Wrap(
+                          children: [
+                            ListTile(
+                              leading: const Icon(Icons.camera_alt,
+                                  color: AppColors.primary),
+                              title: const Text('Prendre une photo',
+                                  style:
+                                      TextStyle(color: AppColors.textPrimary)),
+                              onTap: () async {
+                                Navigator.pop(bottomCtx);
+                                final picker = ImagePicker();
+                                final img = await picker.pickImage(
+                                    source: ImageSource.camera, imageQuality: 80);
+                                if (img != null && context.mounted) {
+                                  context.read<ProfileBloc>().add(
+                                        ProfileAvatarUploadRequested(img.path),
+                                      );
+                                }
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.photo_library,
+                                  color: AppColors.secondary),
+                              title: const Text('Choisir dans la galerie',
+                                  style:
+                                      TextStyle(color: AppColors.textPrimary)),
+                              onTap: () async {
+                                Navigator.pop(bottomCtx);
+                                final picker = ImagePicker();
+                                final img = await picker.pickImage(
+                                    source: ImageSource.gallery, imageQuality: 80);
+                                if (img != null && context.mounted) {
+                                  context.read<ProfileBloc>().add(
+                                        ProfileAvatarUploadRequested(img.path),
+                                      );
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
                   },
                   child: Container(
                     width: 32,

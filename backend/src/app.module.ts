@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SyncModule } from './sync/sync.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { UploadsModule } from './uploads/uploads.module';
 import { PrismaModule } from './common/prisma/prisma.module';
 
 @Module({
@@ -85,6 +86,7 @@ import { PrismaModule } from './common/prisma/prisma.module';
     AnalyticsModule,
     SyncModule,
     SubscriptionsModule,
+    UploadsModule,
   ],
 })
 export class AppModule {}

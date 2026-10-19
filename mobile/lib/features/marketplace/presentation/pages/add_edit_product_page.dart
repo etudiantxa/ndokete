@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -185,53 +186,87 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
     }
   }
 
-  Future<void> _addImageFromGallery() async {
+  Future<void> _pickAndUploadImage(ImageSource source) async {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         maxWidth: 1920,
         maxHeight: 1920,
         imageQuality: 85,
       );
 
       if (image != null && mounted) {
-        // TODO: Intégration Cloudinary - Voir instructions ci-dessous
-        // 
-        // Pour activer l'upload réel d'images:
-        // 1. flutter pub add cloudinary_public
-        // 2. Créer compte sur https://cloudinary.com
-        // 3. Configurer:
-        //    final cloudinary = CloudinaryPublic('VOTRE_CLOUD_NAME', 'VOTRE_PRESET');
-        //    final response = await cloudinary.uploadFile(
-        //      CloudinaryFile.fromFile(image.path, folder: 'ndokete_products')
-        //    );
-        //    setState(() => _imageUrls.add(response.secureUrl));
-        //
-        // En attendant, on utilise un placeholder
-        
-        setState(() {
-          _imageUrls.add('https://via.placeholder.com/400x400?text=Image+${_imageUrls.length + 1}');
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✓ Image sélectionnée (mode démo - Cloudinary à configurer)'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 3),
+        setState(() => _isLoading = true);
+
+        final client = getIt<ApiClient>();
+        final formData = FormData.fromMap({
+          'file': await MultipartFile.fromFile(
+            image.path,
+            filename: image.name,
           ),
-        );
+        });
+
+        final response = await client.post('/uploads/image', data: formData);
+        final imageUrl = (response.data as Map)['url'] as String;
+
+        setState(() {
+          _imageUrls.add(imageUrl);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✓ Photo ajoutée avec succès !'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
+            content: Text('Erreur d\'envoi d\'image: $e'),
             backgroundColor: AppColors.error,
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showImageSourcePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Prendre une photo avec l\'appareil', style: TextStyle(color: AppColors.textPrimary)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.secondary),
+              title: const Text('Choisir depuis la galerie', style: TextStyle(color: AppColors.textPrimary)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _removeImage(int index) {
@@ -369,7 +404,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
                         
                         // Bouton ajouter image
                         GestureDetector(
-                          onTap: _addImageFromGallery,
+                          onTap: _showImageSourcePicker,
                           child: Container(
                             width: 100,
                             height: 100,

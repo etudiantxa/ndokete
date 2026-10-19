@@ -61,6 +61,7 @@ export class UsersService {
             ...(dto.businessName !== undefined ? { businessName: dto.businessName } : {}),
             ...(dto.bio !== undefined ? { description: dto.bio } : {}),
             ...(dto.location !== undefined ? { quarter: dto.location } : {}),
+            ...(dto.profilePhoto !== undefined ? { profilePhoto: dto.profilePhoto } : {}),
           },
         }),
       ]);

@@ -32,4 +32,9 @@ export class UpdateUserDto {
   @IsString()
   @MaxLength(120)
   location?: string;
+
+  @ApiPropertyOptional({ example: 'https://res.cloudinary.com/demo/image/upload/sample.jpg' })
+  @IsOptional()
+  @IsString()
+  profilePhoto?: string;
 }

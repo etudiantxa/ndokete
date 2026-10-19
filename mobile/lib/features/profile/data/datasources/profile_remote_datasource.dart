@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/profile_model.dart';
 
@@ -18,8 +19,13 @@ class ProfileRemoteDatasource {
   }
 
   Future<String> uploadAvatar(String filePath) async {
-    throw UnsupportedError(
-        'Le téléversement d’avatar nécessite un stockage de fichiers configuré.');
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(filePath),
+    });
+    final resp = await _client.post('/uploads/image', data: formData);
+    final url = (resp.data as Map)['url'] as String;
+    await _client.patch('/users/me', data: {'profilePhoto': url});
+    return url;
   }
 
   Future<void> changePassword(String current, String newPassword) =>
