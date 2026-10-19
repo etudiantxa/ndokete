@@ -34,9 +34,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final cleanPhone = _phoneCtrl.text.replaceAll(' ', '').replaceAll('-', '').trim();
     context.read<AuthBloc>().add(AuthRegisterRequested(
           email: _emailCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim(),
+          phone: cleanPhone,
           password: _passwordCtrl.text,
           role: _role,
           businessName: _role == 'ARTISAN' ? _businessNameCtrl.text.trim() : null,

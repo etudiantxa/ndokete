@@ -16,7 +16,7 @@ export class RegisterDto {
 
   @ApiProperty({ example: '+221771234567' })
   @IsString()
-  @Matches(/^\+?[0-9]{8,15}$/, { message: 'Numéro de téléphone invalide' })
+  @Matches(/^\+?[0-9\s\-\.]{8,20}$/, { message: 'Numéro de téléphone invalide' })
   phone: string;
 
   @ApiProperty({ example: 'MonMotDePasse123!' })
