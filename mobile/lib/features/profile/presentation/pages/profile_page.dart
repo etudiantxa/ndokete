@@ -202,6 +202,168 @@ class _ProfileView extends StatelessWidget {
     );
   }
 
+  static Future<bool?> _showPaymentSimulationDialog({
+    required BuildContext context,
+    required String planLabel,
+    required int amount,
+    required String method,
+    required String phone,
+  }) {
+    final pinCtrl = TextEditingController();
+    bool isProcessing = false;
+    final isWave = method == 'WAVE';
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surfaceDark,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                isWave ? Icons.waves : Icons.phone_android,
+                color: isWave ? AppColors.secondary : Colors.orange,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isWave ? 'Paiement Wave' : 'Paiement Orange Money',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerDark),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Services :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text(planLabel,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Montant :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text('$amount FCFA',
+                            style: TextStyle(
+                                color:
+                                    isWave ? AppColors.secondary : Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Téléphone :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text(phone,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Entrez votre code secret à 4 chiffres pour autoriser le prélèvement :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: pinCtrl,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 4,
+                autofocus: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    letterSpacing: 8),
+                decoration: const InputDecoration(
+                  hintText: '••••',
+                  counterText: '',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed:
+                  isProcessing ? null : () => Navigator.pop(dialogCtx, false),
+              child: const Text('Annuler',
+                  style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isWave ? AppColors.secondary : Colors.orange,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () async {
+                      if (pinCtrl.text.length < 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Veuillez entrer un code PIN à 4 chiffres.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isProcessing = true);
+                      await Future<void>.delayed(
+                          const Duration(milliseconds: 1200));
+                      if (ctx.mounted) Navigator.pop(dialogCtx, true);
+                    },
+              child: isProcessing
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black))
+                  : const Text('Valider le Paiement',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   static void showUpgradeSheet(BuildContext context, ProfileEntity profile) {
     String selectedPlan = 'PREMIUM';
     String selectedMethod = 'WAVE';
@@ -464,6 +626,17 @@ class _ProfileView extends StatelessWidget {
                   onPressed: isSubmitting
                       ? null
                       : () async {
+                          final amount = selectedPlan == 'PREMIUM' ? 5000 : 10000;
+                          final confirmed = await _showPaymentSimulationDialog(
+                            context: context,
+                            planLabel: selectedPlan == 'PREMIUM' ? 'Premium (5 000 FCFA)' : 'Premium+ (10 000 FCFA)',
+                            amount: amount,
+                            method: selectedMethod,
+                            phone: phoneCtrl.text.trim(),
+                          );
+
+                          if (confirmed != true) return;
+
                           setSheetState(() => isSubmitting = true);
                           try {
                             final client = getIt<ApiClient>();
