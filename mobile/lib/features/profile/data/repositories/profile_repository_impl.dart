@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
@@ -8,6 +9,15 @@ class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl(this._remote);
 
   String _formatError(Object e) {
+    if (e is DioException) {
+      final msg = e.response?.data?['message'];
+      if (msg != null && msg.toString().isNotEmpty) {
+        return msg.toString();
+      }
+      if (e.response?.statusCode == 401) {
+        return 'Session expirée ou mot de passe incorrect. Veuillez vous reconnecter.';
+      }
+    }
     final str = e.toString();
     if (str.contains('Connection refused') ||
         str.contains('SocketException') ||

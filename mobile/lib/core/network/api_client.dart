@@ -69,7 +69,13 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
-    if (err.response?.statusCode == 401 && !_isRefreshing) {
+    final path = err.requestOptions.path;
+    final isAuthEndpoint = path.contains('/auth/login') ||
+        path.contains('/auth/register') ||
+        path.contains('/auth/refresh') ||
+        path.contains('/users/me/password');
+
+    if (err.response?.statusCode == 401 && !_isRefreshing && !isAuthEndpoint) {
       _isRefreshing = true;
       try {
         final refreshToken = await storage.read(key: 'refresh_token');

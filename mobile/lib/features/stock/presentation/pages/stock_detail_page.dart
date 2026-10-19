@@ -59,6 +59,7 @@ class _StockDetailPageState extends State<StockDetailPage> {
       final result = (response.data as Map)['data'] as Map<String, dynamic>;
       if (mounted) setState(() => _item = result);
       _adjustQtyCtrl.clear();
+      await _loadItem();
 
       final alert = (response.data as Map)['alert'];
       if (mounted && alert != null) {
@@ -153,86 +154,109 @@ class _StockDetailPageState extends State<StockDetailPage> {
   }
 
   void _showAdjustDialog() {
+    _adjustQtyCtrl.clear();
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.cardDark,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Ajuster le stock',
-                style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            Row(
-              children: ['ENTREE', 'SORTIE', 'AJUSTEMENT']
-                  .map((type) => Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: GestureDetector(
-                            onTap: () => setState(() => _adjustType = type),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              decoration: BoxDecoration(
-                                color: _adjustType == type
-                                    ? AppColors.primary.withValues(alpha: 0.2)
-                                    : AppColors.surfaceDark,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+              20, 20, 20, MediaQuery.of(sheetCtx).viewInsets.bottom + 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Ajuster le stock',
+                  style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Row(
+                children: ['ENTREE', 'SORTIE', 'AJUSTEMENT']
+                    .map((type) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onTap: () {
+                                setModalState(() {
+                                  _adjustType = type;
+                                });
+                                setState(() {
+                                  _adjustType = type;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
                                   color: _adjustType == type
-                                      ? AppColors.primary
-                                      : AppColors.dividerDark,
+                                      ? AppColors.primary.withValues(alpha: 0.2)
+                                      : AppColors.cardDark,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _adjustType == type
+                                        ? AppColors.primary
+                                        : AppColors.dividerDark,
+                                    width: _adjustType == type ? 2 : 1,
+                                  ),
                                 ),
-                              ),
-                              child: Text(
-                                type == 'ENTREE'
-                                    ? 'Entrée'
-                                    : type == 'SORTIE'
-                                        ? 'Sortie'
-                                        : 'Ajust.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: _adjustType == type
-                                      ? AppColors.primary
-                                      : AppColors.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                child: Text(
+                                  type == 'ENTREE'
+                                      ? 'Entrée (+)'
+                                      : type == 'SORTIE'
+                                          ? 'Sortie (-)'
+                                          : 'Ajuster',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: _adjustType == type
+                                        ? AppColors.primary
+                                        : AppColors.textSecondary,
+                                    fontSize: 13,
+                                    fontWeight: _adjustType == type
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _adjustQtyCtrl,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'Quantité (${_item?['unit'] ?? 'unité'})',
-                suffixText: _item?['unit'] as String? ?? '',
+                        ))
+                    .toList(),
               ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _adjustStock();
-              },
-              child: const Text('Confirmer'),
-            ),
-          ],
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _adjustQtyCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Quantité (${_item?['unit'] ?? 'unité'})',
+                  suffixText: _item?['unit'] as String? ?? '',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(sheetCtx);
+                    _adjustStock();
+                  },
+                  child: const Text('Confirmer l\'ajustement',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

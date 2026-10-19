@@ -68,20 +68,58 @@ class _ProfileView extends StatelessWidget {
             return _ProfileContent(profile: state.profile);
           }
           if (state is ProfileError) {
+            final isAuthError = state.message.toLowerCase().contains('unauthorized') ||
+                state.message.toLowerCase().contains('expirée') ||
+                state.message.toLowerCase().contains('session');
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(state.message,
-                      style:
-                          const TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () =>
-                        ctx.read<ProfileBloc>().add(ProfileLoadRequested()),
-                    child: const Text('Réessayer'),
-                  ),
-                ],
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isAuthError ? Icons.lock_clock_outlined : Icons.error_outline,
+                      size: 56,
+                      color: AppColors.warning,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      isAuthError
+                          ? 'Votre session a expiré'
+                          : state.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      isAuthError
+                          ? 'Veuillez vous reconnecter pour accéder à votre profil.'
+                          : 'Impossible de charger le profil.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.black,
+                      ),
+                      onPressed: () {
+                        if (isAuthError) {
+                          ctx.read<AuthBloc>().add(const AuthLogoutRequested());
+                          ctx.go('/login');
+                        } else {
+                          ctx.read<ProfileBloc>().add(ProfileLoadRequested());
+                        }
+                      },
+                      child: Text(isAuthError ? 'Se reconnecter' : 'Réessayer'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -158,6 +196,327 @@ class _ProfileView extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  static void showUpgradeSheet(BuildContext context, ProfileEntity profile) {
+    String selectedPlan = 'PREMIUM';
+    String selectedMethod = 'WAVE';
+    final phoneCtrl = TextEditingController(text: profile.phone ?? '');
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.workspace_premium,
+                      color: AppColors.primary, size: 28),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Abonnement Premium NDOKETE',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Choisissez votre formule d\'abonnement :',
+                style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setSheetState(() => selectedPlan = 'PREMIUM'),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: selectedPlan == 'PREMIUM'
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selectedPlan == 'PREMIUM'
+                                ? AppColors.primary
+                                : AppColors.dividerDark,
+                            width: selectedPlan == 'PREMIUM' ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Premium',
+                              style: TextStyle(
+                                color: selectedPlan == 'PREMIUM'
+                                    ? AppColors.primary
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '5 000 FCFA/mois',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 11),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Clients & Produits illimités',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: AppColors.textPrimary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          setSheetState(() => selectedPlan = 'PREMIUM_PLUS'),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: selectedPlan == 'PREMIUM_PLUS'
+                              ? AppColors.primary.withValues(alpha: 0.15)
+                              : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: selectedPlan == 'PREMIUM_PLUS'
+                                ? AppColors.primary
+                                : AppColors.dividerDark,
+                            width: selectedPlan == 'PREMIUM_PLUS' ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'Premium+',
+                              style: TextStyle(
+                                color: selectedPlan == 'PREMIUM_PLUS'
+                                    ? AppColors.primary
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '10 000 FCFA/mois',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 11),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Priorité Marketplace & Support',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: AppColors.textPrimary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Moyen de paiement :',
+                style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setSheetState(() => selectedMethod = 'WAVE'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'WAVE'
+                              ? AppColors.secondary.withValues(alpha: 0.2)
+                              : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selectedMethod == 'WAVE'
+                                ? AppColors.secondary
+                                : AppColors.dividerDark,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.waves,
+                                color: AppColors.secondary, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Wave',
+                              style: TextStyle(
+                                color: selectedMethod == 'WAVE'
+                                    ? AppColors.secondary
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () =>
+                          setSheetState(() => selectedMethod = 'ORANGE_MONEY'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'ORANGE_MONEY'
+                              ? Colors.orange.withValues(alpha: 0.2)
+                              : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selectedMethod == 'ORANGE_MONEY'
+                                ? Colors.orange
+                                : AppColors.dividerDark,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.phone_android,
+                                color: Colors.orange, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Orange Money',
+                              style: TextStyle(
+                                color: selectedMethod == 'ORANGE_MONEY'
+                                    ? Colors.orange
+                                    : AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Numéro de téléphone de paiement',
+                  prefixIcon: Icon(Icons.phone, color: AppColors.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setSheetState(() => isSubmitting = true);
+                          try {
+                            final client = getIt<ApiClient>();
+                            final response = await client.post(
+                              '/subscriptions/upgrade',
+                              data: {
+                                'plan': selectedPlan,
+                                'method': selectedMethod,
+                                'phone': phoneCtrl.text.trim(),
+                              },
+                            );
+                            if (ctx.mounted) {
+                              Navigator.pop(sheetCtx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    (response.data as Map)['message']
+                                            ?.toString() ??
+                                        'Abonnement activé avec succès !',
+                                  ),
+                                  backgroundColor: AppColors.success,
+                                ),
+                              );
+                              context
+                                  .read<ProfileBloc>()
+                                  .add(ProfileLoadRequested());
+                            }
+                          } catch (e) {
+                            setSheetState(() => isSubmitting = false);
+                            if (ctx.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Échec du paiement : $e'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.black),
+                        )
+                      : Text(
+                          'Payer ${selectedPlan == 'PREMIUM' ? '5 000' : '10 000'} FCFA via $selectedMethod',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -424,20 +783,7 @@ class _PlanCard extends StatelessWidget {
           ),
           if (!isPremium)
             ElevatedButton(
-                    onPressed: () => showDialog<void>(
-                      context: context,
-                      builder: (dialogContext) => AlertDialog(
-                        title: const Text('Abonnement Premium'),
-                        content: const Text(
-                            'La souscription en ligne sera disponible après la configuration du paiement.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(dialogContext),
-                            child: const Text('Fermer'),
-                          ),
-                        ],
-                      ),
-                    ),
+              onPressed: () => _ProfileView.showUpgradeSheet(context, profile),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.black,

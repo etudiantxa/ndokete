@@ -141,13 +141,14 @@ export class StockService {
       }),
     ]);
 
-    // Alerte si stock critique
-    const isAlert = updatedItem.quantity <= updatedItem.alertThreshold;
+    // Récupérer l'article à jour avec son historique de mouvements
+    const fullItem = await this.findOne(artisanId, itemId);
+    const isAlert = fullItem.quantity <= fullItem.alertThreshold;
 
     return {
-      data: updatedItem,
+      data: fullItem,
       message: 'Stock ajusté',
-      alert: isAlert ? `Stock critique : ${updatedItem.quantity} ${updatedItem.unit}` : null,
+      alert: isAlert ? `Stock critique : ${fullItem.quantity} ${fullItem.unit}` : null,
     };
   }
 
