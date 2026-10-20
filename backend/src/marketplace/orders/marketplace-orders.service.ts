@@ -138,6 +138,9 @@ export class MarketplaceOrdersService {
 
         // 2. Créer la commande dans l'espace de travail de l'artisan
         const artisanAmount = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+        const commission = Math.round(artisanAmount * 0.10);
+        const netArtisanAmount = artisanAmount - commission;
+
         const itemNames = items
           .map((i) => {
             const p = products.find((prod) => prod.id === i.productId);
@@ -153,10 +156,39 @@ export class MarketplaceOrdersService {
             title: `Marketplace: ${itemNames}`,
             description: `Adresse de livraison: ${dto.address || 'Non spécifiée'}. Notes: ${dto.notes || 'Aucune'}`,
             amount: artisanAmount,
-            deposit: 0,
-            status: 'EN_ATTENTE',
+            deposit: artisanAmount, // Payé en ligne via Mobile Money
+            status: 'EN_COURS', // Déjà payé, en cours de confection
             progressPct: 0,
             syncStatus: 'SYNCED',
+          },
+        });
+
+        // 2b. Créer la transaction financière (ENTREE / Recette) dans la trésorerie de l'artisan
+        await tx.transaction.create({
+          data: {
+            artisanId,
+            orderId: artisanOrder.id,
+            type: 'ENTREE',
+            amount: artisanAmount,
+            category: 'Vente Marketplace',
+            description: `Vente en ligne (Net: ${netArtisanAmount} FCFA, Commande: ${orderNumber})`,
+            paymentMethod: 'WAVE',
+            date: new Date(),
+          },
+        });
+
+        // 2c. Enregistrer le paiement validé avec commission
+        await tx.payment.create({
+          data: {
+            marketplaceOrderId: mktOrder.id,
+            orderId: artisanOrder.id,
+            amount: artisanAmount,
+            method: 'WAVE',
+            status: 'PAYE',
+            reference: `PAY-MKT-${Date.now()}-${Math.floor(Math.random() * 100)}`,
+            commission,
+            commissionPct: 10,
+            paidAt: new Date(),
           },
         });
 
@@ -166,8 +198,8 @@ export class MarketplaceOrdersService {
             userId: artisan.userId,
             type: 'COMMANDE',
             channel: 'IN_APP',
-            title: '🛍️ Nouvelle commande Marketplace !',
-            body: `${clientName} a commandé "${itemNames}" (${artisanAmount} FCFA).`,
+            title: '🛍️ Nouvelle commande Marketplace payée !',
+            body: `${clientName} a commandé "${itemNames}" (${artisanAmount} FCFA). Paiement validé.`,
             data: {
               orderId: artisanOrder.id,
               marketplaceOrderId: mktOrder.id,
