@@ -189,6 +189,40 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     }
   }
 
+  Future<void> _shareOrderOnWhatsApp() async {
+    final order = _order;
+    if (order == null) return;
+    final customer = order['customer'] as Map<String, dynamic>?;
+    final customerName = customer?['name'] ?? 'Client';
+    final customerPhone = customer?['phone'] ?? '';
+    final orderNum = order['orderNumber'] ?? '';
+    final title = order['title'] ?? '';
+    final amount = _currency.format(order['amount']);
+    final deposit = _currency.format(order['deposit'] ?? 0);
+    final status = order['status'] ?? 'EN_ATTENTE';
+
+    final text = '''
+🛍️ *COMMANDE NDOKETE* - $orderNum
+👤 Client : $customerName ($customerPhone)
+🧵 Article : $title
+💰 Montant : $amount FCFA (Acompte : $deposit FCFA)
+📌 Statut : $status
+
+Géré avec la plateforme NDOKETE 🇸🇳
+''';
+
+    final uri = Uri.https('wa.me', '', {'text': text});
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Impossible d\'ouvrir WhatsApp.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -354,6 +388,20 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                           label: 'Acompte',
                           value: '${_currency.format(order['deposit'])} FCFA'),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _shareOrderOnWhatsApp,
+                      icon: const Icon(Icons.share, color: AppColors.success, size: 18),
+                      label: const Text('Partager le reçu sur WhatsApp',
+                          style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.success),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                      ),
+                    ),
                   ),
                 ],
               ),
