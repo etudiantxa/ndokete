@@ -438,6 +438,156 @@ class _MarketplacePageState extends State<MarketplacePage> {
     );
   }
 
+  Future<bool?> _showPaymentSimulationDialog({
+    required BuildContext context,
+    required String planLabel,
+    required int amount,
+    required String method,
+    required String phone,
+  }) {
+    final pinCtrl = TextEditingController();
+    bool isProcessing = false;
+    final isWave = method == 'WAVE';
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surfaceDark,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                isWave ? Icons.waves : Icons.phone_android,
+                color: isWave ? AppColors.secondary : Colors.orange,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isWave ? 'Paiement Wave' : 'Paiement Orange Money',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerDark),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Commande :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text(planLabel,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Montant :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text('${_currency.format(amount)} FCFA',
+                            style: TextStyle(
+                                color:
+                                    isWave ? AppColors.secondary : Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Entrez votre code secret à 4 chiffres pour autoriser le prélèvement :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: pinCtrl,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 4,
+                autofocus: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    letterSpacing: 8),
+                decoration: const InputDecoration(
+                  hintText: '••••',
+                  counterText: '',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed:
+                  isProcessing ? null : () => Navigator.pop(dialogCtx, false),
+              child: const Text('Annuler',
+                  style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isWave ? AppColors.secondary : Colors.orange,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () async {
+                      if (pinCtrl.text.length < 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Veuillez entrer un code PIN à 4 chiffres.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isProcessing = true);
+                      await Future<void>.delayed(
+                          const Duration(milliseconds: 1200));
+                      if (ctx.mounted) Navigator.pop(dialogCtx, true);
+                    },
+              child: isProcessing
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black))
+                  : const Text('Valider le Paiement',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showOrderDetails(Map<String, dynamic> order) {
     final items = order['items'] as List? ?? [];
     final status = order['status'] as String? ?? 'EN_ATTENTE';
@@ -565,12 +715,64 @@ class _MarketplacePageState extends State<MarketplacePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Total payé :', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                const Text('Total à payer :', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
                 Text('${_currency.format(order['totalAmount'] ?? 0)} FCFA',
                     style: const TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+
+            if (status == 'EN_ATTENTE') ...[
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final confirmed = await _showPaymentSimulationDialog(
+                      context: context,
+                      planLabel: order['orderNumber'] ?? 'Commande',
+                      amount: (order['totalAmount'] as num).toInt(),
+                      method: 'WAVE',
+                      phone: '+221771234567',
+                    );
+                    if (confirmed != true) return;
+
+                    try {
+                      final client = getIt<ApiClient>();
+                      await client.post('/payments/initiate', data: {
+                        'marketplaceOrderId': order['id'],
+                        'amount': order['totalAmount'],
+                        'method': 'WAVE',
+                        'phone': '+221771234567',
+                      });
+                      if (ctx.mounted) {
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✓ Paiement effectué avec succès !'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                        _loadMarketplaceOrders();
+                      }
+                    } catch (e) {
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur de paiement : $e'), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.payment, size: 18),
+                  label: const Text('Payer maintenant (Wave / OM)', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
 
             SizedBox(
               width: double.infinity,
