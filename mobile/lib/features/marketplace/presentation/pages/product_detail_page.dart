@@ -64,6 +64,367 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return false;
   }
 
+  Future<bool?> _showPaymentSimulationDialog({
+    required BuildContext context,
+    required String planLabel,
+    required int amount,
+    required String method,
+    required String phone,
+  }) {
+    final pinCtrl = TextEditingController();
+    bool isProcessing = false;
+    final isWave = method == 'WAVE';
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surfaceDark,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                isWave ? Icons.waves : Icons.phone_android,
+                color: isWave ? AppColors.secondary : Colors.orange,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isWave ? 'Paiement Wave' : 'Paiement Orange Money',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerDark),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Article :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text(planLabel,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Montant :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text('${_currency.format(amount)} FCFA',
+                            style: TextStyle(
+                                color:
+                                    isWave ? AppColors.secondary : Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Téléphone :',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                        Text(phone,
+                            style: const TextStyle(
+                                color: AppColors.textPrimary, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Entrez votre code secret à 4 chiffres pour autoriser le prélèvement :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: pinCtrl,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 4,
+                autofocus: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    letterSpacing: 8),
+                decoration: const InputDecoration(
+                  hintText: '••••',
+                  counterText: '',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed:
+                  isProcessing ? null : () => Navigator.pop(dialogCtx, false),
+              child: const Text('Annuler',
+                  style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isWave ? AppColors.secondary : Colors.orange,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () async {
+                      if (pinCtrl.text.length < 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'Veuillez entrer un code PIN à 4 chiffres.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isProcessing = true);
+                      await Future<void>.delayed(
+                          const Duration(milliseconds: 1200));
+                      if (ctx.mounted) Navigator.pop(dialogCtx, true);
+                    },
+              child: isProcessing
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.black))
+                  : const Text('Valider le Paiement',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCheckoutDialog(BuildContext context, Map<String, dynamic> product, int quantity) {
+    final addressCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    String selectedMethod = 'WAVE';
+    bool isSubmitting = false;
+    final totalAmount = (product['price'] as num) * quantity;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Finaliser la commande',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('${_currency.format(totalAmount)} FCFA',
+                      style: const TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: addressCtrl,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Adresse de livraison *',
+                  prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: phoneCtrl,
+                keyboardType: TextInputType.phone,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Numéro de téléphone (Mobile Money) *',
+                  prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: notesCtrl,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Notes pour l\'artisan (optionnel)',
+                  prefixIcon: Icon(Icons.note_outlined, color: AppColors.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              const Text('Moyen de paiement :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setSheetState(() => selectedMethod = 'WAVE'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'WAVE' ? AppColors.secondary.withValues(alpha: 0.2) : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: selectedMethod == 'WAVE' ? AppColors.secondary : AppColors.dividerDark),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.waves, color: AppColors.secondary, size: 18),
+                            const SizedBox(width: 8),
+                            Text('Wave', style: TextStyle(color: selectedMethod == 'WAVE' ? AppColors.secondary : AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setSheetState(() => selectedMethod = 'ORANGE_MONEY'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange.withValues(alpha: 0.2) : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.dividerDark),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.phone_android, color: Colors.orange, size: 18),
+                            const SizedBox(width: 8),
+                            Text('Orange Money', style: TextStyle(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: isSubmitting ? null : () async {
+                    if (addressCtrl.text.trim().isEmpty || phoneCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Veuillez remplir l\'adresse et le téléphone.')),
+                      );
+                      return;
+                    }
+
+                    final confirmed = await _showPaymentSimulationDialog(
+                      context: context,
+                      planLabel: product['name'] ?? 'Article',
+                      amount: totalAmount.toInt(),
+                      method: selectedMethod,
+                      phone: phoneCtrl.text.trim(),
+                    );
+
+                    if (confirmed != true) return;
+
+                    setSheetState(() => isSubmitting = true);
+                    try {
+                      final client = getIt<ApiClient>();
+                      await client.post('/orders', data: {
+                        'items': [
+                          {
+                            'productId': product['id'],
+                            'quantity': quantity,
+                          }
+                        ],
+                        'address': addressCtrl.text.trim(),
+                        'notes': notesCtrl.text.trim(),
+                      });
+
+                      if (ctx.mounted) {
+                        Navigator.pop(sheetCtx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✓ Paiement validé & Commande créée avec succès !'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                        context.pop();
+                      }
+                    } catch (e) {
+                      setSheetState(() => isSubmitting = false);
+                      if (ctx.mounted) {
+                        String errorMessage = 'Erreur de commande';
+                        if (e.toString().contains('Profil client non trouvé')) {
+                          errorMessage = 'Vous devez avoir un profil client pour commander';
+                        } else if (e.toString().contains('Stock insuffisant')) {
+                          errorMessage = 'Stock insuffisant pour ce produit';
+                        } else {
+                          errorMessage = 'Erreur: ${e.toString()}';
+                        }
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(errorMessage), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  child: isSubmitting
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : Text('Payer ${(_currency.format(totalAmount))} FCFA & Commander', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showEditDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -533,44 +894,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              onPressed: () async {
-                                try {
-                                  final client = getIt<ApiClient>();
-                                  await client.post('/orders', data: {
-                                    'items': [
-                                      {
-                                        'productId': product['id'],
-                                        'quantity': _quantity,
-                                      }
-                                    ],
-                                  });
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Commande créée avec succès'),
-                                        backgroundColor: AppColors.success,
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    String errorMessage = 'Erreur de commande';
-                                    if (e.toString().contains('Profil client non trouvé')) {
-                                      errorMessage = 'Vous devez avoir un profil client pour commander';
-                                    } else if (e.toString().contains('Stock insuffisant')) {
-                                      errorMessage = 'Stock insuffisant pour ce produit';
-                                    } else {
-                                      errorMessage = 'Erreur: ${e.toString()}';
-                                    }
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(errorMessage),
-                                        backgroundColor: AppColors.error,
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
+                              onPressed: () => _showCheckoutDialog(context, product, _quantity),
                               child: Text(
                                 'Commander — ${_currency.format(product['price'] * _quantity)} FCFA',
                                 style: const TextStyle(
