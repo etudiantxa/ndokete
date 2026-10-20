@@ -437,6 +437,163 @@ class _MarketplacePageState extends State<MarketplacePage> {
     );
   }
 
+  void _showOrderDetails(Map<String, dynamic> order) {
+    final items = order['items'] as List? ?? [];
+    final status = order['status'] as String? ?? 'EN_ATTENTE';
+    final statuses = ['EN_ATTENTE', 'EN_COURS', 'PRET', 'LIVRE'];
+    final currentIdx = statuses.indexOf(status);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  order['orderNumber'] as String? ?? 'Détails de la commande',
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            const Text('Suivi en temps réel',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            Row(
+              children: statuses.asMap().entries.map((e) {
+                final idx = e.key;
+                final s = e.value;
+                final isPast = idx <= currentIdx;
+                final isCurrent = idx == currentIdx;
+                return Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: isPast ? AppColors.primary : AppColors.cardDark,
+                          shape: BoxShape.circle,
+                          border: isCurrent
+                              ? Border.all(color: AppColors.primary, width: 2)
+                              : null,
+                        ),
+                        child: Icon(
+                          isPast ? Icons.check : Icons.circle,
+                          color: isPast ? Colors.black : AppColors.textDisabled,
+                          size: isPast ? 14 : 6,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ['Attente', 'En cours', 'Prêt', 'Livré'][idx],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: isCurrent ? AppColors.primary : AppColors.textSecondary,
+                          fontSize: 10,
+                          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 24),
+
+            const Text('Articles commandés',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            ...items.map((item) {
+              final product = item['product'] as Map<String, dynamic>?;
+              final qty = item['quantity'] ?? 1;
+              final price = item['price'] ?? 0;
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        product?['name'] ?? 'Produit',
+                        style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    Text('x$qty', style: const TextStyle(color: AppColors.textSecondary)),
+                    const SizedBox(width: 16),
+                    Text('${_currency.format(price * qty)} FCFA',
+                        style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              );
+            }),
+
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total payé :', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                Text('${_currency.format(order['totalAmount'] ?? 0)} FCFA',
+                    style: const TextStyle(color: AppColors.primary, fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.success,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  final uri = Uri.https('wa.me', '', {'text': 'Bonjour, je souhaite avoir des nouvelles de ma commande ${order['orderNumber']}'});
+                  launchUrl(uri, mode: LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.chat, size: 18),
+                label: const Text('Contacter l’artisan sur WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMarketplaceOrders() {
     if (_ordersLoading) {
       return const Center(
@@ -458,39 +615,42 @@ class _MarketplacePageState extends State<MarketplacePage> {
             items.isEmpty ? null : items.first as Map<String, dynamic>;
         final firstProduct = firstItem?['product'] as Map<String, dynamic>?;
         final createdAt = order['createdAt'] as String?;
-        return Card(
-          color: AppColors.cardDark,
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: AppColors.surfaceDark,
-              child: Icon(Icons.receipt_long, color: AppColors.primary),
-            ),
-            title: Text(
-              order['orderNumber'] as String? ?? 'Commande',
-              style: const TextStyle(
-                  color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              '${firstProduct?['name'] ?? 'Produit'}${items.length > 1 ? ' et ${items.length - 1} autre(s)' : ''}'
-              '${createdAt == null ? '' : ' · ${DateFormat('dd/MM/yyyy').format(DateTime.parse(createdAt))}'}',
-              style: const TextStyle(color: AppColors.textSecondary),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${_currency.format(order['totalAmount'] ?? 0)} FCFA',
-                  style: const TextStyle(
-                      color: AppColors.primary, fontWeight: FontWeight.w600),
-                ),
-                Text(
-                  order['status'] as String? ?? '',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 10),
-                ),
-              ],
+        return GestureDetector(
+          onTap: () => _showOrderDetails(order),
+          child: Card(
+            color: AppColors.cardDark,
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: AppColors.surfaceDark,
+                child: Icon(Icons.receipt_long, color: AppColors.primary),
+              ),
+              title: Text(
+                order['orderNumber'] as String? ?? 'Commande',
+                style: const TextStyle(
+                    color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                '${firstProduct?['name'] ?? 'Produit'}${items.length > 1 ? ' et ${items.length - 1} autre(s)' : ''}'
+                '${createdAt == null ? '' : ' · ${DateFormat('dd/MM/yyyy').format(DateTime.parse(createdAt))}'}',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_currency.format(order['totalAmount'] ?? 0)} FCFA',
+                    style: const TextStyle(
+                        color: AppColors.primary, fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    order['status'] as String? ?? '',
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 10),
+                  ),
+                ],
+              ),
             ),
           ),
         );
