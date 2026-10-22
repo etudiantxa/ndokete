@@ -216,7 +216,7 @@ export class MarketplaceOrdersService {
 
   async getClientOrders(userId: string) {
     const client = await this.prisma.client.findUnique({ where: { userId } });
-    if (!client) throw new NotFoundException('Profil client non trouvé');
+    if (!client) return [];
     
     return this.prisma.marketplaceOrder.findMany({
       where: { clientId: client.id },

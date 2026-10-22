@@ -9,7 +9,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @ApiTags('marketplace-orders')
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('CLIENT')
+@Roles('CLIENT', 'ARTISAN', 'ADMIN')
 @Controller('orders')
 export class MarketplaceOrdersController {
   constructor(private ordersService: MarketplaceOrdersService) {}

@@ -45,12 +45,6 @@ class AppRouter {
                 ? '/admin'
                 : (user.isArtisan ? '/dashboard' : '/marketplace');
             if (isOnboarding || isAuth) return home;
-            if (!user.isArtisan &&
-                !user.isAdmin &&
-                _artisanOnlyRoutes
-                    .any((route) => state.matchedLocation.startsWith(route))) {
-              return home;
-            }
             return null;
           }
           if (authState is AuthUnauthenticated || authState is AuthError) {
