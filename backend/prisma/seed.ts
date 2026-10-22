@@ -6,8 +6,20 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Démarrage du seed NDOKETE...');
 
-  // ── Artisan de démo ──────────────────────────────────────────────────────
   const passwordHash = await bcrypt.hash('Demo1234!', 12);
+
+  // ── Compte Administrateur NDOKETE ─────────────────────────────────────────
+  await prisma.user.upsert({
+    where: { email: 'admin@ndokete.sn' },
+    update: {},
+    create: {
+      email: 'admin@ndokete.sn',
+      phone: '+221770000000',
+      passwordHash,
+      role: 'ADMIN',
+      isVerified: true,
+    },
+  });
 
   const artisanUser = await prisma.user.upsert({
     where: { email: 'moussa@ndokete.sn' },

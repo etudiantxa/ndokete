@@ -1182,6 +1182,15 @@ class _ActionSection extends StatelessWidget {
       ),
       child: Column(
         children: [
+          if (profile.role == 'ADMIN' || profile.email.contains('admin')) ...[
+            _ActionItem(
+              icon: Icons.admin_panel_settings_outlined,
+              label: 'Administration NDOKETE (Super-Admin)',
+              color: AppColors.primary,
+              onTap: () => outerCtx.push('/admin'),
+            ),
+            const Divider(height: 1, color: AppColors.dividerDark),
+          ],
           _ActionItem(
             icon: Icons.lock_outline,
             label: 'Changer le mot de passe',

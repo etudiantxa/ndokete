@@ -24,6 +24,7 @@ import '../../features/marketplace/presentation/pages/add_edit_product_page.dart
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/notifications/presentation/pages/reminders_config_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -167,6 +168,9 @@ class AppRouter {
 
           // ── Profil ───────────────────────────────────────────────────────────
           GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+
+          // ── Administration Super-Admin ───────────────────────────────────────
+          GoRoute(path: '/admin', builder: (_, __) => const AdminDashboardPage()),
         ],
         errorBuilder: (context, state) => Scaffold(
           backgroundColor: const Color(0xFF0F1117),

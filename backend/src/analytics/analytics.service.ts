@@ -79,10 +79,50 @@ export class AnalyticsService {
     return {
       totalArtisans,
       premiumArtisans,
-      freePct: Math.round(((totalArtisans - premiumArtisans) / totalArtisans) * 100),
+      freePct: totalArtisans > 0 ? Math.round(((totalArtisans - premiumArtisans) / totalArtisans) * 100) : 100,
       totalCommissions: totalRevenue._sum.commission ?? 0,
       mrr: mrr._sum.price ?? 0,
       churnRisk,
     };
+  }
+
+  async getAdminArtisans() {
+    const artisans = await this.prisma.artisan.findMany({
+      include: {
+        user: { select: { email: true, phone: true, isVerified: true, createdAt: true } },
+        subscription: true,
+        _count: { select: { customers: true, products: true, orders: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return artisans.map((a) => ({
+      id: a.id,
+      userId: a.userId,
+      businessName: a.businessName,
+      email: a.user.email,
+      phone: a.user.phone,
+      quarter: a.quarter,
+      specialty: a.specialty,
+      plan: a.subscription?.plan ?? 'FREE',
+      subscriptionStatus: a.subscription?.status ?? 'INACTIVE',
+      customersCount: a._count.customers,
+      productsCount: a._count.products,
+      ordersCount: a._count.orders,
+      createdAt: a.createdAt,
+    }));
+  }
+
+  async updateArtisanPlan(artisanId: string, plan: 'FREE' | 'PREMIUM' | 'PREMIUM_PLUS') {
+    const prices = { FREE: 0, PREMIUM: 5000, PREMIUM_PLUS: 10000 };
+    const price = prices[plan] ?? 0;
+
+    const sub = await this.prisma.subscription.upsert({
+      where: { artisanId },
+      update: { plan, status: 'ACTIVE', price },
+      create: { artisanId, plan, status: 'ACTIVE', price },
+    });
+
+    return { data: sub, message: `Plan modifié vers ${plan}` };
   }
 }
