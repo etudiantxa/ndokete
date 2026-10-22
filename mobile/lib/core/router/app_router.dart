@@ -41,9 +41,12 @@ class AppRouter {
           final user = authState is AuthAuthenticated ? authState.user : null;
 
           if (user != null) {
-            final home = user.isArtisan ? '/dashboard' : '/marketplace';
+            final home = user.isAdmin
+                ? '/admin'
+                : (user.isArtisan ? '/dashboard' : '/marketplace');
             if (isOnboarding || isAuth) return home;
             if (!user.isArtisan &&
+                !user.isAdmin &&
                 _artisanOnlyRoutes
                     .any((route) => state.matchedLocation.startsWith(route))) {
               return home;
