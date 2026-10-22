@@ -8,15 +8,13 @@ class ApiClient {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static String get _baseUrl {
-    if (_configuredUrl.isNotEmpty) return _configuredUrl;
-    if (!kDebugMode) return _prodUrl;
     if (kIsWeb) return 'http://localhost:3000/api/v1';
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'http://10.0.2.2:3000/api/v1';
-      default:
-        return 'http://localhost:3000/api/v1';
+    if (!kDebugMode) return _prodUrl;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3000/api/v1';
     }
+    if (_configuredUrl.isNotEmpty) return _configuredUrl;
+    return 'http://localhost:3000/api/v1';
   }
 
   late final Dio dio;
