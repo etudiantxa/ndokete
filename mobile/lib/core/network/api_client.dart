@@ -10,10 +10,6 @@ class ApiClient {
   static String get _baseUrl {
     if (_configuredUrl.isNotEmpty) return _configuredUrl;
     if (!kDebugMode) return _prodUrl;
-    if (kIsWeb) return 'http://localhost:3000/api/v1';
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api/v1';
-    }
     return 'http://localhost:3000/api/v1';
   }
 
