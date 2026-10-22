@@ -89,15 +89,26 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   String _handleDioError(DioException e) {
+    if (e.response?.statusCode == 401) {
+      return 'Identifiants incorrects (Email ou mot de passe invalide)';
+    }
+    if (e.response?.statusCode == 409) {
+      return 'Email ou téléphone déjà utilisé';
+    }
+    if (e.response?.statusCode == 403) {
+      return 'Accès non autorisé';
+    }
     final data = e.response?.data;
-    if (data is Map && data['message'] != null) {
+    if (data is Map &&
+        data['message'] != null &&
+        data['message'].toString().isNotEmpty &&
+        data['message'].toString() != 'Unauthorized') {
       return data['message'].toString();
     }
-    switch (e.response?.statusCode) {
-      case 401: return 'Identifiants incorrects';
-      case 409: return 'Email ou téléphone déjà utilisé';
-      case 403: return 'Accès non autorisé';
-      default: return 'Erreur réseau. Vérifiez votre connexion.';
+    if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return 'Le serveur prend trop de temps à répondre.';
     }
+    return 'Erreur de connexion : ${e.message ?? e.error ?? e.toString()}';
   }
 }
