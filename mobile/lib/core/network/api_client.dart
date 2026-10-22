@@ -8,13 +8,11 @@ class ApiClient {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static String get _baseUrl {
-    if (kIsWeb) return 'http://localhost:3000/api/v1';
-    if (!kDebugMode) return _prodUrl;
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api/v1';
-    }
     if (_configuredUrl.isNotEmpty) return _configuredUrl;
-    return 'http://localhost:3000/api/v1';
+    if (!kDebugMode) return _prodUrl;
+    if (kIsWeb) return 'http://localhost:3000/api/v1';
+    // Utiliser l'IP Wi-Fi locale de votre PC (192.168.1.202) accessible par l'émulateur et le téléphone
+    return 'http://192.168.1.202:3000/api/v1';
   }
 
   late final Dio dio;
