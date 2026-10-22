@@ -8,7 +8,9 @@ class ApiClient {
       String.fromEnvironment('API_BASE_URL', defaultValue: '');
 
   static String get _baseUrl {
-    if (_configuredUrl.isNotEmpty) return _configuredUrl;
+    if (_configuredUrl.isNotEmpty && !_configuredUrl.contains('10.0.2.2')) {
+      return _configuredUrl;
+    }
     if (!kDebugMode) return _prodUrl;
     return 'http://localhost:3000/api/v1';
   }
