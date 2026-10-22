@@ -14,10 +14,10 @@ async function bootstrap() {
   // Logger Winston
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
-  // Sécurité
-  app.use(helmet());
+  // Sécurité & CORS permissif pour le réseau local et émulateur
+  app.use(helmet({ crossOriginResourcePolicy: false }));
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5000'],
+    origin: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   });
@@ -61,8 +61,8 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`🚀 NDOKETE API démarrée sur http://localhost:${port}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 NDOKETE API démarrée sur http://localhost:${port} et 0.0.0.0:${port}`);
   console.log(`📖 Swagger docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();
