@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -143,10 +146,30 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         title: const Text('Administration NDOKETE 🇸🇳'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Quitter l\'administration',
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/marketplace');
+            }
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Rafraîchir les données',
             onPressed: _loadAdminData,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: AppColors.error),
+            tooltip: 'Se déconnecter',
+            onPressed: () {
+              context.read<AuthBloc>().add(const AuthLogoutRequested());
+              context.go('/login');
+            },
           ),
         ],
       ),
