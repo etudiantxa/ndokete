@@ -1,10 +1,10 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/web_safe_storage.dart';
 
 class AuthRemoteDatasource {
   final ApiClient _client;
-  final _storage = const FlutterSecureStorage();
+  final _storage = WebSafeStorage();
 
   AuthRemoteDatasource(this._client);
 

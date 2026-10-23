@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../storage/web_safe_storage.dart';
 
 class ApiClient {
   static const _prodUrl = 'https://api.ndokete.sn/api/v1';
@@ -13,7 +13,7 @@ class ApiClient {
   }
 
   late final Dio dio;
-  final _secureStorage = const FlutterSecureStorage();
+  final _secureStorage = WebSafeStorage();
 
   ApiClient() {
     dio = Dio(BaseOptions(
@@ -43,7 +43,7 @@ class ApiClient {
 
 /// Intercepteur JWT : injecte le token et gère le refresh automatique
 class _AuthInterceptor extends Interceptor {
-  final FlutterSecureStorage storage;
+  final WebSafeStorage storage;
   final Dio dio;
   bool _isRefreshing = false;
 
