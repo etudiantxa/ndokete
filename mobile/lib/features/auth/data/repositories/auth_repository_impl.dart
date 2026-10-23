@@ -14,8 +14,10 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final userData = await remoteDataSource.login(identifier, password);
       final user = _mapToEntity(userData);
-      // Stocker l'utilisateur en local pour l'accès offline
-      await HiveService.saveItem(HiveService.userBox, 'current_user', userData);
+      // Stocker l'utilisateur en local pour l'accès offline (optionnel)
+      try {
+        await HiveService.saveItem(HiveService.userBox, 'current_user', userData);
+      } catch (_) {}
       return Right(user);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
@@ -45,7 +47,9 @@ class AuthRepositoryImpl implements AuthRepository {
         quarter: quarter,
       );
       final user = _mapToEntity(userData);
-      await HiveService.saveItem(HiveService.userBox, 'current_user', userData);
+      try {
+        await HiveService.saveItem(HiveService.userBox, 'current_user', userData);
+      } catch (_) {}
       return Right(user);
     } on DioException catch (e) {
       return Left(_handleDioError(e));
