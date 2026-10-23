@@ -26,6 +26,35 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
+  # ── Backend NestJS ───────────────────────────────────────────────────────────
+  backend:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=postgresql://ndokete:ndokete123@postgres:5432/ndokete_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - JWT_ACCESS_SECRET=change_me_access_secret_very_long_and_random
+      - JWT_REFRESH_SECRET=change_me_refresh_secret_very_long_and_random
+      - JWT_ACCESS_EXPIRES=60m
+      - JWT_REFRESH_EXPIRES=7d
+      - CLOUDINARY_CLOUD_NAME=your_cloud_name
+      - CLOUDINARY_API_KEY=your_api_key
+      - CLOUDINARY_API_SECRET=your_api_secret
+      - FIREBASE_PROJECT_ID=ndokete-firebase
+      - FIREBASE_PRIVATE_KEY=private_key
+      - FIREBASE_CLIENT_EMAIL=email@ndokete.iam.gserviceaccount.com
+      - NDOKETE_COMMISSION_PCT=10
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5000,https://ndokete.app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
   # ── Adminer (interface web pour voir la BDD) ──────────────────────────────
   adminer:
     image: adminer
