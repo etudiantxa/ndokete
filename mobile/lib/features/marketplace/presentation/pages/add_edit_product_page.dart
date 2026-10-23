@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
@@ -200,11 +201,23 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
         setState(() => _isLoading = true);
 
         final client = getIt<ApiClient>();
-        final formData = FormData.fromMap({
-          'file': await MultipartFile.fromFile(
+        late final MultipartFile multipartFile;
+
+        if (kIsWeb) {
+          final bytes = await image.readAsBytes();
+          multipartFile = MultipartFile.fromBytes(
+            bytes,
+            filename: image.name,
+          );
+        } else {
+          multipartFile = await MultipartFile.fromFile(
             image.path,
             filename: image.name,
-          ),
+          );
+        }
+
+        final formData = FormData.fromMap({
+          'file': multipartFile,
         });
 
         final response = await client.post('/uploads/image', data: formData);
