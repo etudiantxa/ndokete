@@ -61,8 +61,8 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port, '0.0.0.0');
-  console.log(`🚀 NDOKETE API démarrée sur http://localhost:${port} et 0.0.0.0:${port}`);
+  await app.listen(port);
+  console.log(`🚀 NDOKETE API démarrée sur http://localhost:${port}`);
   console.log(`📖 Swagger docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();
