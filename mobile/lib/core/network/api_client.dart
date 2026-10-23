@@ -63,6 +63,20 @@ class _AuthInterceptor extends Interceptor {
 
   @override
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Bascule automatique de secours de localhost vers 10.0.2.2 sur Android
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.android &&
+        err.requestOptions.baseUrl.contains('localhost') &&
+        (err.type == DioExceptionType.connectionTimeout ||
+            err.type == DioExceptionType.connectionError)) {
+      try {
+        final retryOptions = err.requestOptions;
+        retryOptions.baseUrl = 'http://10.0.2.2:3000/api/v1';
+        final response = await dio.fetch(retryOptions);
+        return handler.resolve(response);
+      } catch (_) {}
+    }
+
     final path = err.requestOptions.path;
     final isAuthEndpoint = path.contains('/auth/login') ||
         path.contains('/auth/register') ||
