@@ -14,11 +14,12 @@ async function bootstrap() {
   // Logger Winston
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
-  // Sécurité & CORS permissif pour le réseau local et émulateur
+  // Sécurité & CORS permissif pour le web et mobile
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.enableCors({
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
     credentials: true,
   });
 
