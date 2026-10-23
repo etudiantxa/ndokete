@@ -131,7 +131,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       final result = await loginUseCase(event.identifier, event.password).timeout(
-        const Duration(seconds: 12),
+        const Duration(seconds: 30),
         onTimeout: () => Left('Le serveur ne répond pas. Vérifiez que le backend est démarré.'),
       );
       result.fold(
@@ -158,7 +158,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         specialty: event.specialty,
         quarter: event.quarter,
       ).timeout(
-        const Duration(seconds: 12),
+        const Duration(seconds: 30),
         onTimeout: () => Left('Le serveur ne répond pas. Vérifiez que le backend est démarré.'),
       );
       result.fold(
