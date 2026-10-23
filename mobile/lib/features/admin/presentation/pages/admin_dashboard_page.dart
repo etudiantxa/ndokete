@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -20,6 +21,181 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool _loading = true;
   final _currency = NumberFormat('#,###', 'fr_FR');
   int _selectedTab = 0;
+  final _searchCtrl = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _showArtisanDetailModal(Map<String, dynamic> artisan) {
+    final plan = artisan['plan'] as String? ?? 'FREE';
+    final isPremium = plan != 'FREE';
+    final phone = artisan['phone'] as String? ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 26,
+                  backgroundColor: isPremium
+                      ? AppColors.primary.withValues(alpha: 0.2)
+                      : AppColors.cardDark,
+                  child: Icon(
+                    isPremium ? Icons.workspace_premium : Icons.store,
+                    color: isPremium ? AppColors.primary : AppColors.textSecondary,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        artisan['businessName'] ?? 'Atelier Artisan',
+                        style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '${artisan['email'] ?? ''} · $phone',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardDark,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Clients', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Text('${artisan['customersCount']}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 15)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardDark,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Produits', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Text('${artisan['productsCount']}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 15)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardDark,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text('Commandes', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        Text('${artisan['ordersCount']}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 15)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(sheetCtx);
+                  _showPlanDialog(artisan);
+                },
+                icon: const Icon(Icons.workspace_premium, size: 18),
+                label: Text('Modifier le Plan (Actuel: $plan)', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            if (phone.isNotEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.success,
+                    side: const BorderSide(color: AppColors.success),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(sheetCtx);
+                    final cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+                    final recipient = cleanPhone.startsWith('221') ? cleanPhone : '221$cleanPhone';
+                    final uri = Uri.https('wa.me', '/$recipient', {'text': 'Bonjour ${artisan['businessName']}, message de l\'administration NDOKETE 🇸🇳'});
+                    launchUrl(uri, mode: LaunchMode.externalApplication);
+                  },
+                  icon: const Icon(Icons.chat, size: 18),
+                  label: const Text('Contacter sur WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<dynamic> get _filteredArtisans {
+    if (_searchQuery.isEmpty) return _artisans;
+    return _artisans.where((a) {
+      final name = (a['businessName'] ?? '').toString().toLowerCase();
+      final email = (a['email'] ?? '').toString().toLowerCase();
+      final quarter = (a['quarter'] ?? '').toString().toLowerCase();
+      return name.contains(_searchQuery) ||
+          email.contains(_searchQuery) ||
+          quarter.contains(_searchQuery);
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -252,94 +428,129 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   const SizedBox(height: 16),
 
                   if (_selectedTab == 0) ...[
-                    const Text('Gestion des Artisans :',
-                        style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Gestion des Artisans :',
+                            style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                        Text('${_filteredArtisans.length} inscrit(s)',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _searchCtrl,
+                      onChanged: (v) =>
+                          setState(() => _searchQuery = v.trim().toLowerCase()),
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Rechercher par nom, email ou quartier...',
+                        hintStyle: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13),
+                        prefixIcon: const Icon(Icons.search,
+                            color: AppColors.textSecondary),
+                        filled: true,
+                        fillColor: AppColors.cardDark,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 12),
-                    ..._artisans.map((artisan) {
+                    ..._filteredArtisans.map((artisan) {
                       final plan = artisan['plan'] as String? ?? 'FREE';
                       final isPremium = plan != 'FREE';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.dividerDark),
-                        ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundColor: isPremium
-                                  ? AppColors.primary.withValues(alpha: 0.2)
-                                  : AppColors.surfaceDark,
-                              child: Icon(
-                                isPremium ? Icons.workspace_premium : Icons.store,
-                                color: isPremium
-                                    ? AppColors.primary
-                                    : AppColors.textSecondary,
+                      return GestureDetector(
+                        onTap: () => _showArtisanDetailModal(artisan),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardDark,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.dividerDark),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: isPremium
+                                    ? AppColors.primary.withValues(alpha: 0.2)
+                                    : AppColors.surfaceDark,
+                                child: Icon(
+                                  isPremium
+                                      ? Icons.workspace_premium
+                                      : Icons.store,
+                                  color: isPremium
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    artisan['businessName'] ?? 'Atelier Artisan',
-                                    style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
-                                  ),
-                                  Text(
-                                    '${artisan['email'] ?? ''} · ${artisan['quarter'] ?? 'Quartier non spécifié'}',
-                                    style: const TextStyle(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: isPremium
-                                              ? AppColors.primary.withValues(alpha: 0.2)
-                                              : AppColors.surfaceDark,
-                                          borderRadius: BorderRadius.circular(6),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      artisan['businessName'] ?? 'Atelier Artisan',
+                                      style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                    ),
+                                    Text(
+                                      '${artisan['email'] ?? ''} · ${artisan['quarter'] ?? 'Quartier non spécifié'}',
+                                      style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 12),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isPremium
+                                                ? AppColors.primary
+                                                    .withValues(alpha: 0.2)
+                                                : AppColors.surfaceDark,
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            plan,
+                                            style: TextStyle(
+                                                color: isPremium
+                                                    ? AppColors.primary
+                                                    : AppColors.textSecondary,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold),
+                                          ),
                                         ),
-                                        child: Text(
-                                          plan,
-                                          style: TextStyle(
-                                              color: isPremium
-                                                  ? AppColors.primary
-                                                  : AppColors.textSecondary,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${artisan['customersCount']} clients · ${artisan['productsCount']} produits',
+                                          style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 11),
                                         ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${artisan['customersCount']} clients · ${artisan['productsCount']} produits',
-                                        style: const TextStyle(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 11),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined,
-                                  color: AppColors.primary),
-                              onPressed: () => _showPlanDialog(artisan),
-                            ),
-                          ],
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined,
+                                    color: AppColors.primary),
+                                onPressed: () => _showPlanDialog(artisan),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }),
