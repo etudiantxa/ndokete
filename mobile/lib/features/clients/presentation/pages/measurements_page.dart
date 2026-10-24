@@ -419,7 +419,6 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                   label: Text(isAnalyzing ? 'Analyse par l\'IA en cours...' : 'Extraire et Remplir avec l\'IA', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              ),
             ],
           ),
         ),
