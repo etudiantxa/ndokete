@@ -292,12 +292,29 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
-                  SizedBox(width: 10),
-                  Text('Assistant IA - Dictée de Mesures',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                      SizedBox(width: 10),
+                      Text('Assistant IA - Dictée de Mesures',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.mic, color: AppColors.primary, size: 28),
+                    tooltip: 'Aide micro',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('🎙️ Touchez le micro sur votre clavier virtuel (Gboard) pour dicter vos mesures.'),
+                          backgroundColor: AppColors.success,
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 10),
