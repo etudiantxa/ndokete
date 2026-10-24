@@ -344,7 +344,7 @@ Géré avec la plateforme NDOKETE 🇸🇳
     );
 
     await Printing.layoutPdf(
-      onBuildPdf: (PdfPageFormat format) async => pdf.save(),
+      onLayout: (PdfPageFormat format) async => pdf.save(),
       name: 'facture_$orderNum.pdf',
     );
   }
