@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -223,6 +226,126 @@ Géré avec la plateforme NDOKETE 🇸🇳
     }
   }
 
+  Future<void> _generateAndSharePdf() async {
+    final order = _order;
+    if (order == null) return;
+    final customer = order['customer'] as Map<String, dynamic>?;
+    final customerName = customer?['name'] ?? 'Client';
+    final customerPhone = customer?['phone'] ?? '';
+    final orderNum = order['orderNumber'] ?? 'CMD-000';
+    final title = order['title'] ?? 'Article sur mesure';
+    final amount = (order['amount'] as num?)?.toDouble() ?? 0;
+    final deposit = (order['deposit'] as num?)?.toDouble() ?? 0;
+    final balance = amount - deposit;
+    final createdAt = order['createdAt'] as String?;
+
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Container(
+            padding: const pw.EdgeInsets.all(32),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('NDOKETE 🇸🇳', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
+                        pw.SizedBox(height: 4),
+                        pw.Text('Plateforme de Gestion & Marketplace pour Artisans', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                      ],
+                    ),
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                      children: [
+                        pw.Text('FACTURE', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 4),
+                        pw.Text('Réf : $orderNum', style: const pw.TextStyle(fontSize: 12)),
+                        if (createdAt != null)
+                          pw.Text('Date : ${DateFormat('dd/MM/yyyy').format(DateTime.parse(createdAt))}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                      ],
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 30),
+                pw.Divider(color: PdfColors.orange800, thickness: 2),
+                pw.SizedBox(height: 20),
+
+                pw.Text('FACTURÉ À :', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
+                pw.SizedBox(height: 6),
+                pw.Text(customerName, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                if (customerPhone.isNotEmpty)
+                  pw.Text('Téléphone : $customerPhone', style: const pw.TextStyle(fontSize: 12)),
+                pw.SizedBox(height: 30),
+
+                pw.Table.fromTextArray(
+                  headers: ['Description / Article', 'Statut', 'Montant (FCFA)'],
+                  data: [
+                    [title, order['status'] ?? 'EN_COURS', '${_currency.format(amount)} FCFA'],
+                  ],
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                  headerDecoration: const pw.BoxDecoration(color: PdfColors.orange800),
+                  cellHeight: 30,
+                  cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight},
+                ),
+                pw.SizedBox(height: 20),
+
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                  children: [
+                    pw.SizedBox(
+                      width: 250,
+                      child: pw.Column(
+                        children: [
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text('Montant Total :', style: const pw.TextStyle(fontSize: 12)),
+                              pw.Text('${_currency.format(amount)} FCFA', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                            ],
+                          ),
+                          pw.SizedBox(height: 6),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text('Acompte versé :', style: const pw.TextStyle(fontSize: 12)),
+                              pw.Text('${_currency.format(deposit)} FCFA', style: pw.TextStyle(fontSize: 12, color: PdfColors.green800)),
+                            ],
+                          ),
+                          pw.Divider(thickness: 1),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text('Reste à payer :', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
+                              pw.Text('${_currency.format(balance)} FCFA', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.red800)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                pw.Spacer(),
+                pw.Divider(color: PdfColors.grey400),
+                pw.Center(
+                  child: pw.Text('Merci pour votre confiance ! - Généré via NDOKETE 🇸🇳', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    await Printing.sharePdf(bytes: await pdf.save(), filename: 'facture_$orderNum.pdf');
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_loading) {
@@ -241,6 +364,11 @@ Géré avec la plateforme NDOKETE 🇸🇳
       appBar: AppBar(
         title: Text(order['orderNumber'] as String),
         actions: [
+          IconButton(
+            tooltip: 'Générer la Facture PDF',
+            icon: const Icon(Icons.picture_as_pdf_outlined, color: AppColors.primary),
+            onPressed: _generateAndSharePdf,
+          ),
           IconButton(
             tooltip: 'Supprimer la commande',
             icon: const Icon(Icons.delete_outline, color: AppColors.error),
