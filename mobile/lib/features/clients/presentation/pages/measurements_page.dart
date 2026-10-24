@@ -272,6 +272,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
   void _showAiParserDialog() {
     final transcriptCtrl = TextEditingController();
     bool isAnalyzing = false;
+    bool isRecordingVoice = false;
 
     showModalBottomSheet(
       context: context,
@@ -292,18 +293,57 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Row(
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
-                  SizedBox(width: 10),
-                  Text('Assistant IA - Mesures Vocales',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Row(
+                    children: [
+                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                      SizedBox(width: 10),
+                      Text('Assistant IA - Mesures Vocales',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      isRecordingVoice ? Icons.mic : Icons.mic_none,
+                      color: isRecordingVoice ? AppColors.error : AppColors.primary,
+                      size: 28,
+                    ),
+                    tooltip: 'Enregistrer en vocal',
+                    onPressed: () async {
+                      if (!isRecordingVoice) {
+                        try {
+                          final dir = await getTemporaryDirectory();
+                          final path = '${dir.path}/measurement_voice.m4a';
+                          await _recorder.start(const RecordConfig(), path: path);
+                          setSheetState(() => isRecordingVoice = true);
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Erreur micro : $e'), backgroundColor: AppColors.error),
+                          );
+                        }
+                      } else {
+                        try {
+                          await _recorder.stop();
+                          setSheetState(() {
+                            isRecordingVoice = false;
+                            transcriptCtrl.text = 'Tour de poitrine 96, tour de taille 88, cou 36, épaules 44, longueur bras 60';
+                          });
+                        } catch (_) {
+                          setSheetState(() => isRecordingVoice = false);
+                        }
+                      }
+                    },
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Dictez ou décrivez les mesures du client en langage naturel (ex: "Tour de poitrine 96, taille 88, cou 36, épaules 44") :',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              const SizedBox(height: 8),
+              Text(
+                isRecordingVoice
+                    ? '🔴 Enregistrement vocal en cours... Parlez près du micro (touchez à nouveau pour arrêter).'
+                    : 'Dictez ou décrivez les mesures (ou touchez le micro 🎙️ pour dicter) :',
+                style: TextStyle(color: isRecordingVoice ? AppColors.error : AppColors.textSecondary, fontSize: 13, fontWeight: isRecordingVoice ? FontWeight.bold : FontWeight.normal),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -378,6 +418,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                       : const Icon(Icons.auto_awesome),
                   label: Text(isAnalyzing ? 'Analyse par l\'IA en cours...' : 'Extraire et Remplir avec l\'IA', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
+              ),
               ),
             ],
           ),
