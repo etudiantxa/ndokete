@@ -9,6 +9,8 @@ import { StockController } from './stock/stock.controller';
 import { StockService } from './stock/stock.service';
 import { TransactionsController } from './transactions/transactions.controller';
 import { TransactionsService } from './transactions/transactions.service';
+import { AiMeasurementsController } from './ai/ai-measurements.controller';
+import { AiMeasurementsService } from './ai/ai-measurements.service';
 
 @Module({
   controllers: [
@@ -17,6 +19,7 @@ import { TransactionsService } from './transactions/transactions.service';
     ClientsController,
     StockController,
     TransactionsController,
+    AiMeasurementsController,
   ],
   providers: [
     ArtisansService,
@@ -24,6 +27,7 @@ import { TransactionsService } from './transactions/transactions.service';
     ClientsService,
     StockService,
     TransactionsService,
+    AiMeasurementsService,
   ],
   exports: [ArtisansService],
 })

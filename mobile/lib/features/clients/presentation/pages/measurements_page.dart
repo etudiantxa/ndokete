@@ -269,6 +269,123 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
     super.dispose();
   }
 
+  void _showAiParserDialog() {
+    final transcriptCtrl = TextEditingController();
+    bool isAnalyzing = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                  SizedBox(width: 10),
+                  Text('Assistant IA - Mesures Vocales',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Dictez ou décrivez les mesures du client en langage naturel (ex: "Tour de poitrine 96, taille 88, cou 36, épaules 44") :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: transcriptCtrl,
+                maxLines: 4,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Ex: Le tour de poitrine est 96, le tour de taille 88, le cou 36...',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  filled: true,
+                  fillColor: AppColors.cardDark,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: isAnalyzing ? null : () async {
+                    final text = transcriptCtrl.text.trim();
+                    if (text.isEmpty) return;
+
+                    setSheetState(() => isAnalyzing = true);
+                    try {
+                      final client = getIt<ApiClient>();
+                      final resp = await client.post('/artisans/ai/parse-measurements', data: {'transcript': text});
+                      final data = (resp.data as Map)['data'] as Map<String, dynamic>? ?? {};
+
+                      if (data.isNotEmpty) {
+                        for (final entry in data.entries) {
+                          if (_controllers.containsKey(entry.key)) {
+                            _controllers[entry.key]?.text = entry.value.toString();
+                          }
+                        }
+                        if (ctx.mounted) Navigator.pop(sheetCtx);
+                        if (mounted) {
+                          setState(() => _editing = true);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✓ ${data.length} mesure(s) extraite(s) et remplies par l\'IA !'),
+                              backgroundColor: AppColors.success,
+                            ),
+                          );
+                        }
+                      } else {
+                        setSheetState(() => isAnalyzing = false);
+                        if (ctx.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Aucune mesure reconnue dans ce texte.')),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      setSheetState(() => isAnalyzing = false);
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur IA : $e'), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  icon: isAnalyzing
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(isAnalyzing ? 'Analyse par l\'IA en cours...' : 'Extraire et Remplir avec l\'IA', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _saveMeasurements() async {
     if (_recording) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -334,6 +451,11 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
       appBar: AppBar(
         title: const Text('Fiche de Mesures'),
         actions: [
+          IconButton(
+            tooltip: 'Assistant IA - Mesures Vocales / Texte',
+            icon: const Icon(Icons.auto_awesome, color: AppColors.primary),
+            onPressed: _showAiParserDialog,
+          ),
           TextButton(
             onPressed: _editing
                 ? _saveMeasurements
