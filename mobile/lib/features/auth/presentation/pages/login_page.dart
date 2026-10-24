@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!_formKey.currentState!.validate()) return;
     context.read<AuthBloc>().add(AuthLoginRequested(
           identifier: _identifierCtrl.text.trim(),
-          password: _passwordCtrl.text,
+          password: _passwordCtrl.text.trim(),
         ));
   }
 
