@@ -328,8 +328,15 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                           await _recorder.stop();
                           setSheetState(() {
                             isRecordingVoice = false;
-                            transcriptCtrl.text = 'Tour de poitrine 96, tour de taille 88, cou 36, épaules 44, longueur bras 60';
                           });
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('🎙️ Audio enregistré ! Tapez vos mesures ci-dessous (ex: "poitrine 98, taille 82")'),
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
+                          }
                         } catch (_) {
                           setSheetState(() => isRecordingVoice = false);
                         }
