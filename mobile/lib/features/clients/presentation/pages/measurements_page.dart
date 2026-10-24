@@ -406,12 +406,6 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
       ),
     );
   }
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Future<void> _saveMeasurements() async {
     if (_recording) {
