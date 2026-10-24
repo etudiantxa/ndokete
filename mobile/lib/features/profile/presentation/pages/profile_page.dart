@@ -1211,6 +1211,12 @@ class _ActionSection extends StatelessWidget {
             ),
           const Divider(height: 1, color: AppColors.dividerDark),
           _ActionItem(
+            icon: Icons.cloud_sync_outlined,
+            label: 'Synchronisation & Mode Hors-Ligne',
+            onTap: () => outerCtx.push('/sync'),
+          ),
+          const Divider(height: 1, color: AppColors.dividerDark),
+          _ActionItem(
             icon: Icons.language,
             label: 'Langue (Français)',
             onTap: () => _showLanguageDialog(outerCtx),

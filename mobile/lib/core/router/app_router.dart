@@ -25,6 +25,7 @@ import '../../features/notifications/presentation/pages/notifications_page.dart'
 import '../../features/notifications/presentation/pages/reminders_config_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/sync/presentation/pages/sync_status_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -168,6 +169,9 @@ class AppRouter {
 
           // ── Administration Super-Admin ───────────────────────────────────────
           GoRoute(path: '/admin', builder: (_, __) => const AdminDashboardPage()),
+
+          // ── Synchronisation Hors-Ligne ───────────────────────────────────────
+          GoRoute(path: '/sync', builder: (_, __) => const SyncStatusPage()),
         ],
         errorBuilder: (context, state) => Scaffold(
           backgroundColor: const Color(0xFF0F1117),

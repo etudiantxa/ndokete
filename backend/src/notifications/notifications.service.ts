@@ -14,15 +14,25 @@ export class NotificationsService {
     private config: ConfigService,
     private gateway: NotificationsGateway,
   ) {
-    // Initialiser Firebase Admin SDK
+    // Initialiser Firebase Admin SDK de manière sécurisée
     if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: config.get('FIREBASE_PROJECT_ID'),
-          privateKey: config.get<string>('FIREBASE_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-          clientEmail: config.get('FIREBASE_CLIENT_EMAIL'),
-        }),
-      });
+      try {
+        const pk = config.get<string>('FIREBASE_PRIVATE_KEY');
+        if (pk && pk.includes('BEGIN PRIVATE KEY')) {
+          admin.initializeApp({
+            credential: admin.credential.cert({
+              projectId: config.get('FIREBASE_PROJECT_ID'),
+              privateKey: pk.replace(/\\n/g, '\n'),
+              clientEmail: config.get('FIREBASE_CLIENT_EMAIL'),
+            }),
+          });
+          this.logger.log('Firebase Admin initialisé avec succès');
+        } else {
+          this.logger.warn('Clé privée Firebase fictive ou absente. Notifications push simulées.');
+        }
+      } catch (err) {
+        this.logger.warn('Avertissement Firebase Admin : ' + err.message);
+      }
     }
   }
 
