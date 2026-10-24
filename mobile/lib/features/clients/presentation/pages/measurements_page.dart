@@ -272,7 +272,6 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
   void _showAiParserDialog() {
     final transcriptCtrl = TextEditingController();
     bool isAnalyzing = false;
-    bool isRecordingVoice = false;
 
     showModalBottomSheet(
       context: context,
@@ -293,72 +292,47 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              const Row(
                 children: [
-                  const Row(
-                    children: [
-                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
-                      SizedBox(width: 10),
-                      Text('Assistant IA - Mesures Vocales',
-                          style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      isRecordingVoice ? Icons.mic : Icons.mic_none,
-                      color: isRecordingVoice ? AppColors.error : AppColors.primary,
-                      size: 28,
-                    ),
-                    tooltip: 'Enregistrer en vocal',
-                    onPressed: () async {
-                      if (!isRecordingVoice) {
-                        try {
-                          final dir = await getTemporaryDirectory();
-                          final path = '${dir.path}/measurement_voice.m4a';
-                          await _recorder.start(const RecordConfig(), path: path);
-                          setSheetState(() => isRecordingVoice = true);
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Erreur micro : $e'), backgroundColor: AppColors.error),
-                          );
-                        }
-                      } else {
-                        try {
-                          await _recorder.stop();
-                          setSheetState(() {
-                            isRecordingVoice = false;
-                          });
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('🎙️ Audio enregistré ! Tapez vos mesures ci-dessous (ex: "poitrine 98, taille 82")'),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          }
-                        } catch (_) {
-                          setSheetState(() => isRecordingVoice = false);
-                        }
-                      }
-                    },
-                  ),
+                  Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                  SizedBox(width: 10),
+                  Text('Assistant IA - Dictée de Mesures',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                isRecordingVoice
-                    ? '🔴 Enregistrement vocal en cours... Parlez près du micro (touchez à nouveau pour arrêter).'
-                    : 'Dictez ou décrivez les mesures (ou touchez le micro 🎙️ pour dicter) :',
-                style: TextStyle(color: isRecordingVoice ? AppColors.error : AppColors.textSecondary, fontSize: 13, fontWeight: isRecordingVoice ? FontWeight.bold : FontWeight.normal),
+              const SizedBox(height: 10),
+              const Text(
+                '💡 Astuce : Utilisez le micro 🎙️ de votre clavier virtuel (Gboard) pour dicter vocalement, ou tapez/sélectionnez les raccourcis ci-dessous :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  'Cou 36',
+                  'Épaules 44',
+                  'Poitrine 96',
+                  'Taille 88',
+                  'Bassin 102',
+                  'Bras 60',
+                ].map((chip) => ActionChip(
+                      backgroundColor: AppColors.cardDark,
+                      labelStyle: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                      label: Text(chip),
+                      onPressed: () {
+                        final current = transcriptCtrl.text;
+                        transcriptCtrl.text = current.isEmpty ? chip : '$current, $chip';
+                      },
+                    )).toList(),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: transcriptCtrl,
                 maxLines: 4,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'Ex: Le tour de poitrine est 96, le tour de taille 88, le cou 36...',
+                  hintText: 'Ex: Cou 36, épaules 44, poitrine 96, taille 88...',
                   hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   filled: true,
                   fillColor: AppColors.cardDark,
@@ -426,6 +400,12 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                   label: Text(isAnalyzing ? 'Analyse par l\'IA en cours...' : 'Extraire et Remplir avec l\'IA', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
             ],
           ),
         ),
