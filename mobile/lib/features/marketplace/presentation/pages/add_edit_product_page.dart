@@ -202,17 +202,20 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
 
         final client = getIt<ApiClient>();
         late final MultipartFile multipartFile;
+        final filename = image.name.isNotEmpty
+            ? image.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
         if (kIsWeb) {
           final bytes = await image.readAsBytes();
           multipartFile = MultipartFile.fromBytes(
             bytes,
-            filename: image.name,
+            filename: filename,
           );
         } else {
           multipartFile = await MultipartFile.fromFile(
             image.path,
-            filename: image.name,
+            filename: filename,
           );
         }
 
