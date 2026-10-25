@@ -187,6 +187,18 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
     }
   }
 
+  static String _formatImageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+    var formatted = url;
+    if (!formatted.contains('/api/v1/') && formatted.contains('/uploads/')) {
+      formatted = formatted.replaceAll('/uploads/', '/api/v1/uploads/');
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && formatted.contains('localhost')) {
+      formatted = formatted.replaceAll('localhost', '10.0.2.2');
+    }
+    return formatted;
+  }
+
   Future<void> _pickAndUploadImage(ImageSource source) async {
     try {
       final ImagePicker picker = ImagePicker();
@@ -388,7 +400,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: Image.network(
-                                    url,
+                                    _formatImageUrl(url),
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) => Container(
                                       color: AppColors.cardDark,

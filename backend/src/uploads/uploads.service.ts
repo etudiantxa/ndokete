@@ -67,7 +67,7 @@ export class UploadsService {
     fs.writeFileSync(filePath, file.buffer);
 
     const appUrl = this.config.get<string>('APP_URL') || 'http://localhost:3000';
-    const localUrl = `${appUrl}/uploads/${filename}`;
+    const localUrl = `${appUrl}/api/v1/uploads/${filename}`;
 
     return {
       success: true,
