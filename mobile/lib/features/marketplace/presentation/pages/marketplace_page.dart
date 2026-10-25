@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 
@@ -892,7 +893,7 @@ class _ProductCard extends StatelessWidget {
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   child: photos != null && photos.isNotEmpty
                       ? Image.network(
-                          photos.first as String,
+                          ImageUtils.formatImageUrl(photos.first as String?),
                           fit: BoxFit.cover,
                           width: double.infinity,
                           errorBuilder: (_, __, ___) => _PlaceholderProduct(),

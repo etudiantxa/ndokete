@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -570,7 +571,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                           onPageChanged: (i) =>
                               setState(() => _selectedImage = i),
                           itemBuilder: (_, i) => CachedNetworkImage(
-                            imageUrl: product['photos'][i],
+                            imageUrl: ImageUtils.formatImageUrl(product['photos'][i] as String?),
                             fit: BoxFit.cover,
                             placeholder: (_, __) => Container(
                               color: AppColors.cardDark,
