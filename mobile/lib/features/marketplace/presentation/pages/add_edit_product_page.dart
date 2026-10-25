@@ -224,11 +224,16 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
         });
 
         final response = await client.post('/uploads/image', data: formData);
-        final imageUrl = (response.data as Map)['url'] as String;
+        final resData = response.data as Map;
+        final imageUrl = (resData['data'] != null && resData['data'] is Map)
+            ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
+            : resData['url'] as String? ?? '';
 
-        setState(() {
-          _imageUrls.add(imageUrl);
-        });
+        if (imageUrl.isNotEmpty) {
+          setState(() {
+            _imageUrls.add(imageUrl);
+          });
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
