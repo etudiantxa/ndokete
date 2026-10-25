@@ -226,6 +226,21 @@ Géré avec la plateforme NDOKETE 🇸🇳
     }
   }
 
+  static String _formatStatusLabel(String? status) {
+    switch (status) {
+      case 'EN_ATTENTE':
+        return 'En attente';
+      case 'EN_COURS':
+        return 'En confection';
+      case 'PRET':
+        return 'Prêt';
+      case 'LIVRE':
+        return 'Livré';
+      default:
+        return status ?? '';
+    }
+  }
+
   Future<void> _generateAndSharePdf() async {
     final order = _order;
     if (order == null) return;
@@ -256,7 +271,7 @@ Géré avec la plateforme NDOKETE 🇸🇳
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('NDOKETE 🇸🇳', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
+                        pw.Text('NDOKETE', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
                         pw.SizedBox(height: 4),
                         pw.Text('Plateforme de Gestion & Marketplace pour Artisans', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
                       ],
@@ -287,11 +302,17 @@ Géré avec la plateforme NDOKETE 🇸🇳
                 pw.Table.fromTextArray(
                   headers: ['Description / Article', 'Statut', 'Montant (FCFA)'],
                   data: [
-                    [title, order['status'] ?? 'EN_COURS', '${_currency.format(amount)} FCFA'],
+                    [title, _formatStatusLabel(order['status'] as String?), '${_currency.format(amount)} FCFA'],
                   ],
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 11),
                   headerDecoration: const pw.BoxDecoration(color: PdfColors.orange800),
-                  cellHeight: 30,
+                  cellStyle: const pw.TextStyle(fontSize: 10),
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(3.5),
+                    1: const pw.FlexColumnWidth(2.0),
+                    2: const pw.FlexColumnWidth(2.2),
+                  },
+                  cellPadding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight},
                 ),
                 pw.SizedBox(height: 20),
@@ -334,7 +355,7 @@ Géré avec la plateforme NDOKETE 🇸🇳
                 pw.Spacer(),
                 pw.Divider(color: PdfColors.grey400),
                 pw.Center(
-                  child: pw.Text('Merci pour votre confiance ! - Généré via NDOKETE 🇸🇳', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                  child: pw.Text('Merci pour votre confiance ! - Généré via NDOKETE (Sénégal)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
                 ),
               ],
             ),
