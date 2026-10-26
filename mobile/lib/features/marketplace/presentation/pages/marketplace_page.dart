@@ -593,7 +593,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
     final items = order['items'] as List? ?? [];
     final payments = order['payments'] as List? ?? [];
     final status = order['status'] as String? ?? 'EN_ATTENTE';
-    final isPaid = status != 'EN_ATTENTE' || payments.any((p) => (p is Map) && p['status'] == 'PAYE');
+    final isPaid = payments.any((p) => (p is Map) && p['status'] == 'PAYE');
     final statuses = ['EN_ATTENTE', 'EN_COURS', 'PRET', 'LIVRE'];
     final currentIdx = statuses.indexOf(status);
 
