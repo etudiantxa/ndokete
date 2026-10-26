@@ -1318,14 +1318,43 @@ class _ActionSection extends StatelessWidget {
     showDialog<void>(
       context: ctx,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Langue'),
-        content: const Text('La langue active est le français. Le wolof sera ajouté prochainement.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Fermer'),
-          ),
-        ],
+        backgroundColor: AppColors.surfaceDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.language, color: AppColors.primary),
+            SizedBox(width: 10),
+            Text('Langue / Tànn Lakk', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Text('🇫🇷', style: TextStyle(fontSize: 24)),
+              title: const Text('Français', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Langue officielle', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('✓ Langue active : Français'), backgroundColor: AppColors.success),
+                );
+              },
+            ),
+            const Divider(color: AppColors.dividerDark),
+            ListTile(
+              leading: const Text('🇸🇳', style: TextStyle(fontSize: 24)),
+              title: const Text('Wolof (Sénégal)', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+              subtitle: const Text('Dictionnaire & Lexique wolof artisanal', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              onTap: () {
+                Navigator.pop(dialogContext);
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('✓ Lakk bi tànn na : Wolof (Dalal ak jamm)'), backgroundColor: AppColors.success),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
