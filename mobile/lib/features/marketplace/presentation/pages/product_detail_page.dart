@@ -358,7 +358,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       : const Text('Passer la commande (Paiement ultérieur)', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
-              ),
             ],
           ),
         ),
