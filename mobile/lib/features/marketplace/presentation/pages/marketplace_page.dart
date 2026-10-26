@@ -591,7 +591,9 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
   void _showOrderDetails(Map<String, dynamic> order) {
     final items = order['items'] as List? ?? [];
+    final payments = order['payments'] as List? ?? [];
     final status = order['status'] as String? ?? 'EN_ATTENTE';
+    final isPaid = status != 'EN_ATTENTE' || payments.any((p) => (p is Map) && p['status'] == 'PAYE');
     final statuses = ['EN_ATTENTE', 'EN_COURS', 'PRET', 'LIVRE'];
     final currentIdx = statuses.indexOf(status);
 
@@ -723,7 +725,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
             ),
             const SizedBox(height: 20),
 
-            if (status == 'EN_ATTENTE') ...[
+            if (!isPaid) ...[
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
