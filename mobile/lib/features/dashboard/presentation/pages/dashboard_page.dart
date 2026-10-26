@@ -224,7 +224,6 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-  }
 }
 
 class _KpiCard extends StatelessWidget {
