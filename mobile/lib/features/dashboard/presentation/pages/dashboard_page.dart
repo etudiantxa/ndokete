@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/wolof_dictionary.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -47,30 +48,35 @@ class _DashboardPageState extends State<DashboardPage> {
         ? (context.read<AuthBloc>().state as AuthAuthenticated).user
         : null;
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(user?.businessName ?? 'Artisan'),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                  : RefreshIndicator(
-                      onRefresh: _loadDashboard,
-                      color: AppColors.primary,
-                      child: _buildBody(),
-                    ),
+    return ValueListenableBuilder<String>(
+      valueListenable: WolofDictionary.currentLanguage,
+      builder: (context, lang, _) {
+        return Scaffold(
+          backgroundColor: AppColors.backgroundDark,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(user?.businessName ?? 'Artisan'),
+                Expanded(
+                  child: _loading
+                      ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                      : RefreshIndicator(
+                          onRefresh: _loadDashboard,
+                          color: AppColors.primary,
+                          child: _buildBody(),
+                        ),
+                ),
+                _buildBottomNav(),
+              ],
             ),
-            _buildBottomNav(),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: AppColors.primary,
-        onPressed: () => context.push('/orders/new'),
-        child: const Icon(Icons.add, color: Colors.black, size: 28),
-      ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            backgroundColor: AppColors.primary,
+            onPressed: () => context.push('/orders/new'),
+            child: const Icon(Icons.add, color: Colors.black, size: 28),
+          ),
+        );
+      },
     );
   }
 
@@ -88,7 +94,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 style: TextStyle(color: AppColors.primary, fontSize: 10, letterSpacing: 1.5),
               ),
               Text(
-                'Salam, $name',
+                '${WolofDictionary.tr("Salam")}, $name',
                 style: const TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 22,
@@ -210,13 +216,14 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _NavItem(icon: Icons.dashboard_outlined, label: 'Accueil', selected: _selectedTab == 0, onTap: () => setState(() => _selectedTab = 0)),
-          _NavItem(icon: Icons.receipt_long_outlined, label: 'Commandes', selected: _selectedTab == 1, onTap: () { setState(() => _selectedTab = 1); context.push('/orders'); }),
-          _NavItem(icon: Icons.account_balance_wallet_outlined, label: 'Finance', selected: _selectedTab == 2, onTap: () { setState(() => _selectedTab = 2); context.push('/finance'); }),
-          _NavItem(icon: Icons.person_outline, label: 'Profil', selected: _selectedTab == 3, onTap: () { setState(() => _selectedTab = 3); context.push('/profile'); }),
+          _NavItem(icon: Icons.dashboard_outlined, label: WolofDictionary.tr('Accueil'), selected: _selectedTab == 0, onTap: () => setState(() => _selectedTab = 0)),
+          _NavItem(icon: Icons.receipt_long_outlined, label: WolofDictionary.tr('Commandes'), selected: _selectedTab == 1, onTap: () { setState(() => _selectedTab = 1); context.push('/orders'); }),
+          _NavItem(icon: Icons.account_balance_wallet_outlined, label: WolofDictionary.tr('Finance'), selected: _selectedTab == 2, onTap: () { setState(() => _selectedTab = 2); context.push('/finance'); }),
+          _NavItem(icon: Icons.person_outline, label: WolofDictionary.tr('Profil'), selected: _selectedTab == 3, onTap: () { setState(() => _selectedTab = 3); context.push('/profile'); }),
         ],
       ),
     );
+  }
   }
 }
 

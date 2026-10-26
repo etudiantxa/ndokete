@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/wolof_dictionary.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -1335,6 +1336,7 @@ class _ActionSection extends StatelessWidget {
               title: const Text('Français', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
               subtitle: const Text('Langue officielle', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               onTap: () {
+                WolofDictionary.setLanguage('fr');
                 Navigator.pop(dialogContext);
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(content: Text('✓ Langue active : Français'), backgroundColor: AppColors.success),
@@ -1347,6 +1349,7 @@ class _ActionSection extends StatelessWidget {
               title: const Text('Wolof (Sénégal)', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
               subtitle: const Text('Dictionnaire & Lexique wolof artisanal', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               onTap: () {
+                WolofDictionary.setLanguage('wo');
                 Navigator.pop(dialogContext);
                 ScaffoldMessenger.of(ctx).showSnackBar(
                   const SnackBar(content: Text('✓ Lakk bi tànn na : Wolof (Dalal ak jamm)'), backgroundColor: AppColors.success),
