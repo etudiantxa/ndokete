@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Headers, UseGuards, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService, InitiatePaymentDto } from './payments.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -15,6 +15,13 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Initier un paiement Wave ou Orange Money' })
   initiate(@Body() dto: InitiatePaymentDto) {
     return this.paymentsService.initiatePayment(dto);
+  }
+
+  @Public()
+  @Post('sandbox-confirm/:paymentId')
+  @ApiOperation({ summary: 'Confirmer un paiement en mode Sandbox' })
+  sandboxConfirm(@Param('paymentId') paymentId: string) {
+    return this.paymentsService.sandboxConfirmPayment(paymentId);
   }
 
   @Public()

@@ -227,11 +227,122 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
+  void _showLeaveReviewDialog(BuildContext context, String artisanId) {
+    int rating = 5;
+    final commentCtrl = TextEditingController();
+    bool submitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.star, color: AppColors.primary, size: 24),
+                  SizedBox(width: 10),
+                  Text('Donner votre avis sur l\'artisan',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Sélectionnez votre note (1 à 5 étoiles) :',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  final starNum = index + 1;
+                  return IconButton(
+                    icon: Icon(
+                      starNum <= rating ? Icons.star : Icons.star_border,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
+                    onPressed: () => setSheetState(() => rating = starNum),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: commentCtrl,
+                maxLines: 3,
+                style: const TextStyle(color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'Écrivez votre commentaire (ex: Travail soigné et livraison rapide !)',
+                  hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  filled: true,
+                  fillColor: AppColors.cardDark,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: submitting ? null : () async {
+                    setSheetState(() => submitting = true);
+                    try {
+                      final client = getIt<ApiClient>();
+                      await client.post('/reviews', data: {
+                        'artisanId': artisanId,
+                        'rating': rating,
+                        'comment': commentCtrl.text.trim(),
+                      });
+                      if (ctx.mounted) Navigator.pop(sheetCtx);
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('✓ Merci ! Votre avis a été enregistré.'),
+                            backgroundColor: AppColors.success,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      setSheetState(() => submitting = false);
+                      if (ctx.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Erreur : $e'), backgroundColor: AppColors.error),
+                        );
+                      }
+                    }
+                  },
+                  icon: submitting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : const Icon(Icons.send),
+                  label: Text(submitting ? 'Envoi...' : 'Publier mon avis', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showCheckoutDialog(BuildContext context, Map<String, dynamic> product, int quantity) {
     final addressCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
-    String selectedMethod = 'WAVE';
     bool isSubmitting = false;
     final totalAmount = (product['price'] as num) * quantity;
 
@@ -700,6 +811,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 color: AppColors.primary, fontSize: 12)),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () {
+                      final artisanId = product?['artisanId'];
+                      if (artisanId != null) {
+                        _showLeaveReviewDialog(context, artisanId.toString());
+                      }
+                    },
+                    icon: const Icon(Icons.star_outline, size: 18),
+                    label: const Text('Donner votre avis (1 à 5 étoiles)', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 20),
