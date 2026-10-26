@@ -773,6 +773,25 @@ class _MarketplacePageState extends State<MarketplacePage> {
                 ),
               ),
               const SizedBox(height: 12),
+            ] else ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.success),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline, color: AppColors.success, size: 20),
+                    SizedBox(width: 8),
+                    Text('Paiement déjà effectué', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
             ],
 
             SizedBox(
