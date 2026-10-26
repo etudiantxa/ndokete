@@ -294,57 +294,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   prefixIcon: Icon(Icons.note_outlined, color: AppColors.textSecondary),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              const Text('Moyen de paiement :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setSheetState(() => selectedMethod = 'WAVE'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selectedMethod == 'WAVE' ? AppColors.secondary.withValues(alpha: 0.2) : AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: selectedMethod == 'WAVE' ? AppColors.secondary : AppColors.dividerDark),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.waves, color: AppColors.secondary, size: 18),
-                            const SizedBox(width: 8),
-                            Text('Wave', style: TextStyle(color: selectedMethod == 'WAVE' ? AppColors.secondary : AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setSheetState(() => selectedMethod = 'ORANGE_MONEY'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange.withValues(alpha: 0.2) : AppColors.cardDark,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.dividerDark),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.phone_android, color: Colors.orange, size: 18),
-                            const SizedBox(width: 8),
-                            Text('Orange Money', style: TextStyle(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
               const SizedBox(height: 24),
 
               SizedBox(
@@ -362,16 +311,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       );
                       return;
                     }
-
-                    final confirmed = await _showPaymentSimulationDialog(
-                      context: context,
-                      planLabel: product['name'] ?? 'Article',
-                      amount: totalAmount.toInt(),
-                      method: selectedMethod,
-                      phone: phoneCtrl.text.trim(),
-                    );
-
-                    if (confirmed != true) return;
 
                     setSheetState(() => isSubmitting = true);
                     try {
@@ -391,7 +330,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         Navigator.pop(sheetCtx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('✓ Paiement validé & Commande créée avec succès !'),
+                            content: Text('✓ Commande passée ! L\'artisan a été notifié. Vous pourrez payer depuis "Mes commandes".'),
                             backgroundColor: AppColors.success,
                           ),
                         );
@@ -416,8 +355,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   },
                   child: isSubmitting
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                      : Text('Payer ${(_currency.format(totalAmount))} FCFA & Commander', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      : const Text('Passer la commande (Paiement ultérieur)', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
+              ),
               ),
             ],
           ),
