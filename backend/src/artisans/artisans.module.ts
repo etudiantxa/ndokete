@@ -11,6 +11,8 @@ import { TransactionsController } from './transactions/transactions.controller';
 import { TransactionsService } from './transactions/transactions.service';
 import { AiMeasurementsController } from './ai/ai-measurements.controller';
 import { AiMeasurementsService } from './ai/ai-measurements.service';
+import { TeamController } from './team/team.controller';
+import { TeamService } from './team/team.service';
 
 @Module({
   controllers: [
@@ -20,6 +22,7 @@ import { AiMeasurementsService } from './ai/ai-measurements.service';
     StockController,
     TransactionsController,
     AiMeasurementsController,
+    TeamController,
   ],
   providers: [
     ArtisansService,
@@ -28,6 +31,7 @@ import { AiMeasurementsService } from './ai/ai-measurements.service';
     StockService,
     TransactionsService,
     AiMeasurementsService,
+    TeamService,
   ],
   exports: [ArtisansService],
 })

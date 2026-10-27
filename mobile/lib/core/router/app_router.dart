@@ -26,6 +26,8 @@ import '../../features/notifications/presentation/pages/reminders_config_page.da
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/sync/presentation/pages/sync_status_page.dart';
+import '../../features/artisans/presentation/pages/team_page.dart';
+import '../../features/artisans/presentation/pages/subscription_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -172,6 +174,12 @@ class AppRouter {
 
           // ── Synchronisation Hors-Ligne ───────────────────────────────────────
           GoRoute(path: '/sync', builder: (_, __) => const SyncStatusPage()),
+
+          // ── Gestion d'Équipe & Apprentis ─────────────────────────────────────
+          GoRoute(path: '/team', builder: (_, __) => const TeamPage()),
+
+          // ── Abonnement & Facturation Pro ─────────────────────────────────────
+          GoRoute(path: '/subscription', builder: (_, __) => const SubscriptionPage()),
         ],
         errorBuilder: (context, state) => Scaffold(
           backgroundColor: const Color(0xFF0F1117),

@@ -70,6 +70,7 @@ model Artisan {
   stockItems        StockItem[]
   subscription      Subscription?
   transactions      Transaction[]
+  teamMembers       TeamMember[]
 
   @@map("artisans")
 }
@@ -457,4 +458,17 @@ enum SyncStatus {
   SYNCED
   FAILED
   CONFLICT
+}
+
+model TeamMember {
+  id                String   @id @default(uuid())
+  artisanId         String
+  name              String
+  phone             String
+  role              String   @default("Apprenti")
+  canManageFinances Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  artisan           Artisan  @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+
+  @@map("team_members")
 }

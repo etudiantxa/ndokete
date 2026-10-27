@@ -1217,6 +1217,20 @@ class _ActionSection extends StatelessWidget {
             onTap: () => outerCtx.push('/sync'),
           ),
           const Divider(height: 1, color: AppColors.dividerDark),
+          if (isArtisan) ...[
+            _ActionItem(
+              icon: Icons.group_outlined,
+              label: 'Gestion d’Équipe & Apprentis',
+              onTap: () => outerCtx.push('/team'),
+            ),
+            const Divider(height: 1, color: AppColors.dividerDark),
+            _ActionItem(
+              icon: Icons.workspace_premium_outlined,
+              label: 'Mon Abonnement & Facturation Pro',
+              onTap: () => outerCtx.push('/subscription'),
+            ),
+            const Divider(height: 1, color: AppColors.dividerDark),
+          ],
           _ActionItem(
             icon: Icons.language,
             label: 'Langue / Tànn Lakk',
