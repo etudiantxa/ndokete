@@ -1219,8 +1219,22 @@ class _ActionSection extends StatelessWidget {
           const Divider(height: 1, color: AppColors.dividerDark),
           _ActionItem(
             icon: Icons.language,
-            label: 'Langue (Français)',
+            label: 'Langue / Tànn Lakk',
             onTap: () => _showLanguageDialog(outerCtx),
+          ),
+          const Divider(height: 1, color: AppColors.dividerDark),
+          _ActionItem(
+            icon: AppTheme.isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            label: AppTheme.isDark ? 'Mode Thème Clair' : 'Mode Thème Sombre',
+            onTap: () {
+              AppTheme.toggleTheme();
+              ScaffoldMessenger.of(outerCtx).showSnackBar(
+                SnackBar(
+                  content: Text(AppTheme.isDark ? '✓ Thème Sombre activé' : '✓ Thème Clair activé'),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
           ),
           const Divider(height: 1, color: AppColors.dividerDark),
           _ActionItem(

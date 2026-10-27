@@ -43,6 +43,49 @@ class AppColors {
 }
 
 class AppTheme {
+  static final ValueNotifier<ThemeMode> currentTheme = ValueNotifier<ThemeMode>(ThemeMode.dark);
+
+  static void toggleTheme() {
+    currentTheme.value = currentTheme.value == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+  }
+
+  static bool get isDark => currentTheme.value == ThemeMode.dark;
+
+  static ThemeData get light => ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        fontFamily: 'Poppins',
+        colorScheme: const ColorScheme.light(
+          primary: AppColors.primary,
+          secondary: AppColors.secondary,
+          surface: AppColors.surfaceLight,
+          error: AppColors.error,
+          onPrimary: AppColors.textOnPrimary,
+          onSecondary: Colors.black,
+          onSurface: Colors.black,
+        ),
+        scaffoldBackgroundColor: AppColors.backgroundLight,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: AppColors.surfaceLight,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+          iconTheme: IconThemeData(color: Colors.black),
+        ),
+        cardTheme: CardThemeData(
+          color: AppColors.cardLight,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+
   static ThemeData get dark => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,

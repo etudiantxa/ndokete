@@ -145,26 +145,31 @@ class _NdoketeAppState extends State<NdoketeApp> {
       );
     }
 
-    return BlocProvider.value(
-      value: widget.authBloc,
-      child: MaterialApp.router(
-        title: 'NDOKETE',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeMode.dark,
-         routerConfig: _router,
-        locale: const Locale('fr', 'FR'),
-        supportedLocales: const [
-          Locale('fr', 'FR'),
-          Locale('wo'), // Wolof
-        ],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppTheme.currentTheme,
+      builder: (context, themeMode, _) {
+        return BlocProvider.value(
+          value: widget.authBloc,
+          child: MaterialApp.router(
+            title: 'NDOKETE',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeMode,
+            routerConfig: _router,
+            locale: const Locale('fr', 'FR'),
+            supportedLocales: const [
+              Locale('fr', 'FR'),
+              Locale('wo'), // Wolof
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+          ),
+        );
+      },
     );
   }
 }
