@@ -21,7 +21,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
   bool _ordersLoading = false;
   bool _isArtisan = false;
   List<dynamic> _marketplaceOrders = [];
+  List<dynamic> _allProducts = [];
   String _selectedCategory = 'Tout';
+  String _sortBy = 'RECENT';
+  String _selectedLocation = 'Toutes';
+  double _maxPrice = 200000;
   final _searchCtrl = TextEditingController();
   final _currency = NumberFormat('#,###', 'fr_FR');
   late int _selectedNav;
@@ -77,13 +81,177 @@ class _MarketplacePageState extends State<MarketplacePage> {
       } else if (payload is Map && payload['data'] is List) {
         productList = payload['data'] as List;
       }
-      setState(() {
-        _products = productList;
-        _loading = false;
-      });
+      _allProducts = productList;
+      _applyFiltersAndSort();
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  void _applyFiltersAndSort() {
+    var filtered = List<Map<String, dynamic>>.from(
+      _allProducts.map((p) => p as Map<String, dynamic>),
+    );
+
+    filtered = filtered.where((p) {
+      final price = (p['price'] as num?)?.toDouble() ?? 0;
+      return price <= _maxPrice;
+    }).toList();
+
+    if (_selectedLocation != 'Toutes') {
+      filtered = filtered.where((p) {
+        final loc = (p['location'] ?? p['artisan']?['quarter'] ?? '').toString();
+        return loc.toLowerCase().contains(_selectedLocation.toLowerCase());
+      }).toList();
+    }
+
+    if (_sortBy == 'PRIX_ASC') {
+      filtered.sort((a, b) => ((a['price'] as num?) ?? 0).compareTo((b['price'] as num?) ?? 0));
+    } else if (_sortBy == 'PRIX_DESC') {
+      filtered.sort((a, b) => ((b['price'] as num?) ?? 0).compareTo((a['price'] as num?) ?? 0));
+    }
+
+    setState(() {
+      _products = filtered;
+      _loading = false;
+    });
+  }
+
+  void _showAdvancedFilterDialog() {
+    String tempSort = _sortBy;
+    String tempLocation = _selectedLocation;
+    double tempMaxPrice = _maxPrice;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(sheetCtx).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.tune, color: AppColors.primary, size: 24),
+                      SizedBox(width: 10),
+                      Text('Filtres Avancés & Tri',
+                          style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setSheetState(() {
+                        tempSort = 'RECENT';
+                        tempLocation = 'Toutes';
+                        tempMaxPrice = 200000;
+                      });
+                    },
+                    child: const Text('Réinitialiser', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              const Text('Trier par :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Plus récents'),
+                    selected: tempSort == 'RECENT',
+                    selectedColor: AppColors.primary,
+                    onSelected: (sel) => setSheetState(() => tempSort = 'RECENT'),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Prix : croissant'),
+                    selected: tempSort == 'PRIX_ASC',
+                    selectedColor: AppColors.primary,
+                    onSelected: (sel) => setSheetState(() => tempSort = 'PRIX_ASC'),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Prix : décroissant'),
+                    selected: tempSort == 'PRIX_DESC',
+                    selectedColor: AppColors.primary,
+                    onSelected: (sel) => setSheetState(() => tempSort = 'PRIX_DESC'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              const Text('Ville / Quartier :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: ['Toutes', 'Dakar', 'Thiès', 'Saint-Louis', 'Touba'].map((loc) {
+                  return ChoiceChip(
+                    label: Text(loc),
+                    selected: tempLocation == loc,
+                    selectedColor: AppColors.primary,
+                    onSelected: (sel) => setSheetState(() => tempLocation = loc),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Prix maximum :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                  Text('${_currency.format(tempMaxPrice.toInt())} FCFA', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              Slider(
+                value: tempMaxPrice,
+                min: 5000,
+                max: 200000,
+                divisions: 39,
+                activeColor: AppColors.primary,
+                inactiveColor: AppColors.cardDark,
+                onChanged: (val) => setSheetState(() => tempMaxPrice = val),
+              ),
+              const SizedBox(height: 20),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _sortBy = tempSort;
+                      _selectedLocation = tempLocation;
+                      _maxPrice = tempMaxPrice;
+                    });
+                    Navigator.pop(sheetCtx);
+                    _applyFiltersAndSort();
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Appliquer les filtres', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _loadMarketplaceOrders() async {
@@ -170,20 +338,28 @@ class _MarketplacePageState extends State<MarketplacePage> {
                   hintText: 'Trouvez l\'artisanat unique...',
                   prefixIcon:
                       const Icon(Icons.search, color: AppColors.textSecondary),
-                  suffixIcon: Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardDark,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      tooltip: 'Mes commandes',
-                      onPressed: _isArtisan
-                          ? () => _selectNavigation(2)
-                          : () => _selectNavigation(2),
-                      icon: const Icon(Icons.shopping_cart_outlined,
-                          color: AppColors.textSecondary, size: 18),
-                    ),
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Filtres avancés & Tri',
+                        onPressed: _showAdvancedFilterDialog,
+                        icon: const Icon(Icons.tune_outlined, color: AppColors.primary, size: 20),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          tooltip: 'Mes commandes',
+                          onPressed: () => _selectNavigation(2),
+                          icon: const Icon(Icons.shopping_cart_outlined,
+                              color: AppColors.textSecondary, size: 18),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 onChanged: _loadProducts,
