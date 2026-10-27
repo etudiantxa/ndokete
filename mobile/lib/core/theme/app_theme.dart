@@ -197,17 +197,6 @@ class AppTheme {
           space: 1,
         ),
       );
-
-  static ThemeData get light => dark.copyWith(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: AppColors.backgroundLight,
-        colorScheme: const ColorScheme.light(
-          primary: AppColors.primary,
-          secondary: AppColors.secondary,
-          surface: AppColors.surfaceLight,
-          error: AppColors.error,
-        ),
-      );
 }
 
 /// Extensions utilitaires sur BuildContext
