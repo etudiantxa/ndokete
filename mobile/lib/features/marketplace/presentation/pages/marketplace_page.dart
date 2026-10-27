@@ -98,10 +98,15 @@ class _MarketplacePageState extends State<MarketplacePage> {
       return price <= _maxPrice;
     }).toList();
 
+    final dakarQuarters = ['médina', 'medina', 'colobane', 'plateau', 'pikine', 'parcelles', 'grand yoff', 'dakar', 'fann', 'ngor', 'yoff', 'ouakam', 'mermoz', 'sacré-cœur', 'guédiawaye', 'rufisque'];
+
     if (_selectedLocation != 'Toutes') {
       filtered = filtered.where((p) {
-        final loc = (p['location'] ?? p['artisan']?['quarter'] ?? '').toString();
-        return loc.toLowerCase().contains(_selectedLocation.toLowerCase());
+        final loc = (p['location'] ?? p['artisan']?['quarter'] ?? '').toString().toLowerCase();
+        if (_selectedLocation == 'Dakar') {
+          return dakarQuarters.any((q) => loc.contains(q));
+        }
+        return loc.contains(_selectedLocation.toLowerCase());
       }).toList();
     }
 
@@ -197,7 +202,7 @@ class _MarketplacePageState extends State<MarketplacePage> {
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
-                children: ['Toutes', 'Dakar', 'Thiès', 'Saint-Louis', 'Touba'].map((loc) {
+                children: ['Toutes', 'Dakar', 'Médina', 'Thiès', 'Kaolack', 'Saint-Louis', 'Touba'].map((loc) {
                   return ChoiceChip(
                     label: Text(loc),
                     selected: tempLocation == loc,
