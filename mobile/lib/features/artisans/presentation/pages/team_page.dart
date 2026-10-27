@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -113,7 +112,7 @@ class _TeamPageState extends State<TeamPage> {
                     setSheetState(() => saving = true);
                     try {
                       final client = getIt<ApiClient>();
-                      await client.post('/artisans/team', data: {
+                      final resp = await client.post('/artisans/team', data: {
                         'name': nameCtrl.text.trim(),
                         'phone': phoneCtrl.text.trim(),
                         'role': role,
@@ -121,9 +120,34 @@ class _TeamPageState extends State<TeamPage> {
                       });
                       if (ctx.mounted) Navigator.pop(sheetCtx);
                       _loadTeam();
+
+                      final responseData = (resp.data as Map)['data'] as Map?;
+                      final tempPwd = responseData?['temporaryPassword'] ?? 'Demo1234!';
+
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('✓ Membre ajouté avec succès !'), backgroundColor: AppColors.success),
+                        showDialog(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            backgroundColor: AppColors.surfaceDark,
+                            title: const Text('Accès de connexion généré', style: TextStyle(color: AppColors.textPrimary)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('L’apprenti(e) ${nameCtrl.text.trim()} peut désormais se connecter sur l’application :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                                const SizedBox(height: 12),
+                                SelectableText('• Identifiant (Téléphone) : ${phoneCtrl.text.trim()}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 4),
+                                SelectableText('• Mot de passe provisoire : $tempPwd', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx),
+                                child: const Text('Fermer', style: TextStyle(color: AppColors.textSecondary)),
+                              ),
+                            ],
+                          ),
                         );
                       }
                     } catch (e) {
