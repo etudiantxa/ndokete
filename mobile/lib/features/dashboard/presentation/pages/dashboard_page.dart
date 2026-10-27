@@ -20,6 +20,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Map<String, dynamic>? _dashboardData;
   bool _loading = true;
   int _selectedTab = 0;
+  int _unreadNotifications = 0;
 
   final _currency = NumberFormat('#,###', 'fr_FR');
 
@@ -32,9 +33,17 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _loadDashboard() async {
     try {
       final client = getIt<ApiClient>();
-      final response = await client.get('/artisans/dashboard');
+      final responses = await Future.wait([
+        client.get('/artisans/dashboard'),
+        client.get('/notifications'),
+      ]);
+      final data = (responses[0].data as Map<String, dynamic>)['data'] as Map<String, dynamic>;
+      final notifsPayload = (responses[1].data as Map)['data'] as List? ?? [];
+      final unread = notifsPayload.where((n) => !(n as Map)['isRead']).length;
+
       setState(() {
-        _dashboardData = (response.data as Map<String, dynamic>)['data'] as Map<String, dynamic>;
+        _dashboardData = data;
+        _unreadNotifications = unread;
         _loading = false;
       });
     } catch (_) {
@@ -104,7 +113,10 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
           GestureDetector(
-            onTap: () => context.push('/notifications'),
+            onTap: () async {
+              await context.push('/notifications');
+              _loadDashboard();
+            },
             child: Container(
               width: 44,
               height: 44,
@@ -112,7 +124,25 @@ class _DashboardPageState extends State<DashboardPage> {
                 color: AppColors.cardDark,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.notifications_outlined, color: AppColors.textPrimary),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(Icons.notifications_outlined, color: AppColors.textPrimary),
+                  if (_unreadNotifications > 0)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: AppColors.error,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],
