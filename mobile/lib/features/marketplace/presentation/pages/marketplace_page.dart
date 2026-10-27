@@ -22,6 +22,10 @@ class _MarketplacePageState extends State<MarketplacePage> {
   bool _isArtisan = false;
   List<dynamic> _marketplaceOrders = [];
   List<dynamic> _allProducts = [];
+  int _currentPage = 1;
+  int _totalPages = 1;
+  bool _isLoadingMore = false;
+  bool _hasMorePages = true;
   String _selectedCategory = 'Tout';
   String _sortBy = 'RECENT';
   String _selectedLocation = 'Toutes';
@@ -61,12 +65,23 @@ class _MarketplacePageState extends State<MarketplacePage> {
     _loadProducts();
   }
 
-  Future<void> _loadProducts([String? search]) async {
+  Future<void> _loadProducts([String? search, bool isLoadMore = false]) async {
     if (!mounted) return;
-    setState(() => _loading = true);
+
+    if (isLoadMore) {
+      if (_isLoadingMore || !_hasMorePages) return;
+      setState(() => _isLoadingMore = true);
+    } else {
+      _currentPage = 1;
+      _hasMorePages = true;
+      setState(() => _loading = true);
+    }
+
     try {
       final client = getIt<ApiClient>();
       final params = {
+        'page': _currentPage,
+        'limit': 12,
         if (_selectedCategory != 'Tout') 'category': _selectedCategory,
         if (search != null && search.isNotEmpty) 'search': search,
       };
@@ -74,17 +89,50 @@ class _MarketplacePageState extends State<MarketplacePage> {
           ? await client.get('/marketplace/my-shop', params: params)
           : await client.get('/marketplace', params: params);
       if (!mounted) return;
-      final payload = (response.data as Map)['data'];
-      List<dynamic> productList = [];
-      if (payload is List) {
-        productList = payload;
-      } else if (payload is Map && payload['data'] is List) {
-        productList = payload['data'] as List;
+
+      final resMap = response.data as Map;
+      final payload = resMap['data'];
+      final meta = resMap['meta'] as Map?;
+      if (meta != null) {
+        _totalPages = meta['totalPages'] as int? ?? 1;
+        _hasMorePages = _currentPage < _totalPages;
       }
-      _allProducts = productList;
+
+      List<dynamic> newProducts = [];
+      if (payload is List) {
+        newProducts = payload;
+      } else if (payload is Map && payload['data'] is List) {
+        newProducts = payload['data'] as List;
+      }
+
+      if (isLoadMore) {
+        _allProducts.addAll(newProducts);
+      } else {
+        _allProducts = newProducts;
+      }
+
       _applyFiltersAndSort();
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _isLoadingMore = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _isLoadingMore = false;
+        });
+      }
+    }
+  }
+
+  void _loadNextPage() {
+    if (_hasMorePages && !_isLoadingMore) {
+      _currentPage++;
+      _loadProducts(_searchCtrl.text, true);
     }
   }
 
@@ -563,6 +611,41 @@ class _MarketplacePageState extends State<MarketplacePage> {
                                       crossAxisSpacing: 12,
                                       mainAxisSpacing: 12,
                                     ),
+                                  ),
+                                ),
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                                    child: _hasMorePages
+                                        ? SizedBox(
+                                            width: double.infinity,
+                                            child: OutlinedButton.icon(
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: AppColors.primary,
+                                                side: const BorderSide(color: AppColors.primary),
+                                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                              ),
+                                              onPressed: _isLoadingMore ? null : _loadNextPage,
+                                              icon: _isLoadingMore
+                                                  ? const SizedBox(
+                                                      width: 16,
+                                                      height: 16,
+                                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                                                  : const Icon(Icons.keyboard_arrow_down, size: 20),
+                                              label: Text(
+                                                _isLoadingMore
+                                                    ? 'Chargement...'
+                                                    : 'Charger plus de produits (Page $_currentPage / $_totalPages)',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              ),
+                                            ),
+                                          )
+                                        : Center(
+                                            child: Text(
+                                              '✓ Tous les produits ont été chargés (Page $_currentPage / $_totalPages)',
+                                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                            ),
+                                          ),
                                   ),
                                 ),
                                 const SliverToBoxAdapter(
