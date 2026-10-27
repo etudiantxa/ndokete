@@ -10,7 +10,8 @@ RUN npm install
 COPY backend/ ./
 
 RUN npx prisma generate
+RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npx", "nest", "start"]
+CMD ["node", "dist/main.js"]
