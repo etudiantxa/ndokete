@@ -355,7 +355,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
               children: [
                 pw.TableRow(
-                  decoration: const pw.BoxDecoration(color: PdfColor.fromHex('#F0F0F0')),
+                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                   children: [
                     pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Description du Plan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
                     pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Moyen de Paiement', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
