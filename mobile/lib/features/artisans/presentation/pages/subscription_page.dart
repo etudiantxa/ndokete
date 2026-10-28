@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -15,9 +17,6 @@ class SubscriptionPage extends StatefulWidget {
 class _SubscriptionPageState extends State<SubscriptionPage> {
   Map<String, dynamic>? _subData;
   bool _loading = true;
-  bool _upgrading = false;
-
-  final _currency = NumberFormat('#,###', 'fr_FR');
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _upgradePlan(String plan) async {
-    setState(() => _upgrading = true);
     try {
       final client = getIt<ApiClient>();
       await client.post('/subscriptions/upgrade', data: {
@@ -49,7 +47,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       });
       await _loadSubscription();
       if (mounted) {
-        setState(() => _upgrading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✓ Abonnement mis à jour avec succès !'),
@@ -59,12 +56,52 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _upgrading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur : $e'), backgroundColor: AppColors.error),
         );
       }
     }
+  }
+
+  Future<void> _downloadReceipt(String plan) async {
+    final pdf = pw.Document();
+    final amount = plan == 'PREMIUM' ? '5 000 FCFA' : plan == 'PREMIUM_PLUS' ? '10 000 FCFA' : '0 FCFA';
+
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('NDOKETE PRO', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.orange)),
+                pw.Text('REÇU D’ABONNEMENT', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+              ],
+            ),
+            pw.SizedBox(height: 20),
+            pw.Divider(color: PdfColors.grey),
+            pw.SizedBox(height: 10),
+            pw.Text('Date : ${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now())}', style: const pw.TextStyle(fontSize: 12)),
+            pw.Text('Type d’abonnement : $plan', style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.Text('Montant réglé : $amount', style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.Text('Moyen de paiement : Wave Mobile Money', style: const pw.TextStyle(fontSize: 12)),
+            pw.Text('Statut : PAYÉ (Validé)', style: pw.TextStyle(fontSize: 12, color: PdfColors.green, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 30),
+            pw.Divider(color: PdfColors.grey),
+            pw.Spacer(),
+            pw.Center(
+              child: pw.Text('Merci d’utiliser NDOKETE pour la gestion de votre atelier !', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Reçu_Abonnement_NDOKETE.pdf',
+    );
   }
 
   @override
@@ -123,6 +160,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                             : 'Accès illimité actif',
                         style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                       ),
+                      const SizedBox(height: 16),
+                      if (plan != 'GRATUIT' && plan != 'FREEMIUM')
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                          ),
+                          onPressed: () => _downloadReceipt(plan),
+                          icon: const Icon(Icons.download, size: 16),
+                          label: const Text('Télécharger le reçu PDF'),
+                        ),
                     ],
                   ),
                 ),
@@ -193,7 +241,7 @@ class _PlanCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spanBetween,
             children: [
               Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
               Text(price, style: const TextStyle(color: AppColors.primary, fontSize: 15, fontWeight: FontWeight.bold)),
