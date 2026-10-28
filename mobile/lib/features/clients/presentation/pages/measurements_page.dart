@@ -344,6 +344,30 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                     )).toList(),
               ),
               const SizedBox(height: 12),
+              // Guide dictée vocale clavier
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.secondary),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.mic, color: AppColors.secondary, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Appuyez sur le micro 🎙️ de votre clavier (Gboard)',
+                        style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+
               TextField(
                 controller: transcriptCtrl,
                 maxLines: 4,
