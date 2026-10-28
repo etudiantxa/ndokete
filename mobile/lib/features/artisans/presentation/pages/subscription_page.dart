@@ -171,11 +171,91 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> _upgradePlan(String plan, int amount) async {
+    String selectedMethod = 'WAVE';
+
+    final methodChosen = await showDialog<String>(
+      context: context,
+      builder: (methodCtx) => StatefulBuilder(
+        builder: (ctx, setMethodState) => AlertDialog(
+          backgroundColor: AppColors.surfaceDark,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Choisir le moyen de paiement', style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Sélectionnez votre opérateur Mobile Money :', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setMethodState(() => selectedMethod = 'WAVE'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'WAVE' ? AppColors.secondary.withValues(alpha: 0.2) : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: selectedMethod == 'WAVE' ? AppColors.secondary : AppColors.dividerDark),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.waves, color: AppColors.secondary, size: 18),
+                            SizedBox(width: 8),
+                            Text('Wave', style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setMethodState(() => selectedMethod = 'ORANGE_MONEY'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange.withValues(alpha: 0.2) : AppColors.cardDark,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.dividerDark),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.phone_android, color: Colors.orange, size: 18),
+                            SizedBox(width: 8),
+                            Text('Orange Money', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(methodCtx),
+              child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+              onPressed: () => Navigator.pop(methodCtx, selectedMethod),
+              child: const Text('Continuer', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (methodChosen == null) return;
+
     final confirmed = await _showPaymentSimulationDialog(
       context: context,
       planLabel: 'Abonnement $plan Pro',
       amount: amount,
-      method: 'WAVE',
+      method: methodChosen,
       phone: '+221771234567',
     );
 
@@ -185,14 +265,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       final client = getIt<ApiClient>();
       await client.post('/subscriptions/upgrade', data: {
         'plan': plan,
-        'method': 'WAVE',
+        'method': methodChosen,
         'phone': '+221771234567',
       });
       await _loadSubscription();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✓ Paiement Mobile Money validé & Abonnement activé !'),
+          SnackBar(
+            content: Text('✓ Paiement $methodChosen validé & Abonnement activé !'),
             backgroundColor: AppColors.success,
           ),
         );
