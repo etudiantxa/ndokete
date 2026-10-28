@@ -37,7 +37,150 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     }
   }
 
-  Future<void> _upgradePlan(String plan) async {
+  Future<bool?> _showPaymentSimulationDialog({
+    required BuildContext context,
+    required String planLabel,
+    required int amount,
+    required String method,
+    required String phone,
+  }) {
+    final pinCtrl = TextEditingController();
+    bool isProcessing = false;
+    final isWave = method == 'WAVE';
+
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surfaceDark,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(
+                isWave ? Icons.waves : Icons.phone_android,
+                color: isWave ? AppColors.secondary : Colors.orange,
+                size: 26,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isWave ? 'Paiement Wave' : 'Paiement Orange Money',
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardDark,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerDark),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Abonnement :', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        Text(planLabel, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Montant :', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        Text('${NumberFormat('#,###', 'fr_FR').format(amount)} FCFA',
+                            style: TextStyle(
+                                color: isWave ? AppColors.secondary : Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Entrez votre code secret à 4 chiffres pour autoriser le prélèvement de l’abonnement :',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: pinCtrl,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 4,
+                autofocus: true,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    letterSpacing: 8),
+                decoration: const InputDecoration(
+                  hintText: '••••',
+                  counterText: '',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: isProcessing ? null : () => Navigator.pop(dialogCtx, false),
+              child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isWave ? AppColors.secondary : Colors.orange,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () async {
+                      if (pinCtrl.text.length < 4) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Veuillez entrer un code PIN à 4 chiffres.')),
+                        );
+                        return;
+                      }
+                      setDialogState(() => isProcessing = true);
+                      await Future<void>.delayed(const Duration(milliseconds: 1200));
+                      if (ctx.mounted) Navigator.pop(dialogCtx, true);
+                    },
+              child: isProcessing
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : const Text('Valider le Paiement', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _upgradePlan(String plan, int amount) async {
+    final confirmed = await _showPaymentSimulationDialog(
+      context: context,
+      planLabel: 'Abonnement $plan Pro',
+      amount: amount,
+      method: 'WAVE',
+      phone: '+221771234567',
+    );
+
+    if (confirmed != true) return;
+
     try {
       final client = getIt<ApiClient>();
       await client.post('/subscriptions/upgrade', data: {
@@ -49,7 +192,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✓ Abonnement mis à jour avec succès !'),
+            content: Text('✓ Paiement Mobile Money validé & Abonnement activé !'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -193,7 +336,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   price: '5 000 FCFA / mois',
                   features: const ['Clients illimités', 'Produits illimités', 'Assistant IA vocal', 'Statistiques financières'],
                   isCurrent: plan == 'PREMIUM',
-                  onTap: () => _upgradePlan('PREMIUM'),
+                  onTap: () => _upgradePlan('PREMIUM', 5000),
                   isFeatured: true,
                 ),
                 const SizedBox(height: 14),
@@ -203,7 +346,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   price: '10 000 FCFA / mois',
                   features: const ['Tout illimité + Support prioritaire', 'Badge Artisan Vétéran VIP', 'Coaching & Visibilité accrue'],
                   isCurrent: plan == 'PREMIUM_PLUS',
-                  onTap: () => _upgradePlan('PREMIUM_PLUS'),
+                  onTap: () => _upgradePlan('PREMIUM_PLUS', 10000),
                 ),
               ],
             ),
