@@ -9,8 +9,10 @@ class ApiClient {
 
   static String get _baseUrl {
     if (_configuredUrl.isNotEmpty) return _configuredUrl;
-    if (kIsWeb) return 'http://localhost:3000/api/v1';
-    return 'http://10.0.2.2:3000/api/v1';
+    if (kIsWeb) return 'http://localhost:4000/api/v1';
+    // Pour un vrai téléphone portable branché en USB, on pointe vers l'IP Wi-Fi du PC (192.168.1.13)
+    if (!kDebugMode) return 'http://192.168.1.13:4000/api/v1';
+    return 'http://10.0.2.2:4000/api/v1';
   }
 
   late final Dio dio;
@@ -72,9 +74,9 @@ class _AuthInterceptor extends Interceptor {
       try {
         final retryOptions = err.requestOptions;
         if (retryOptions.baseUrl.contains('localhost')) {
-          retryOptions.baseUrl = 'http://10.0.2.2:3000/api/v1';
+          retryOptions.baseUrl = 'http://10.0.2.2:4000/api/v1';
         } else if (retryOptions.baseUrl.contains('10.0.2.2')) {
-          retryOptions.baseUrl = 'http://192.168.1.13:3000/api/v1';
+          retryOptions.baseUrl = 'http://192.168.1.13:4000/api/v1';
         }
         final response = await dio.fetch(retryOptions);
         return handler.resolve(response);
