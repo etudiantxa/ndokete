@@ -9,10 +9,8 @@ class ApiClient {
 
   static String get _baseUrl {
     if (_configuredUrl.isNotEmpty) return _configuredUrl;
-    if (kIsWeb) return 'http://localhost:4000/api/v1';
-    // Pour un vrai téléphone portable branché en USB, on pointe vers l'IP Wi-Fi du PC (192.168.1.13)
-    if (!kDebugMode) return 'http://192.168.1.13:4000/api/v1';
-    return 'http://10.0.2.2:4000/api/v1';
+    // Utiliser le backend en ligne sur Render pour un accès universel sans contrainte de pare-feu
+    return 'https://ndokete.onrender.com/api/v1';
   }
 
   late final Dio dio;
