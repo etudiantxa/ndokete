@@ -12,6 +12,7 @@ import 'core/di/injection.dart';
 import 'core/router/app_router.dart';
 import 'core/storage/hive_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/inactivity_wrapper.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'firebase_options.dart';
 
@@ -150,23 +151,25 @@ class _NdoketeAppState extends State<NdoketeApp> {
       builder: (context, themeMode, _) {
         return BlocProvider.value(
           value: widget.authBloc,
-          child: MaterialApp.router(
-            title: 'NDOKETE',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.light,
-            darkTheme: AppTheme.dark,
-            themeMode: themeMode,
-            routerConfig: _router,
-            locale: const Locale('fr', 'FR'),
-            supportedLocales: const [
-              Locale('fr', 'FR'),
-              Locale('wo'), // Wolof
-            ],
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
+          child: InactivityWrapper(
+            child: MaterialApp.router(
+              title: 'NDOKETE',
+              debugShowCheckedModeBanner: false,
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
+              routerConfig: _router,
+              locale: const Locale('fr', 'FR'),
+              supportedLocales: const [
+                Locale('fr', 'FR'),
+                Locale('wo'), // Wolof
+              ],
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+            ),
           ),
         );
       },
