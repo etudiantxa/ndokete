@@ -30,14 +30,14 @@ services:
   backend:
     build: .
     ports:
-      - '3000:3000'
+      - '4000:3000'
     environment:
       - NODE_ENV=development
       - PORT=3000
       - DATABASE_URL=postgresql://ndokete:ndokete123@postgres:5432/ndokete_db?schema=public
       - REDIS_URL=redis://redis:6379
-      - JWT_ACCESS_SECRET=change_me_access_secret_very_long_and_random
-      - JWT_REFRESH_SECRET=change_me_refresh_secret_very_long_and_random
+      - JWT_ACCESS_SECRET=9d132a955e3253d08861a8b70e4db9a3b637088a99c6bc5a51868799164f5409
+      - JWT_REFRESH_SECRET=9ceddbcfc3b83c8de5e43f7f429a0526b3387611b7c9c2ddb9228a857b6d85f6
       - JWT_ACCESS_EXPIRES=60m
       - JWT_REFRESH_EXPIRES=7d
       - CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -47,7 +47,7 @@ services:
       - FIREBASE_PRIVATE_KEY=private_key
       - FIREBASE_CLIENT_EMAIL=email@ndokete.iam.gserviceaccount.com
       - NDOKETE_COMMISSION_PCT=10
-      - CORS_ORIGINS=http://localhost:3000,http://localhost:5000,https://ndokete.app
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:4000,http://localhost:5000,https://ndokete.app
     depends_on:
       postgres:
         condition: service_healthy
