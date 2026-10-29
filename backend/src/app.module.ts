@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import * as Joi from 'joi';
@@ -78,6 +80,10 @@ import { PrismaModule } from './common/prisma/prisma.module';
     }),
 
     PrismaModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60,
+      limit: 100,
+    }]),
     AuthModule,
     UsersModule,
     ArtisansModule,
@@ -89,6 +95,12 @@ import { PrismaModule } from './common/prisma/prisma.module';
     SubscriptionsModule,
     UploadsModule,
     ReviewsModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}
