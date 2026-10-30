@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
@@ -185,9 +186,15 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     );
   }
 
+  String _selectedPlanFilter = 'TOUT';
+
   List<dynamic> get _filteredArtisans {
-    if (_searchQuery.isEmpty) return _artisans;
     return _artisans.where((a) {
+      final plan = (a['plan'] as String? ?? 'FREE').toUpperCase();
+      if (_selectedPlanFilter != 'TOUT' && plan != _selectedPlanFilter) {
+        return false;
+      }
+      if (_searchQuery.isEmpty) return true;
       final name = (a['businessName'] ?? '').toString().toLowerCase();
       final email = (a['email'] ?? '').toString().toLowerCase();
       final quarter = (a['quarter'] ?? '').toString().toLowerCase();
@@ -195,6 +202,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           email.contains(_searchQuery) ||
           quarter.contains(_searchQuery);
     }).toList();
+  }
+
+  Widget _filterChip(String label, String value) {
+    final selected = _selectedPlanFilter == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.cardDark,
+      labelStyle: TextStyle(color: selected ? Colors.black : AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 12),
+      onSelected: (_) => setState(() => _selectedPlanFilter = value),
+    );
   }
 
   @override
@@ -461,6 +480,21 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _filterChip('Tous', 'TOUT'),
+                          const SizedBox(width: 8),
+                          _filterChip('Gratuit', 'FREE'),
+                          const SizedBox(width: 8),
+                          _filterChip('Premium', 'PREMIUM'),
+                          const SizedBox(width: 8),
+                          _filterChip('Premium+', 'PREMIUM_PLUS'),
+                        ],
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     ..._filteredArtisans.map((artisan) {
                       final plan = artisan['plan'] as String? ?? 'FREE';
@@ -560,16 +594,87 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       decoration: BoxDecoration(
                         color: AppColors.cardDark,
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.dividerDark),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Analyse de Rentabilité NDOKETE',
+                          const Row(
+                            children: [
+                              Icon(Icons.insights, color: AppColors.primary, size: 20),
+                              SizedBox(width: 8),
+                              Text('Croissance des Abonnements & Commissions',
+                                  style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15)),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 200,
+                            child: LineChart(
+                              LineChartData(
+                                gridData: FlGridData(
+                                  show: true,
+                                  drawVerticalLine: false,
+                                  getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.dividerDark, strokeWidth: 1),
+                                ),
+                                titlesData: FlTitlesData(
+                                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 24,
+                                      getTitlesWidget: (value, meta) {
+                                        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil'];
+                                        final index = value.toInt();
+                                        if (index >= 0 && index < months.length) {
+                                          return Text(months[index], style: const TextStyle(color: AppColors.textSecondary, fontSize: 11));
+                                        }
+                                        return const Text('');
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                borderData: FlBorderData(show: false),
+                                minX: 0,
+                                maxX: 6,
+                                minY: 0,
+                                maxY: 120,
+                                lineBarsData: [
+                                  LineChartBarData(
+                                    spots: const [
+                                      FlSpot(0, 20),
+                                      FlSpot(1, 40),
+                                      FlSpot(2, 55),
+                                      FlSpot(3, 75),
+                                      FlSpot(4, 90),
+                                      FlSpot(5, 105),
+                                      FlSpot(6, 120),
+                                    ],
+                                    isCurved: true,
+                                    color: AppColors.primary,
+                                    barWidth: 3,
+                                    dotData: const FlDotData(show: true),
+                                    belowBarData: BarAreaData(
+                                      show: true,
+                                      color: AppColors.primary.withValues(alpha: 0.15),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text('Analyse de Rentabilité NDOKETE',
                               style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontWeight: FontWeight.bold)),
-                          SizedBox(height: 8),
-                          Text(
+                          const SizedBox(height: 8),
+                          const Text(
                             'Chaque abonnement Premium rapporte 5 000 FCFA/mois récurrents. Chaque vente marketplace reverse 10% de commission à la plateforme.',
                             style: TextStyle(
                                 color: AppColors.textSecondary, fontSize: 12),
