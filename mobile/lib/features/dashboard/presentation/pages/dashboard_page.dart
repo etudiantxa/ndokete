@@ -65,7 +65,7 @@ class _DashboardPageState extends State<DashboardPage> {
           body: SafeArea(
             child: Column(
               children: [
-                _buildHeader(user?.businessName ?? 'Artisan'),
+                _buildHeader(user?.businessName ?? user?.email?.split('@').first ?? 'Atelier'),
                 Expanded(
                   child: _loading
                       ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
@@ -95,23 +95,27 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'NDOKETE WORKSPACE',
-                style: TextStyle(color: AppColors.primary, fontSize: 10, letterSpacing: 1.5),
-              ),
-              Text(
-                '${WolofDictionary.tr("Salam")}, $name',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'NDOKETE WORKSPACE',
+                  style: TextStyle(color: AppColors.primary, fontSize: 10, letterSpacing: 1.5),
                 ),
-              ),
-            ],
+                Text(
+                  '${WolofDictionary.tr("Salam")}, $name',
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 12),
           GestureDetector(
             onTap: () async {
               await context.push('/notifications');
