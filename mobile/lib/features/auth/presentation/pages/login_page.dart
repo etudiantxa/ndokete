@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/network/api_client.dart';
 import '../bloc/auth_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -173,6 +174,34 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Sélecteur de Serveur (Local vs En Ligne)
+                  Center(
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: ApiClient.useLocalServer.value ? AppColors.warning : AppColors.success,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          ApiClient.useLocalServer.value = !ApiClient.useLocalServer.value;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(ApiClient.useLocalServer.value
+                                ? '💻 Connecté au serveur Local (Docker : port 4000)'
+                                : '☁️ Connecté au serveur En Ligne (Render)'),
+                            backgroundColor: ApiClient.useLocalServer.value ? AppColors.warning : AppColors.success,
+                          ),
+                        );
+                      },
+                      icon: Icon(ApiClient.useLocalServer.value ? Icons.computer : Icons.cloud, size: 16),
+                      label: Text(
+                        ApiClient.useLocalServer.value ? 'Serveur : Local (Docker)' : 'Serveur : En Ligne (Render)',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ),
                 ],
               ),
