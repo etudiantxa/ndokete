@@ -219,12 +219,18 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: selectedMethod == 'ORANGE_MONEY' ? Colors.orange : AppColors.dividerDark),
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.phone_android, color: Colors.orange, size: 18),
-                            SizedBox(width: 8),
-                            Text('Orange Money', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                            const Icon(Icons.phone_android, color: Colors.orange, size: 16),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                'Orange Money',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 11),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -345,7 +351,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   children: [
                     pw.Text('DATE DE REGLEMENT :', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
                     pw.SizedBox(height: 4),
-                    pw.Text(DateFormat('dd/MM/yyyy a HH:mm').format(DateTime.now()), style: const pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(DateFormat('dd/MM/yyyy a HH:mm').format(DateTime.now()), style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                   ],
                 ),
               ],

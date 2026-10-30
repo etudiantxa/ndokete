@@ -139,15 +139,19 @@ class _TreasuryPageState extends State<TreasuryPage> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(Icons.circle, color: _getHealthColor(), size: 8),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    'SANTÉ FINANCIÈRE ${_treasury?['healthScore'] ?? ''}',
-                                    style: TextStyle(
-                                      color: _getHealthColor(),
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w600,
+                                  Flexible(
+                                    child: Text(
+                                      'SANTÉ FINANCIÈRE ${_treasury?['healthScore'] ?? ''}',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: _getHealthColor(),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
