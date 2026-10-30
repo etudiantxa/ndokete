@@ -17,41 +17,42 @@ export class TransactionsController {
   @Get()
   @ApiOperation({ summary: 'Liste des transactions' })
   @ApiQuery({ name: 'period', required: false, enum: ['today', 'week', 'month', 'all'] })
-  findAll(@CurrentUser('artisanId') artisanId: string, @Query('period') period?: string) {
-    return this.transactionsService.findAll(artisanId, period);
+  findAll(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Query('period') period?: string) {
+    return this.transactionsService.findAll(userId, artisanId, period);
   }
 
   @Get('treasury')
   @ApiOperation({ summary: 'Résumé trésorerie (recettes, dépenses, bénéfice net)' })
   @ApiQuery({ name: 'period', required: false })
-  getTreasury(@CurrentUser('artisanId') artisanId: string, @Query('period') period?: string) {
-    return this.transactionsService.getTreasurySummary(artisanId, period);
+  getTreasury(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Query('period') period?: string) {
+    return this.transactionsService.getTreasurySummary(userId, artisanId, period);
   }
 
   @Get('weekly')
   @ApiOperation({ summary: 'Évolution hebdomadaire sur 4 semaines' })
-  getWeekly(@CurrentUser('artisanId') artisanId: string) {
-    return this.transactionsService.getWeeklyEvolution(artisanId);
+  getWeekly(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string) {
+    return this.transactionsService.getWeeklyEvolution(userId, artisanId);
   }
 
   @Get('report/:year/:month')
   @ApiOperation({ summary: 'Rapport financier mensuel (exportable PDF côté Flutter)' })
   getReport(
+    @CurrentUser('id') userId: string,
     @CurrentUser('artisanId') artisanId: string,
     @Param('year') year: number,
     @Param('month') month: number,
   ) {
-    return this.transactionsService.getMonthlyReport(artisanId, month, year);
+    return this.transactionsService.getMonthlyReport(userId, artisanId, month, year);
   }
 
   @Post()
   @ApiOperation({ summary: 'Enregistrer une nouvelle transaction' })
-  create(@CurrentUser('artisanId') artisanId: string, @Body() dto: CreateTransactionDto) {
-    return this.transactionsService.create(artisanId, dto);
+  create(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Body() dto: CreateTransactionDto) {
+    return this.transactionsService.create(userId, artisanId, dto);
   }
 
   @Delete(':id')
-  remove(@CurrentUser('artisanId') artisanId: string, @Param('id') id: string) {
-    return this.transactionsService.remove(artisanId, id);
+  remove(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Param('id') id: string) {
+    return this.transactionsService.remove(userId, artisanId, id);
   }
 }

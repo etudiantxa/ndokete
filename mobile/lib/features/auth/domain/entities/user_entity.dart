@@ -9,6 +9,8 @@ class UserEntity extends Equatable {
   final String? businessName;
   final String? profilePhoto;
   final String? subscriptionPlan;
+  final bool isOwner;
+  final bool canManageFinances;
 
   const UserEntity({
     required this.id,
@@ -19,6 +21,8 @@ class UserEntity extends Equatable {
     this.businessName,
     this.profilePhoto,
     this.subscriptionPlan,
+    this.isOwner = true,
+    this.canManageFinances = true,
   });
 
   bool get isArtisan => role == 'ARTISAN';
@@ -28,5 +32,5 @@ class UserEntity extends Equatable {
       subscriptionPlan == 'PREMIUM' || subscriptionPlan == 'PREMIUM_PLUS';
 
   @override
-  List<Object?> get props => [id, email, phone, role, artisanId];
+  List<Object?> get props => [id, email, phone, role, artisanId, isOwner, canManageFinances];
 }

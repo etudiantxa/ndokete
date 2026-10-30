@@ -32,7 +32,24 @@ export class UsersService {
       },
     });
     if (!user) throw new NotFoundException('Utilisateur non trouvé');
-    return user;
+
+    let isOwner = true;
+    let canManageFinances = true;
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(m => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)));
+      if (matchedMember) {
+        isOwner = false;
+        canManageFinances = matchedMember.canManageFinances;
+      }
+    }
+
+    return {
+      ...user,
+      isOwner,
+      canManageFinances,
+    };
   }
 
   async updateMe(userId: string, dto: UpdateUserDto) {

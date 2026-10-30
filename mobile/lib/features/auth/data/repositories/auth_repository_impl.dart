@@ -89,6 +89,8 @@ class AuthRepositoryImpl implements AuthRepository {
       artisanId: artisan?['id'] as String? ?? data['artisanId'] as String?,
       businessName: artisan?['businessName'] as String?,
       subscriptionPlan: (artisan?['subscription'] as Map?)?['plan'] as String?,
+      isOwner: data['isOwner'] as bool? ?? true,
+      canManageFinances: data['canManageFinances'] as bool? ?? true,
     );
   }
 

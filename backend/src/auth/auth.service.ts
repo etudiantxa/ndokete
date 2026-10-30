@@ -100,6 +100,18 @@ export class AuthService {
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordValid) throw new UnauthorizedException('Identifiants incorrects');
 
+    let isOwner = true;
+    let canManageFinances = true;
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(m => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)));
+      if (matchedMember) {
+        isOwner = false;
+        canManageFinances = matchedMember.canManageFinances;
+      }
+    }
+
     const tokens = await this.generateTokens(user.id, user.email, user.role, user.artisan?.id);
     return {
       message: 'Connexion réussie',
@@ -109,6 +121,8 @@ export class AuthService {
         phone: user.phone,
         role: user.role,
         artisanId: user.artisan?.id,
+        isOwner,
+        canManageFinances,
       },
       ...tokens,
     };
