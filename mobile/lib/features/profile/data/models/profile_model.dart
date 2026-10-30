@@ -19,6 +19,8 @@ class ProfileModel extends ProfileEntity {
     super.productsCount,
     super.productsLimit,
     required super.createdAt,
+    super.isOwner,
+    super.canManageFinances,
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
@@ -69,6 +71,8 @@ class ProfileModel extends ProfileEntity {
       productsLimit: isPremium ? 999999 : 5,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
           DateTime.fromMillisecondsSinceEpoch(0),
+      isOwner: json['isOwner'] as bool? ?? true,
+      canManageFinances: json['canManageFinances'] as bool? ?? true,
     );
   }
 

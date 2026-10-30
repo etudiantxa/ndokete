@@ -1217,7 +1217,7 @@ class _ActionSection extends StatelessWidget {
             onTap: () => outerCtx.push('/sync'),
           ),
           const Divider(height: 1, color: AppColors.dividerDark),
-          if (isArtisan) ...[
+          if (isArtisan && profile.isOwner) ...[
             _ActionItem(
               icon: Icons.group_outlined,
               label: 'Gestion d’Équipe & Apprentis',

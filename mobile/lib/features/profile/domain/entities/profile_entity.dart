@@ -21,6 +21,8 @@ class ProfileEntity extends Equatable {
   final int productsCount;
   final int productsLimit;
   final DateTime createdAt;
+  final bool isOwner;
+  final bool canManageFinances;
 
   const ProfileEntity({
     required this.id,
@@ -40,6 +42,8 @@ class ProfileEntity extends Equatable {
     this.productsCount = 0,
     this.productsLimit = 5,
     required this.createdAt,
+    this.isOwner = true,
+    this.canManageFinances = true,
   });
 
   bool get isArtisan => role == 'ARTISAN' || shopName != null;
@@ -60,5 +64,5 @@ class ProfileEntity extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, plan, clientsCount, productsCount];
+  List<Object?> get props => [id, plan, clientsCount, productsCount, isOwner, canManageFinances];
 }
