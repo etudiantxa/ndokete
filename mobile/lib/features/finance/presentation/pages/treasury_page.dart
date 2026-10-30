@@ -124,16 +124,20 @@ class _TreasuryPageState extends State<TreasuryPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${_currency.format(_treasury?['netProfit'] ?? 0)} FCFA',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
+                            Expanded(
+                              child: Text(
+                                '${_currency.format(_treasury?['netProfit'] ?? 0)} FCFA',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: _getHealthColor().withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
@@ -141,17 +145,14 @@ class _TreasuryPageState extends State<TreasuryPage> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.circle, color: _getHealthColor(), size: 8),
+                                  Icon(Icons.circle, color: _getHealthColor(), size: 6),
                                   const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      'SANTÉ FINANCIÈRE ${_treasury?['healthScore'] ?? ''}',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: _getHealthColor(),
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                  Text(
+                                    'SCORE: ${_treasury?['healthScore'] ?? 'EXCELLENT'}',
+                                    style: TextStyle(
+                                      color: _getHealthColor(),
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
