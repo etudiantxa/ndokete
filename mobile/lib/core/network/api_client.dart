@@ -33,10 +33,10 @@ class ApiClient {
       dio.options.baseUrl = _baseUrl;
     });
 
-    dio.interceptors.addAll([
-      _AuthInterceptor(_secureStorage, dio),
-      LogInterceptor(responseBody: true, requestBody: true),
-    ]);
+    dio.interceptors.add(_AuthInterceptor(_secureStorage, dio));
+    if (kDebugMode) {
+      dio.interceptors.add(LogInterceptor(responseBody: true, requestBody: true));
+    }
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? params}) =>

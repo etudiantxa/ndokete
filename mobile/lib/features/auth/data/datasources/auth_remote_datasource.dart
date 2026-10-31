@@ -15,11 +15,10 @@ class AuthRemoteDatasource {
         'password': password,
       });
       
-      // DEBUG: Afficher la réponse complète dans la console web
-      if (kIsWeb) {
+      // DEBUG: Afficher la réponse complète dans la console web (uniquement en mode Debug)
+      if (kIsWeb && kDebugMode) {
         print('=== LOGIN RESPONSE ===');
         print('Status: ${response.statusCode}');
-        print('Data: ${response.data}');
         print('=====================');
       }
       
@@ -42,11 +41,8 @@ class AuthRemoteDatasource {
       );
       return (responseData['user'] as Map<String, dynamic>?) ?? {};
     } catch (e) {
-      if (kIsWeb) {
+      if (kIsWeb && kDebugMode) {
         print('=== LOGIN ERROR ===');
-        print('Error: $e');
-        print('Stack trace: ${StackTrace.current}');
-        print('==================');
       }
       rethrow;
     }
