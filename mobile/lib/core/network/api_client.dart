@@ -4,7 +4,7 @@ import '../storage/web_safe_storage.dart';
 
 class ApiClient {
   static const String localUrl = 'http://10.0.2.2:4000/api/v1';
-  static const String remoteUrl = 'https://ndokete.onrender.com/api/v1';
+  static const String remoteUrl = 'https://api.ndokete.com/api/v1';
 
   // Par défaut : True en mode Debug (Local Docker), False en mode Release (En ligne Render)
   static final ValueNotifier<bool> useLocalServer = ValueNotifier<bool>(kDebugMode);
