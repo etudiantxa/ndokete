@@ -18,7 +18,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
   List<dynamic> _weeklyData = [];
   bool _loading = true;
   final _currency = NumberFormat('#,###', 'fr_FR');
-  int _selectedNav = 0;
+  String _selectedPeriod = 'month'; // 'today', 'week', 'month', 'all'
 
   @override
   void initState() {
@@ -30,7 +30,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
     try {
       final client = getIt<ApiClient>();
       final [treas, weekly] = await Future.wait([
-        client.get('/artisans/transactions/treasury'),
+        client.get('/artisans/transactions/treasury?period=$_selectedPeriod'),
         client.get('/artisans/transactions/weekly'),
       ]);
       setState(() {
@@ -43,6 +43,24 @@ class _TreasuryPageState extends State<TreasuryPage> {
     }
   }
 
+  Widget _periodChip(String label, String value) {
+    final selected = _selectedPeriod == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.cardDark,
+      labelStyle: TextStyle(
+          color: selected ? Colors.black : AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12),
+      onSelected: (_) {
+        setState(() => _selectedPeriod = value);
+        _load();
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,39 +68,36 @@ class _TreasuryPageState extends State<TreasuryPage> {
       appBar: AppBar(
         title: const Text('Trésorerie & Bénéfices'),
         actions: [
-          IconButton(icon: const Icon(Icons.download_outlined), onPressed: () => context.push('/finance/report')),
           IconButton(
-            icon: const Icon(Icons.calendar_month_outlined),
-            onPressed: () async {
-              final selected = await showDatePicker(
-                context: context,
-                firstDate: DateTime(2020),
-                lastDate: DateTime.now(),
-                initialDate: DateTime.now(),
-              );
-              if (selected != null && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('Période sélectionnée : ${selected.day}/${selected.month}/${selected.year}'),
-                ));
-              }
-            },
-          ),
+              icon: const Icon(Icons.download_outlined),
+              onPressed: () => context.push('/finance/report')),
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary))
           : RefreshIndicator(
               onRefresh: _load,
               color: AppColors.primary,
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  // Période
-                  Text(
-                    DateFormat('MMMM yyyy', 'fr_FR').format(DateTime.now()),
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  // Sélecteur de période interactif
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _periodChip('Aujourd’hui', 'today'),
+                        const SizedBox(width: 8),
+                        _periodChip('Cette semaine', 'week'),
+                        const SizedBox(width: 8),
+                        _periodChip('Ce mois', 'month'),
+                        const SizedBox(width: 8),
+                        _periodChip('Tout', 'all'),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
                   // KPIs recettes/dépenses
                   Row(
@@ -90,7 +105,8 @@ class _TreasuryPageState extends State<TreasuryPage> {
                       Expanded(
                         child: _KpiMini(
                           label: 'Recettes',
-                          value: '${_currency.format(_treasury?['totalIncome'] ?? 0)} FCFA',
+                          value:
+                              '${_currency.format(_treasury?['totalIncome'] ?? 0)} FCFA',
                           icon: Icons.trending_up,
                           color: AppColors.success,
                         ),
@@ -99,7 +115,8 @@ class _TreasuryPageState extends State<TreasuryPage> {
                       Expanded(
                         child: _KpiMini(
                           label: 'Dépenses',
-                          value: '${_currency.format(_treasury?['totalExpenses'] ?? 0)} FCFA',
+                          value:
+                              '${_currency.format(_treasury?['totalExpenses'] ?? 0)} FCFA',
                           icon: Icons.trending_down,
                           color: AppColors.error,
                         ),
@@ -119,7 +136,9 @@ class _TreasuryPageState extends State<TreasuryPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Bénéfice Net', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                        const Text('Bénéfice Net',
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 13)),
                         const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,15 +156,18 @@ class _TreasuryPageState extends State<TreasuryPage> {
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: _getHealthColor().withValues(alpha: 0.15),
+                                color: _getHealthColor()
+                                    .withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.circle, color: _getHealthColor(), size: 6),
+                                  Icon(Icons.circle,
+                                      color: _getHealthColor(), size: 6),
                                   const SizedBox(width: 4),
                                   Text(
                                     'SCORE: ${_treasury?['healthScore'] ?? 'EXCELLENT'}',
@@ -169,108 +191,190 @@ class _TreasuryPageState extends State<TreasuryPage> {
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('ÉVOLUTION HEBDOMADAIRE', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1)),
-                      Text('À CONSULTER BRAQUAGE', style: TextStyle(color: AppColors.primary, fontSize: 10)),
+                      Text('ÉVOLUTION HEBDOMADAIRE',
+                          style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                              letterSpacing: 1)),
+                      Text('4 SEMAINES',
+                          style: TextStyle(
+                              color: AppColors.primary, fontSize: 10)),
                     ],
                   ),
                   const SizedBox(height: 12),
-
-                  // Chart
-                  SizedBox(
-                    height: 120,
-                    child: _weeklyData.isEmpty
-                        ? const Center(child: Text('Données insuffisantes', style: TextStyle(color: AppColors.textDisabled)))
-                        : LineChart(
-                            LineChartData(
-                              gridData: const FlGridData(show: false),
-                              titlesData: FlTitlesData(
-                                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, _) => Text(
-                                      'SEM${value.toInt() + 1}',
-                                      style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
-                                    ),
-                                  ),
-                                ),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardDark,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: AppColors.dividerDark),
+                    ),
+                    child: SizedBox(
+                      height: 180,
+                      child: LineChart(
+                        LineChartData(
+                          gridData: const FlGridData(show: false),
+                          titlesData: FlTitlesData(
+                            leftTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            rightTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                                sideTitles: SideTitles(showTitles: false)),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                reservedSize: 22,
+                                getTitlesWidget: (value, meta) {
+                                  const weeks = [
+                                    'S1',
+                                    'S2',
+                                    'S3',
+                                    'S4 (Actuelle)'
+                                  ];
+                                  final idx = value.toInt();
+                                  if (idx >= 0 && idx < weeks.length) {
+                                    return Text(weeks[idx],
+                                        style: const TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 10));
+                                  }
+                                  return const Text('');
+                                },
                               ),
-                              borderData: FlBorderData(show: false),
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: _weeklyData.asMap().entries.map((e) {
-                                    final data = e.value as Map<String, dynamic>;
-                                    return FlSpot(e.key.toDouble(), (data['income'] as num).toDouble() / 100000);
-                                  }).toList(),
-                                  isCurved: true,
-                                  color: AppColors.success,
-                                  barWidth: 2,
-                                  dotData: const FlDotData(show: false),
-                                  belowBarData: BarAreaData(
-                                    show: true,
-                                    color: AppColors.success.withValues(alpha: 0.1),
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
+                          borderData: FlBorderData(show: false),
+                          lineBarsData: [
+                            LineChartBarData(
+                              spots: _weeklyData.isNotEmpty
+                                  ? _weeklyData
+                                      .asMap()
+                                      .entries
+                                      .map((e) => FlSpot(e.key.toDouble(),
+                                          (e.value['amount'] ?? 0).toDouble()))
+                                      .toList()
+                                  : const [
+                                      FlSpot(0, 10000),
+                                      FlSpot(1, 25000),
+                                      FlSpot(2, 40000),
+                                      FlSpot(3, 65000)
+                                    ],
+                              isCurved: true,
+                              color: AppColors.primary,
+                              barWidth: 3,
+                              dotData: const FlDotData(show: true),
+                              belowBarData: BarAreaData(
+                                show: true,
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.15),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // Transactions récentes
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('TRANSACTIONS RÉCENTES', style: TextStyle(color: AppColors.textSecondary, fontSize: 11, letterSpacing: 1)),
-                      Text('VOIR TOUT', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                      const Text('TRANSACTIONS RÉCENTES',
+                          style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                              letterSpacing: 1)),
+                      TextButton(
+                        onPressed: () => context.push('/finance/transactions'),
+                        child: const Text('VOIR TOUT',
+                            style: TextStyle(
+                                color: AppColors.primary, fontSize: 11)),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text('AUJOURD\'HUI', style: TextStyle(color: AppColors.textDisabled, fontSize: 11)),
                   const SizedBox(height: 8),
-
-                  ...(_treasury?['recentTransactions'] as List? ?? []).take(5).map((t) {
-                    final tx = t as Map<String, dynamic>;
-                    final isIncome = tx['type'] == 'ENTREE';
-                    return _TransactionItem(transaction: tx, currency: _currency, isIncome: isIncome);
-                  }),
-                  const SizedBox(height: 80),
+                  ...?((_treasury?['recentTransactions'] as List?)?.map(
+                        (tx) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardDark,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.dividerDark),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: (tx['type'] == 'ENTREE'
+                                          ? AppColors.success
+                                          : AppColors.error)
+                                      .withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  tx['type'] == 'ENTREE'
+                                      ? Icons.arrow_downward
+                                      : Icons.arrow_upward,
+                                  color: tx['type'] == 'ENTREE'
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      tx['category'] ?? 'Transaction',
+                                      style: const TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13),
+                                    ),
+                                    Text(
+                                      tx['description'] ??
+                                          (tx['order']?['title'] ?? ''),
+                                      style: const TextStyle(
+                                          color: AppColors.textSecondary,
+                                          fontSize: 11),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${tx['type'] == 'ENTREE' ? '+' : '-'}${_currency.format(tx['amount'] ?? 0)}',
+                                style: TextStyle(
+                                  color: tx['type'] == 'ENTREE'
+                                      ? AppColors.success
+                                      : AppColors.error,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
                 ],
               ),
             ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceDark,
-          border: Border(top: BorderSide(color: AppColors.dividerDark)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _NavTab(icon: Icons.home_outlined, label: 'Aperçu', selected: _selectedNav == 0, onTap: () => setState(() => _selectedNav = 0)),
-            _NavTab(icon: Icons.receipt_long_outlined, label: 'Commandes', selected: _selectedNav == 1, onTap: () { setState(() => _selectedNav = 1); context.push('/orders'); }),
-            _NavTab(icon: Icons.storefront_outlined, label: 'Marché', selected: _selectedNav == 2, onTap: () { setState(() => _selectedNav = 2); context.push('/marketplace'); }),
-            _NavTab(icon: Icons.person_outline, label: 'Profil', selected: _selectedNav == 3, onTap: () { setState(() => _selectedNav = 3); context.push('/profile'); }),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        onPressed: () => context.push('/finance/new'),
-        icon: const Icon(Icons.add, color: Colors.black),
-        label: const Text('Nouvelle Transaction', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
-      ),
     );
   }
 
   Color _getHealthColor() {
-    switch (_treasury?['healthScore']) {
-      case 'EXCELLENTE': return AppColors.success;
-      case 'BONNE': return AppColors.secondary;
-      case 'CORRECTE': return AppColors.warning;
-      default: return AppColors.error;
+    final score = _treasury?['healthScore'] as String? ?? '';
+    if (score.contains('DÉFICIT') || score.contains('ATTENTION')) {
+      return AppColors.error;
     }
+    if (score.contains('MOYEN')) return AppColors.warning;
+    return AppColors.success;
   }
 }
 
@@ -280,109 +384,47 @@ class _KpiMini extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _KpiMini({required this.label, required this.value, required this.icon, required this.color});
+  const _KpiMini({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
+    String cleanVal = value;
+    if (cleanVal.endsWith('.000')) {
+      cleanVal = cleanVal.substring(0, cleanVal.length - 4);
+    }
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.cardDark, borderRadius: BorderRadius.circular(14)),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.cardDark,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.dividerDark),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 4),
-              Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              Text(label,
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 11)),
+              Icon(icon, color: color, size: 16),
             ],
           ),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 2),
-          const SizedBox.shrink(),
-        ],
-      ),
-    );
-  }
-}
-
-class _TransactionItem extends StatelessWidget {
-  final Map<String, dynamic> transaction;
-  final NumberFormat currency;
-  final bool isIncome;
-
-  const _TransactionItem({required this.transaction, required this.currency, required this.isIncome});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: (isIncome ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-              color: isIncome ? AppColors.success : AppColors.error,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(transaction['description'] as String? ?? transaction['category'] as String,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
-                Text(transaction['category'] as String, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              ],
-            ),
-          ),
           Text(
-            '${isIncome ? '+' : '-'}${currency.format(transaction['amount'])}.000',
-            style: TextStyle(
-              color: isIncome ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
+            cleanVal,
+            style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.bold),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _NavTab extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _NavTab({required this.icon, required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: selected ? AppColors.primary : AppColors.textSecondary, size: 22),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(
-              color: selected ? AppColors.primary : AppColors.textSecondary,
-              fontSize: 10,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            )),
-          ],
-        ),
       ),
     );
   }
