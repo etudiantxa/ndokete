@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Query, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Query, Param, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { TransactionsService, CreateTransactionDto } from './transactions.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -39,8 +39,8 @@ export class TransactionsController {
   getReport(
     @CurrentUser('id') userId: string,
     @CurrentUser('artisanId') artisanId: string,
-    @Param('year') year: number,
-    @Param('month') month: number,
+    @Param('year', ParseIntPipe) year: number,
+    @Param('month', ParseIntPipe) month: number,
   ) {
     return this.transactionsService.getMonthlyReport(userId, artisanId, month, year);
   }
