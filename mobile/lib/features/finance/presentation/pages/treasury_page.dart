@@ -90,7 +90,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                       Expanded(
                         child: _KpiMini(
                           label: 'Recettes',
-                          value: '${_currency.format(_treasury?['income'] ?? 0)}.000',
+                          value: '${_currency.format(_treasury?['totalIncome'] ?? 0)} FCFA',
                           icon: Icons.trending_up,
                           color: AppColors.success,
                         ),
@@ -99,7 +99,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                       Expanded(
                         child: _KpiMini(
                           label: 'Dépenses',
-                          value: '${_currency.format(_treasury?['expenses'] ?? 0)}.000',
+                          value: '${_currency.format(_treasury?['totalExpenses'] ?? 0)} FCFA',
                           icon: Icons.trending_down,
                           color: AppColors.error,
                         ),

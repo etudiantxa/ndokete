@@ -102,7 +102,55 @@ export class TransactionsService {
 
   async getMonthlyReport(userId: string, artisanId: string, month: number, year: number) {
     await this.checkFinancePermission(userId, artisanId);
-    return { success: true, data: {} };
+
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+
+    const [artisan, income, expenses, transactions] = await Promise.all([
+      this.prisma.artisan.findUnique({ where: { id: artisanId }, select: { businessName: true } }),
+      this.prisma.transaction.aggregate({
+        where: {
+          artisanId,
+          type: 'ENTREE',
+          date: { gte: startDate, lte: endDate },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.transaction.aggregate({
+        where: {
+          artisanId,
+          type: 'DEPENSE',
+          date: { gte: startDate, lte: endDate },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.transaction.findMany({
+        where: {
+          artisanId,
+          date: { gte: startDate, lte: endDate },
+        },
+        orderBy: { date: 'desc' },
+        include: { order: { select: { orderNumber: true, title: true } } },
+      }),
+    ]);
+
+    const totalIncome = income._sum.amount || 0;
+    const totalExpenses = expenses._sum.amount || 0;
+    const netProfit = totalIncome - totalExpenses;
+
+    return {
+      success: true,
+      data: {
+        artisanName: artisan?.businessName || 'Atelier NDOKETE',
+        month,
+        year,
+        totalIncome,
+        totalExpenses,
+        netProfit,
+        transactions,
+      },
+      message: 'Rapport mensuel récupéré avec succès',
+    };
   }
 
   async create(userId: string, artisanId: string, dto: CreateTransactionDto) {
