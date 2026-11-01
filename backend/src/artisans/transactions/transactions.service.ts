@@ -28,43 +28,55 @@ export class CreateTransactionDto {
 export class TransactionsService {
   constructor(private prisma: PrismaService) {}
 
-  async checkFinancePermission(userId?: string, artisanId?: string) {
-    if (!userId || !artisanId) return;
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return;
-    const teamMember = await this.prisma.teamMember.findFirst({
-      where: { phone: user.phone, artisanId },
-    });
-    if (teamMember && !teamMember.canManageFinances) {
-      throw new ForbiddenException('Accès refusé : vous n’avez pas les droits d’accès à la trésorerie.');
+  async resolveArtisanId(userId: string, artisanId?: string): Promise<string> {
+    if (artisanId) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (user && user.phone) {
+        const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+        const allMembers = await this.prisma.teamMember.findMany();
+        const matchedMember = allMembers.find(m => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)));
+        if (matchedMember && !matchedMember.canManageFinances) {
+          throw new ForbiddenException('Accès refusé : vous n’avez pas les droits d’accès à la trésorerie.');
+        }
+      }
+      return artisanId;
     }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { artisan: { select: { id: true } } },
+    });
+    if (!user?.artisan?.id) {
+      throw new NotFoundException('Profil artisan non trouvé pour cet utilisateur');
+    }
+    return user.artisan.id;
   }
 
-  async findAll(userId: string, artisanId: string, period?: string) {
-    await this.checkFinancePermission(userId, artisanId);
+  async findAll(userId: string, artisanId?: string, period?: string) {
+    const realArtisanId = await this.resolveArtisanId(userId, artisanId);
     const dateFilter = this.getPeriodFilter(period);
     return this.prisma.transaction.findMany({
-      where: { artisanId, ...dateFilter },
+      where: { artisanId: realArtisanId, ...dateFilter },
       orderBy: { date: 'desc' },
       include: { order: { select: { orderNumber: true, title: true } } },
     });
   }
 
-  async getTreasurySummary(userId: string, artisanId: string, period = 'month') {
-    await this.checkFinancePermission(userId, artisanId);
+  async getTreasurySummary(userId: string, artisanId?: string, period = 'month') {
+    const realArtisanId = await this.resolveArtisanId(userId, artisanId);
     const dateFilter = this.getPeriodFilter(period);
 
     const [income, expenses, recentTransactions] = await Promise.all([
       this.prisma.transaction.aggregate({
-        where: { artisanId, type: 'ENTREE', ...dateFilter },
+        where: { artisanId: realArtisanId, type: 'ENTREE', ...dateFilter },
         _sum: { amount: true },
       }),
       this.prisma.transaction.aggregate({
-        where: { artisanId, type: 'DEPENSE', ...dateFilter },
+        where: { artisanId: realArtisanId, type: 'DEPENSE', ...dateFilter },
         _sum: { amount: true },
       }),
       this.prisma.transaction.findMany({
-        where: { artisanId },
+        where: { artisanId: realArtisanId },
         orderBy: { date: 'desc' },
         take: 10,
         include: { order: { select: { orderNumber: true, title: true } } },
@@ -95,22 +107,22 @@ export class TransactionsService {
     };
   }
 
-  async getWeeklyEvolution(userId: string, artisanId: string) {
-    await this.checkFinancePermission(userId, artisanId);
+  async getWeeklyEvolution(userId: string, artisanId?: string) {
+    await this.resolveArtisanId(userId, artisanId);
     return { success: true, data: [] };
   }
 
   async getMonthlyReport(userId: string, artisanId: string, month: number, year: number) {
-    await this.checkFinancePermission(userId, artisanId);
+    const realArtisanId = await this.resolveArtisanId(userId, artisanId);
 
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
     const [artisan, income, expenses, transactions] = await Promise.all([
-      this.prisma.artisan.findUnique({ where: { id: artisanId }, select: { businessName: true } }),
+      this.prisma.artisan.findUnique({ where: { id: realArtisanId }, select: { businessName: true } }),
       this.prisma.transaction.aggregate({
         where: {
-          artisanId,
+          artisanId: realArtisanId,
           type: 'ENTREE',
           date: { gte: startDate, lte: endDate },
         },
@@ -118,7 +130,7 @@ export class TransactionsService {
       }),
       this.prisma.transaction.aggregate({
         where: {
-          artisanId,
+          artisanId: realArtisanId,
           type: 'DEPENSE',
           date: { gte: startDate, lte: endDate },
         },
@@ -126,7 +138,7 @@ export class TransactionsService {
       }),
       this.prisma.transaction.findMany({
         where: {
-          artisanId,
+          artisanId: realArtisanId,
           date: { gte: startDate, lte: endDate },
         },
         orderBy: { date: 'desc' },
@@ -154,10 +166,10 @@ export class TransactionsService {
   }
 
   async create(userId: string, artisanId: string, dto: CreateTransactionDto) {
-    await this.checkFinancePermission(userId, artisanId);
+    const realArtisanId = await this.resolveArtisanId(userId, artisanId);
     const transaction = await this.prisma.transaction.create({
       data: {
-        artisanId,
+        artisanId: realArtisanId,
         type: dto.type,
         amount: dto.amount,
         category: dto.category,
@@ -172,8 +184,8 @@ export class TransactionsService {
   }
 
   async remove(userId: string, artisanId: string, id: string) {
-    await this.checkFinancePermission(userId, artisanId);
-    const tx = await this.prisma.transaction.findFirst({ where: { id, artisanId } });
+    const realArtisanId = await this.resolveArtisanId(userId, artisanId);
+    const tx = await this.prisma.transaction.findFirst({ where: { id, artisanId: realArtisanId } });
     if (!tx) throw new NotFoundException('Transaction non trouvée');
     await this.prisma.transaction.delete({ where: { id } });
     return { success: true, message: 'Transaction supprimée' };
