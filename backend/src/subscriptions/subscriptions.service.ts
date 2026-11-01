@@ -78,6 +78,20 @@ export class SubscriptionsService {
       },
     });
 
+    // Notifier les administrateurs de la plateforme
+    const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
+    for (const admin of admins) {
+      await this.prisma.notification.create({
+        data: {
+          userId: admin.id,
+          type: 'PAIEMENT',
+          channel: 'IN_APP',
+          title: '📈 Nouvel Abonnement Pro !',
+          body: `L'atelier "${artisan.businessName}" vient de souscrire au plan ${dto.plan} (${price} FCFA) via ${dto.method}.`,
+        },
+      });
+    }
+
     this.logger.log(`Abonnement ${dto.plan} activé pour l'artisan ${artisan.id} via ${dto.method}`);
 
     return {
