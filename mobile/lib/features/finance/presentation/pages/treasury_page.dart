@@ -98,7 +98,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.black,
         onPressed: () async {
-          await context.push('/finance/transactions/new');
+          await context.push('/finance/new');
           _load();
         },
         icon: const Icon(Icons.add),
