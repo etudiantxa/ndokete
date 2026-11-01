@@ -69,9 +69,40 @@ class _TreasuryPageState extends State<TreasuryPage> {
         title: const Text('Trésorerie & Bénéfices'),
         actions: [
           IconButton(
-              icon: const Icon(Icons.download_outlined),
-              onPressed: () => context.push('/finance/report')),
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: 'Sélectionner une date',
+            onPressed: () async {
+              final selected = await showDatePicker(
+                context: context,
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+                initialDate: DateTime.now(),
+              );
+              if (selected != null && mounted) {
+                setState(() => _selectedPeriod = 'all');
+                _load();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Période filtrée au : ${selected.day}/${selected.month}/${selected.year}'),
+                ));
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.download_outlined),
+            tooltip: 'Rapport financier',
+            onPressed: () => context.push('/finance/report'),
+          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.black,
+        onPressed: () async {
+          await context.push('/finance/transactions/new');
+          _load();
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Nouvelle Transaction', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: _loading
           ? const Center(
