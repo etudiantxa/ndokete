@@ -86,8 +86,9 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
           (e.response == null ||
               e.type == DioExceptionType.connectionError ||
               e.type == DioExceptionType.connectionTimeout ||
-              e.type == DioExceptionType.receiveTimeout);
-      if (!kIsWeb && offline) {
+              e.type == DioExceptionType.receiveTimeout ||
+              e.error != null);
+      if (offline) {
         await HiveService.addToSyncQueue(
           entity: 'order',
           action: 'create',
@@ -95,7 +96,7 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
           payload: payload,
         );
       }
-      if (mounted && !kIsWeb && offline) {
+      if (mounted && offline) {
         setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

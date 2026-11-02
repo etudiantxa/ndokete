@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/storage/hive_service.dart';
 
 class ClientsPage extends StatefulWidget {
   const ClientsPage({super.key});
@@ -280,6 +282,31 @@ class _AddClientSheetState extends State<_AddClientSheet> {
                         widget.onSaved();
                         if (context.mounted) Navigator.pop(context);
                       } catch (error) {
+                        if (error is DioException) {
+                          final localId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+                          await HiveService.addToSyncQueue(
+                            entity: 'customer',
+                            action: 'create',
+                            localId: localId,
+                            payload: {
+                              'name': _nameCtrl.text.trim(),
+                              'phone': _phoneCtrl.text.trim(),
+                              if (_addressCtrl.text.trim().isNotEmpty)
+                                'address': _addressCtrl.text.trim(),
+                            },
+                          );
+                          widget.onSaved();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('✓ Client enregistré hors-ligne (En attente de synchro)'),
+                                backgroundColor: AppColors.warning,
+                              ),
+                            );
+                            Navigator.pop(context);
+                          }
+                          return;
+                        }
                         if (!mounted) return;
                         setState(() => _loading = false);
                         ScaffoldMessenger.of(context).showSnackBar(
