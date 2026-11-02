@@ -52,12 +52,14 @@ class OrdersRepositoryImpl implements OrdersRepository {
         );
         return Right(OrderEntity(
           id: localId,
-          orderNumber: 'CMD-LOCAL-$localId',
+          artisanId: 'local_artisan',
+          customerId: data['customerId'] as String? ?? 'local_customer',
+          customerName: 'Client Local',
           title: data['title'] as String? ?? 'Commande Locale',
-          amount: data['amount'] as int? ?? 0,
-          deposit: data['deposit'] as int? ?? 0,
+          amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
           status: OrderStatus.EN_ATTENTE,
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         ));
       }
       return Left(e.toString());

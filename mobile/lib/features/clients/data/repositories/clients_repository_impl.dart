@@ -42,9 +42,10 @@ class ClientsRepositoryImpl implements ClientsRepository {
         );
         return Right(ClientEntity(
           id: localId,
+          artisanId: 'local_artisan',
           name: data['name'] as String? ?? 'Client Local',
-          phone: data['phone'] as String? ?? '',
-          totalOrders: 0,
+          phone: data['phone'] as String?,
+          createdAt: DateTime.now(),
         ));
       }
       return Left(e.toString());
