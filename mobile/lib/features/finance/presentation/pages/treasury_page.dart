@@ -81,7 +81,8 @@ class _TreasuryPageState extends State<TreasuryPage> {
               if (selected != null && mounted) {
                 setState(() => _selectedPeriod = 'all');
                 _load();
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                final localCtx = context;
+                ScaffoldMessenger.of(localCtx).showSnackBar(SnackBar(
                   content: Text('Période filtrée au : ${selected.day}/${selected.month}/${selected.year}'),
                 ));
               }
