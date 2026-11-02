@@ -143,6 +143,13 @@ class _ClientsPageState extends State<ClientsPage> {
                                             style: const TextStyle(
                                                 color: AppColors.textSecondary,
                                                 fontSize: 12)),
+                                        if (c['address'] != null && c['address'].toString().isNotEmpty) ...[
+                                          const SizedBox(height: 2),
+                                          Text('📍 ${c['address']}',
+                                              style: const TextStyle(
+                                                  color: AppColors.textSecondary,
+                                                  fontSize: 11)),
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -200,12 +207,14 @@ class _AddClientSheetState extends State<_AddClientSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   bool _loading = false;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
+    _addressCtrl.dispose();
     super.dispose();
   }
 
@@ -246,6 +255,13 @@ class _AddClientSheetState extends State<_AddClientSheet> {
                   ? 'Le téléphone est obligatoire'
                   : null,
             ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _addressCtrl,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: const InputDecoration(labelText: 'Adresse / Quartier (Optionnel)'),
+              textCapitalization: TextCapitalization.sentences,
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _loading
@@ -258,6 +274,8 @@ class _AddClientSheetState extends State<_AddClientSheet> {
                         await client.post('/artisans/customers', data: {
                           'name': _nameCtrl.text.trim(),
                           'phone': _phoneCtrl.text.trim(),
+                          if (_addressCtrl.text.trim().isNotEmpty)
+                            'address': _addressCtrl.text.trim(),
                         });
                         widget.onSaved();
                         if (context.mounted) Navigator.pop(context);
