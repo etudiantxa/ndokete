@@ -1,7 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import '../../domain/entities/client_entity.dart';
 import '../../domain/repositories/clients_repository.dart';
 import '../datasources/clients_remote_datasource.dart';
+import '../../../../core/storage/hive_service.dart';
 
 class ClientsRepositoryImpl implements ClientsRepository {
   final ClientsRemoteDatasource _remote;
@@ -30,6 +32,21 @@ class ClientsRepositoryImpl implements ClientsRepository {
     try {
       return Right(await _remote.createClient(data));
     } catch (e) {
+      if (e is DioException && (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.unknown)) {
+        final localId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+        await HiveService.addToSyncQueue(
+          entity: 'customer',
+          action: 'create',
+          localId: localId,
+          payload: data,
+        );
+        return Right(ClientEntity(
+          id: localId,
+          name: data['name'] as String? ?? 'Client Local',
+          phone: data['phone'] as String? ?? '',
+          totalOrders: 0,
+        ));
+      }
       return Left(e.toString());
     }
   }
