@@ -65,7 +65,7 @@ class _DashboardPageState extends State<DashboardPage> {
           body: SafeArea(
             child: Column(
               children: [
-                _buildHeader(user?.businessName ?? user?.email?.split('@').first ?? 'Atelier'),
+                _buildHeader(user?.businessName ?? 'Atelier'),
                 Expanded(
                   child: _loading
                       ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
@@ -81,7 +81,10 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: AppColors.primary,
-            onPressed: () => context.push('/orders/new'),
+            onPressed: () async {
+              await context.push('/orders/new');
+              _loadDashboard();
+            },
             child: const Icon(Icons.add, color: Colors.black, size: 28),
           ),
         );
@@ -184,7 +187,10 @@ class _DashboardPageState extends State<DashboardPage> {
               icon: Icons.add_circle_outline,
               label: 'Ajouter\nCommande',
               color: AppColors.secondary,
-              onTap: () => context.push('/orders/new'),
+              onTap: () async {
+                await context.push('/orders/new');
+                _loadDashboard();
+              },
             ),
             const SizedBox(width: 12),
             _QuickAction(
