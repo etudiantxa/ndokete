@@ -42,7 +42,7 @@ class OrdersRepositoryImpl implements OrdersRepository {
     try {
       return Right(await _remote.createOrder(data));
     } catch (e) {
-      if (e is DioException && (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout || e.type == DioExceptionType.unknown)) {
+      if (e is DioException) {
         final localId = 'local_${DateTime.now().millisecondsSinceEpoch}';
         await HiveService.addToSyncQueue(
           entity: 'order',
