@@ -29,27 +29,36 @@ export class TransactionsService {
   constructor(private prisma: PrismaService) {}
 
   async resolveArtisanId(userId: string, artisanId?: string): Promise<string> {
-    if (artisanId) {
-      const user = await this.prisma.user.findUnique({ where: { id: userId } });
-      if (user && user.phone) {
-        const cleanPhone = user.phone.replace(/[^0-9]/g, '');
-        const allMembers = await this.prisma.teamMember.findMany();
-        const matchedMember = allMembers.find(m => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)));
-        if (matchedMember && !matchedMember.canManageFinances) {
-          throw new ForbiddenException('Accès refusé : vous n’avez pas les droits d’accès à la trésorerie.');
-        }
-      }
-      return artisanId;
-    }
-
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { artisan: { select: { id: true } } },
     });
-    if (!user?.artisan?.id) {
-      throw new NotFoundException('Profil artisan non trouvé pour cet utilisateur');
+    if (!user) throw new ForbiddenException('Utilisateur non trouvé');
+
+    // 1. Si l'utilisateur est le propriétaire de l'atelier
+    if (user.artisan?.id) {
+      return user.artisan.id;
     }
-    return user.artisan.id;
+
+    // 2. Si c'est un membre d'équipe (Apprenti / Employé)
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(
+        (m) => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)),
+      );
+
+      if (matchedMember) {
+        if (!matchedMember.canManageFinances) {
+          throw new ForbiddenException(
+            'Accès refusé : vous n’avez pas les droits d’accès à la trésorerie.',
+          );
+        }
+        return matchedMember.artisanId;
+      }
+    }
+
+    throw new ForbiddenException('Accès refusé : vous n’avez pas les droits d’accès à cet atelier.');
   }
 
   async findAll(userId: string, artisanId?: string, period?: string) {
