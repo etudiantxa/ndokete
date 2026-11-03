@@ -178,14 +178,22 @@ export class PaymentsService {
       const commission = Math.round((payment.amount * 10) / 100);
       const netAmount = payment.amount - commission;
 
+      await this.prisma.payment.update({
+        where: { id: paymentId },
+        data: {
+          commission,
+          commissionPct: 10,
+        },
+      });
+
       await this.prisma.transaction.create({
         data: {
           artisanId: updatedOrder.artisanId,
           orderId: updatedOrder.id,
           type: 'ENTREE',
-          amount: payment.amount,
+          amount: netAmount,
           category: 'Vente Marketplace',
-          description: `Paiement en ligne reçu (Net: ${netAmount} FCFA, Commande: ${updatedOrder.orderNumber})`,
+          description: `Vente en ligne (Brut: ${payment.amount}F, Commission plateforme 10%: ${commission}F, Net perçu: ${netAmount}F)`,
           paymentMethod: payment.method,
           date: new Date(),
         },
