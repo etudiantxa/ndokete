@@ -220,11 +220,10 @@ export class PaymentsService {
       const mktOrder = await this.prisma.marketplaceOrder.update({
         where: { id: payment.marketplaceOrderId },
         data: { status: 'EN_COURS' },
-        include: { product: { include: { artisan: true } } },
+        include: { items: { include: { product: { include: { artisan: true } } } } },
       });
 
       const commission = Math.round((payment.amount * 10) / 100);
-      const netAmount = payment.amount - commission;
 
       await this.prisma.payment.update({
         where: { id: paymentId },
@@ -234,29 +233,35 @@ export class PaymentsService {
         },
       });
 
-      await this.prisma.transaction.create({
-        data: {
-          artisanId: mktOrder.product.artisanId,
-          type: 'ENTREE',
-          amount: netAmount,
-          category: 'Vente Marketplace',
-          description: `Vente "${mktOrder.product.name}" (Brut: ${payment.amount}F, Comm. 10%: ${commission}F, Net: ${netAmount}F)`,
-          paymentMethod: payment.method,
-          date: new Date(),
-        },
-      });
+      for (const item of mktOrder.items) {
+        const itemAmount = item.unitPrice * item.quantity;
+        const itemCommission = Math.round((itemAmount * 10) / 100);
+        const itemNet = itemAmount - itemCommission;
 
-      const artisan = mktOrder.product.artisan;
-      if (artisan) {
-        await this.prisma.notification.create({
+        await this.prisma.transaction.create({
           data: {
-            userId: artisan.userId,
-            type: 'PAIEMENT',
-            channel: 'IN_APP',
-            title: '💰 Vente Marketplace Réussie !',
-            body: `Votre article "${mktOrder.product.name}" a été vendu pour ${payment.amount} FCFA (Net perçu: ${netAmount} FCFA).`,
+            artisanId: item.artisanId,
+            type: 'ENTREE',
+            amount: itemNet,
+            category: 'Vente Marketplace',
+            description: `Vente "${item.product.name}" (Brut: ${itemAmount}F, Comm. 10%: ${itemCommission}F, Net: ${itemNet}F)`,
+            paymentMethod: payment.method,
+            date: new Date(),
           },
         });
+
+        const artisan = item.product.artisan;
+        if (artisan) {
+          await this.prisma.notification.create({
+            data: {
+              userId: artisan.userId,
+              type: 'PAIEMENT',
+              channel: 'IN_APP',
+              title: '💰 Vente Marketplace Réussie !',
+              body: `Votre article "${item.product.name}" a été vendu pour ${itemAmount} FCFA (Net perçu: ${itemNet} FCFA).`,
+            },
+          });
+        }
       }
     }
 
