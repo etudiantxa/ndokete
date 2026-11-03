@@ -413,17 +413,6 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                   ),
                 ),
               ),
-                        Icon(_recording ? Icons.stop_circle : Icons.mic, color: _recording ? AppColors.error : AppColors.secondary, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          _recording ? '🔴 Enregistrement... Touchez pour arrêter' : '🎙️ Touchez ici pour dicter vocalement à l’IA',
-                          style: TextStyle(color: _recording ? AppColors.error : AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(height: 14),
 
               TextField(

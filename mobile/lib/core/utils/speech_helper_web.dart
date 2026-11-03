@@ -19,13 +19,14 @@ class SpeechHelper {
 
       _recognition!.onResult.listen((event) {
         String fullText = '';
-        if (event.results != null) {
-          for (var i = 0; i < event.results!.length; i++) {
-            final res = event.results![i];
-            if (res != null && res.length > 0) {
-              final text = res[0]?.transcript;
-              if (text != null && text.isNotEmpty) {
-                fullText += (fullText.isEmpty ? '' : ' ') + text;
+        final results = event.results;
+        if (results != null) {
+          for (var i = 0; i < results.length; i++) {
+            final res = results[i];
+            if (res != null) {
+              final alt = res.item(0);
+              if (alt != null && alt.transcript != null && alt.transcript!.isNotEmpty) {
+                fullText += (fullText.isEmpty ? '' : ' ') + alt.transcript!;
               }
             }
           }
