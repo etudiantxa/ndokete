@@ -38,8 +38,14 @@ class _TreasuryPageState extends State<TreasuryPage> {
         _weeklyData = (weekly.data as Map)['data'] as List? ?? [];
         _loading = false;
       });
-    } catch (_) {
-      setState(() => _loading = false);
+    } catch (e) {
+      final is403 = (e is DioException && e.response?.statusCode == 403) ||
+          e.toString().contains('403') ||
+          e.toString().contains('Forbidden');
+      setState(() {
+        if (is403) _accessDenied = true;
+        _loading = false;
+      });
     }
   }
 
@@ -63,6 +69,15 @@ class _TreasuryPageState extends State<TreasuryPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_accessDenied) {
+      return const _AccessDeniedView();
+    }
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated && !authState.user.isOwner && !authState.user.canManageFinances) {
+      return const _AccessDeniedView();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
