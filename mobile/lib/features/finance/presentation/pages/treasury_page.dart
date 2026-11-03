@@ -20,6 +20,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
   Map<String, dynamic>? _treasury;
   List<dynamic> _weeklyData = [];
   bool _loading = true;
+  bool _accessDenied = false;
   final _currency = NumberFormat('#,###', 'fr_FR');
   String _selectedPeriod = 'month'; // 'today', 'week', 'month', 'all'
 
@@ -425,6 +426,46 @@ class _TreasuryPageState extends State<TreasuryPage> {
     }
     if (score.contains('MOYEN')) return AppColors.warning;
     return AppColors.success;
+  }
+}
+
+class _AccessDeniedView extends StatelessWidget {
+  const _AccessDeniedView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
+      appBar: AppBar(title: const Text('Trésorerie & Finances')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.lock_outline, color: AppColors.warning, size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Accès Restreint',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Vous n’avez pas l’autorisation d’accéder au module Trésorerie & Finances de cet atelier. Seul l’artisan principal ou un gérant autorisé peut consulter ces données.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+                onPressed: () => context.go('/dashboard'),
+                child: const Text('Retour au Tableau de Bord', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
