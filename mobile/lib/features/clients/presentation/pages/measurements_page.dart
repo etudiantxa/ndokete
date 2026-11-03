@@ -11,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/speech_helper.dart';
 
 class MeasurementsPage extends StatefulWidget {
   final String clientId;
@@ -272,6 +273,7 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
   void _showAiParserDialog() {
     final transcriptCtrl = TextEditingController();
     bool isAnalyzing = false;
+    bool isListeningSpeech = false;
 
     showModalBottomSheet(
       context: context,
@@ -297,30 +299,48 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                 children: [
                   const Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
-                      const SizedBox(width: 10),
-                      const Text('Assistant IA - Dictée de Mesures',
+                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                      SizedBox(width: 10),
+                      Text('Assistant IA - Dictée de Mesures',
                           style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   IconButton(
-                    icon: Icon(_recording ? Icons.stop_circle : Icons.mic,
-                        color: _recording ? AppColors.error : AppColors.primary,
+                    icon: Icon(isListeningSpeech ? Icons.stop_circle : Icons.mic,
+                        color: isListeningSpeech ? AppColors.error : AppColors.primary,
                         size: 28),
-                    tooltip: _recording ? 'Arrêter l’enregistrement' : 'Enregistrer une note vocale',
-                    onPressed: _toggleRecording,
+                    tooltip: isListeningSpeech ? 'Arrêter la dictée' : 'Dicter vos mesures à la voix',
+                    onPressed: () {
+                      if (isListeningSpeech) {
+                        SpeechHelper.stop();
+                        setSheetState(() => isListeningSpeech = false);
+                      } else {
+                        SpeechHelper.listen(
+                          onResult: (text) {
+                            setSheetState(() {
+                              transcriptCtrl.text = text;
+                            });
+                          },
+                          onStatus: (listening) {
+                            setSheetState(() {
+                              isListeningSpeech = listening;
+                            });
+                          },
+                        );
+                      }
+                    },
                   ),
                 ],
               ),
               const SizedBox(height: 10),
               Text(
-                _recording
-                    ? '🔴 Enregistrement vocal en cours... Parlez maintenant, puis touchez le micro pour arrêter.'
-                    : '💡 Astuce : Cliquez sur le micro 🎙️ pour enregistrer directement votre voix, ou sélectionnez les raccourcis ci-dessous :',
+                isListeningSpeech
+                    ? '🔴 Écoute IA en cours... Parlez maintenant (ex: Cou 36, poitrine 98, longueur boubou 140)'
+                    : '💡 Astuce : Cliquez sur le micro 🎙️ pour dicter vos mesures à haute voix, ou utilisez les raccourcis :',
                 style: TextStyle(
-                  color: _recording ? AppColors.error : AppColors.textSecondary,
+                  color: isListeningSpeech ? AppColors.error : AppColors.textSecondary,
                   fontSize: 12,
-                  fontWeight: _recording ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isListeningSpeech ? FontWeight.bold : FontWeight.normal,
                   height: 1.3,
                 ),
               ),
@@ -350,23 +370,49 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                     )).toList(),
               ),
               const SizedBox(height: 12),
-              // Bouton enregistrement vocal direct pour l'IA
+              // Bouton dictée vocale directe pour alimenter la zone de texte
               GestureDetector(
-                onTap: () async {
-                  await _toggleRecording();
-                  setSheetState(() {});
+                onTap: () {
+                  if (isListeningSpeech) {
+                    SpeechHelper.stop();
+                    setSheetState(() => isListeningSpeech = false);
+                  } else {
+                    SpeechHelper.listen(
+                      onResult: (text) {
+                        setSheetState(() {
+                          transcriptCtrl.text = text;
+                        });
+                      },
+                      onStatus: (listening) {
+                        setSheetState(() {
+                          isListeningSpeech = listening;
+                        });
+                      },
+                    );
+                  }
                 },
                 child: Center(
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: _recording ? AppColors.error.withValues(alpha: 0.2) : AppColors.secondary.withValues(alpha: 0.15),
+                      color: isListeningSpeech ? AppColors.error.withValues(alpha: 0.2) : AppColors.secondary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: _recording ? AppColors.error : AppColors.secondary),
+                      border: Border.all(color: isListeningSpeech ? AppColors.error : AppColors.secondary),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Icon(isListeningSpeech ? Icons.stop_circle : Icons.mic, color: isListeningSpeech ? AppColors.error : AppColors.secondary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          isListeningSpeech ? '🔴 Dictée en cours... Touchez pour arrêter' : '🎙️ Touchez ici pour dicter à haute voix',
+                          style: TextStyle(color: isListeningSpeech ? AppColors.error : AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
                         Icon(_recording ? Icons.stop_circle : Icons.mic, color: _recording ? AppColors.error : AppColors.secondary, size: 20),
                         const SizedBox(width: 8),
                         Text(
