@@ -297,30 +297,32 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
-                      SizedBox(width: 10),
-                      Text('Assistant IA - Dictée de Mesures',
+                      const Icon(Icons.auto_awesome, color: AppColors.primary, size: 24),
+                      const SizedBox(width: 10),
+                      const Text('Assistant IA - Dictée de Mesures',
                           style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.mic, color: AppColors.primary, size: 28),
-                    tooltip: 'Aide micro',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('🎙️ Touchez le micro sur votre clavier virtuel (Gboard) pour dicter vos mesures.'),
-                          backgroundColor: AppColors.success,
-                        ),
-                      );
-                    },
+                    icon: Icon(_recording ? Icons.stop_circle : Icons.mic,
+                        color: _recording ? AppColors.error : AppColors.primary,
+                        size: 28),
+                    tooltip: _recording ? 'Arrêter l’enregistrement' : 'Enregistrer une note vocale',
+                    onPressed: _toggleRecording,
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              const Text(
-                '💡 Astuce : Utilisez le micro 🎙️ de votre clavier virtuel (Gboard) pour dicter vocalement, ou tapez/sélectionnez les raccourcis ci-dessous :',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.3),
+              Text(
+                _recording
+                    ? '🔴 Enregistrement vocal en cours... Parlez maintenant, puis touchez le micro pour arrêter.'
+                    : '💡 Astuce : Cliquez sur le micro 🎙️ pour enregistrer directement votre voix, ou sélectionnez les raccourcis ci-dessous :',
+                style: TextStyle(
+                  color: _recording ? AppColors.error : AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: _recording ? FontWeight.bold : FontWeight.normal,
+                  height: 1.3,
+                ),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -333,6 +335,10 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                   'Taille 88',
                   'Bassin 102',
                   'Bras 60',
+                  'Longueur Boubou 140',
+                  'Longueur Pantalon 105',
+                  'Longueur Jupe 95',
+                  'Entrejambe 78',
                 ].map((chip) => ActionChip(
                       backgroundColor: AppColors.cardDark,
                       labelStyle: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
