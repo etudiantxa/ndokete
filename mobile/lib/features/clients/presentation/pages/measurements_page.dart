@@ -350,25 +350,31 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                     )).toList(),
               ),
               const SizedBox(height: 12),
-              // Guide dictée vocale clavier
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.secondary),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.mic, color: AppColors.secondary, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'Appuyez sur le micro 🎙️ de votre clavier (Gboard)',
-                        style: TextStyle(color: AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
-                      ),
-                    ],
+              // Bouton enregistrement vocal direct pour l'IA
+              GestureDetector(
+                onTap: () async {
+                  await _toggleRecording();
+                  setSheetState(() {});
+                },
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _recording ? AppColors.error.withValues(alpha: 0.2) : AppColors.secondary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _recording ? AppColors.error : AppColors.secondary),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(_recording ? Icons.stop_circle : Icons.mic, color: _recording ? AppColors.error : AppColors.secondary, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          _recording ? '🔴 Enregistrement... Touchez pour arrêter' : '🎙️ Touchez ici pour dicter vocalement à l’IA',
+                          style: TextStyle(color: _recording ? AppColors.error : AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
