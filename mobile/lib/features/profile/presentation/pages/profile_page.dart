@@ -710,105 +710,133 @@ class _ProfileContent extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       children: [
         // ── Avatar + Infos ─────────────────────────────────────────────
-        Center(
-          child: Stack(
-            children: [
-              CircleAvatar(
-                radius: 52,
-                backgroundColor: AppColors.cardDark,
-                backgroundImage: profile.avatarUrl != null
-                    ? NetworkImage(profile.avatarUrl!)
-                    : null,
-                child: profile.avatarUrl == null
-                    ? Text(
-                        profile.name.isNotEmpty
-                            ? profile.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold),
-                      )
-                    : null,
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      backgroundColor: AppColors.surfaceDark,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.vertical(top: Radius.circular(16)),
-                      ),
-                      builder: (bottomCtx) => SafeArea(
-                        child: Wrap(
-                          children: [
-                            ListTile(
-                              leading: const Icon(Icons.camera_alt,
-                                  color: AppColors.primary),
-                              title: const Text('Prendre une photo',
-                                  style:
-                                      TextStyle(color: AppColors.textPrimary)),
-                              onTap: () async {
-                                Navigator.pop(bottomCtx);
-                                final picker = ImagePicker();
-                                final img = await picker.pickImage(
-                                    source: ImageSource.camera, imageQuality: 80);
-                                if (img != null && context.mounted) {
-                                  context.read<ProfileBloc>().add(
-                                        ProfileAvatarUploadRequested(img.path),
-                                      );
-                                }
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.photo_library,
-                                  color: AppColors.secondary),
-                              title: const Text('Choisir dans la galerie',
-                                  style:
-                                      TextStyle(color: AppColors.textPrimary)),
-                              onTap: () async {
-                                Navigator.pop(bottomCtx);
-                                final picker = ImagePicker();
-                                final img = await picker.pickImage(
-                                    source: ImageSource.gallery, imageQuality: 80);
-                                if (img != null && context.mounted) {
-                                  context.read<ProfileBloc>().add(
-                                        ProfileAvatarUploadRequested(img.path),
-                                      );
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: AppColors.backgroundDark, width: 2),
-                    ),
-                    child: const Icon(Icons.camera_alt,
-                        color: Colors.black, size: 16),
-                  ),
-                ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primary.withValues(alpha: 0.12),
+                AppColors.cardDark,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 15,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        Center(
           child: Column(
             children: [
+              Center(
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.primary, width: 2),
+                      ),
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundColor: AppColors.surfaceDark,
+                        backgroundImage: profile.avatarUrl != null
+                            ? NetworkImage(profile.avatarUrl!)
+                            : null,
+                        child: profile.avatarUrl == null
+                            ? Text(
+                                profile.name.isNotEmpty
+                                    ? profile.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 34,
+                                    fontWeight: FontWeight.bold),
+                              )
+                            : null,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            backgroundColor: AppColors.surfaceDark,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.vertical(top: Radius.circular(16)),
+                            ),
+                            builder: (bottomCtx) => SafeArea(
+                              child: Wrap(
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.camera_alt,
+                                        color: AppColors.primary),
+                                    title: const Text('Prendre une photo',
+                                        style:
+                                            TextStyle(color: AppColors.textPrimary)),
+                                    onTap: () async {
+                                      Navigator.pop(bottomCtx);
+                                      final picker = ImagePicker();
+                                      final img = await picker.pickImage(
+                                          source: ImageSource.camera, imageQuality: 80);
+                                      if (img != null && context.mounted) {
+                                        context.read<ProfileBloc>().add(
+                                              ProfileAvatarUploadRequested(img.path),
+                                            );
+                                      }
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.photo_library,
+                                        color: AppColors.secondary),
+                                    title: const Text('Choisir dans la galerie',
+                                        style:
+                                            TextStyle(color: AppColors.textPrimary)),
+                                    onTap: () async {
+                                      Navigator.pop(bottomCtx);
+                                      final picker = ImagePicker();
+                                      final img = await picker.pickImage(
+                                          source: ImageSource.gallery, imageQuality: 80);
+                                      if (img != null && context.mounted) {
+                                        context.read<ProfileBloc>().add(
+                                              ProfileAvatarUploadRequested(img.path),
+                                            );
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: AppColors.backgroundDark, width: 2),
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              color: Colors.black, size: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(profile.name,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 20,
@@ -816,15 +844,19 @@ class _ProfileContent extends StatelessWidget {
               const SizedBox(height: 4),
               Text(profile.email,
                   style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 14)),
-              const SizedBox(height: 6),
+                      color: AppColors.textSecondary, fontSize: 13)),
+              const SizedBox(height: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: isArtisan
-                      ? AppColors.primary.withValues(alpha: 0.15)
-                      : AppColors.secondary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+                      ? AppColors.primary.withValues(alpha: 0.2)
+                      : AppColors.secondary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: isArtisan
+                          ? AppColors.primary.withValues(alpha: 0.4)
+                          : AppColors.secondary.withValues(alpha: 0.4)),
                 ),
                 child: Text(
                   isArtisan ? (profile.shopName ?? 'Atelier Artisan') : 'Compte Client',
