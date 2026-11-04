@@ -458,6 +458,30 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Ou choisissez une photo modèle pro en 1 clic :',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800',
+                        'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?w=800',
+                        'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=800',
+                      ].map((presetUrl) => ActionChip(
+                            backgroundColor: AppColors.cardDark,
+                            labelStyle: const TextStyle(color: AppColors.primary, fontSize: 11),
+                            label: Text('Modèle Pro'),
+                            onPressed: () {
+                              setState(() {
+                                _imageUrls.add(presetUrl);
+                              });
+                            },
+                          )).toList(),
+                    ),
                     const SizedBox(height: 24),
 
                     // Section: Nom du produit
