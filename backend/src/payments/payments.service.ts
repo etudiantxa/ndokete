@@ -207,7 +207,7 @@ export class PaymentsService {
             type: 'PAIEMENT',
             channel: 'IN_APP',
             title: '💰 Paiement reçu !',
-            body: `Le client a effectué le paiement de ${payment.amount} FCFA pour la commande ${updatedOrder.orderNumber}. Vous pouvez lancer la confection !`,
+            body: `Le client a payé la somme de ${payment.amount} FCFA pour la commande ${updatedOrder.orderNumber}. Vous avez reçu ${netAmount} FCFA sur votre compte (Commission de la plateforme 10%: ${commission} FCFA).`,
             data: {
               orderId: updatedOrder.id,
             },

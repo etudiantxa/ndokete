@@ -69,22 +69,6 @@ export class OrdersService {
       include: { customer: true },
     });
 
-    // Enregistrer automatiquement l'acompte dans la trésorerie de l'artisan
-    if (dto.deposit && dto.deposit > 0) {
-      await this.prisma.transaction.create({
-        data: {
-          artisanId,
-          type: 'ENTREE',
-          amount: dto.deposit,
-          category: 'Acompte',
-          description: `Acompte versé pour la commande ${orderNumber} (${dto.title})`,
-          orderId: order.id,
-          date: new Date(),
-          paymentMethod: 'WAVE',
-        },
-      });
-    }
-
     // Mettre à jour le compteur client et le montant total dépensé
     await this.prisma.customer.update({
       where: { id: dto.customerId },
