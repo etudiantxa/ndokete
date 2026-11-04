@@ -62,8 +62,13 @@ export class AuthService {
         },
       });
     } else if (dto.role === Role.CLIENT) {
+      const fullName = `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim();
       await this.prisma.client.create({
-        data: { userId: user.id },
+        data: {
+          userId: user.id,
+          name: fullName.length > 0 ? fullName : 'Client',
+          address: dto.address,
+        },
       });
     }
 

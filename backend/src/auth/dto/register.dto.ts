@@ -28,6 +28,15 @@ export class RegisterDto {
   @IsEnum(Role)
   role: Role;
 
+  @ApiProperty({ example: 'Moussa', required: false })
+  @IsOptional() @IsString() firstName?: string;
+
+  @ApiProperty({ example: 'Diallo', required: false })
+  @IsOptional() @IsString() lastName?: string;
+
+  @ApiProperty({ example: 'Médina', required: false })
+  @IsOptional() @IsString() address?: string;
+
   // Artisan uniquement
   @ApiProperty({ example: 'Atelier Moussa', required: false })
   @IsOptional()

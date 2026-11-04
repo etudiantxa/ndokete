@@ -16,6 +16,9 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
   final _businessNameCtrl = TextEditingController();
   final _quarterCtrl = TextEditingController();
   String _role = 'ARTISAN';
@@ -32,6 +35,19 @@ class _RegisterPageState extends State<RegisterPage> {
     'Pikine', 'Guédiawaye', 'Thiès', 'Saint-Louis', 'Ziguinchor',
   ];
 
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _phoneCtrl.dispose();
+    _passwordCtrl.dispose();
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
+    _addressCtrl.dispose();
+    _businessNameCtrl.dispose();
+    _quarterCtrl.dispose();
+    super.dispose();
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     final cleanPhone = _phoneCtrl.text.replaceAll(' ', '').replaceAll('-', '').trim();
@@ -40,6 +56,9 @@ class _RegisterPageState extends State<RegisterPage> {
           phone: cleanPhone,
           password: _passwordCtrl.text,
           role: _role,
+          firstName: _firstNameCtrl.text.trim(),
+          lastName: _lastNameCtrl.text.trim(),
+          address: _addressCtrl.text.trim(),
           businessName: _role == 'ARTISAN' ? _businessNameCtrl.text.trim() : null,
           specialty: _selectedSpecialty,
           quarter: _role == 'ARTISAN' ? _quarterCtrl.text.trim() : null,
@@ -101,7 +120,39 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // Champs communs
+                // Prénom et Nom
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _firstNameCtrl,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        decoration: const InputDecoration(
+                          labelText: 'Prénom',
+                          prefixIcon: Icon(Icons.person_outline, color: AppColors.textSecondary),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Prénom requis' : null,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lastNameCtrl,
+                        style: const TextStyle(color: AppColors.textPrimary),
+                        decoration: const InputDecoration(
+                          labelText: 'Nom',
+                          prefixIcon: Icon(Icons.person, color: AppColors.textSecondary),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                        validator: (v) => (v == null || v.trim().isEmpty) ? 'Nom requis' : null,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Email
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
@@ -115,6 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 12),
 
+                // Téléphone
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
@@ -128,6 +180,19 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 12),
 
+                // Adresse / Quartier
+                TextFormField(
+                  controller: _addressCtrl,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                  decoration: const InputDecoration(
+                    labelText: 'Adresse / Quartier',
+                    prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.textSecondary),
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 12),
+
+                // Mot de passe
                 TextFormField(
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
@@ -196,8 +261,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     dropdownColor: AppColors.cardDark,
                     style: const TextStyle(color: AppColors.textPrimary),
                     decoration: const InputDecoration(
-                      labelText: 'Quartier / Ville',
-                      prefixIcon: Icon(Icons.location_on_outlined, color: AppColors.textSecondary),
+                      labelText: 'Quartier / Ville de l’atelier',
+                      prefixIcon: Icon(Icons.location_city_outlined, color: AppColors.textSecondary),
                     ),
                     items: _quarters.map((q) => DropdownMenuItem(
                       value: q,

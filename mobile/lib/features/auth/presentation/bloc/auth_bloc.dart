@@ -31,6 +31,9 @@ class AuthRegisterRequested extends AuthEvent {
   final String phone;
   final String password;
   final String role;
+  final String? firstName;
+  final String? lastName;
+  final String? address;
   final String? businessName;
   final String? specialty;
   final String? quarter;
@@ -40,6 +43,9 @@ class AuthRegisterRequested extends AuthEvent {
     required this.phone,
     required this.password,
     required this.role,
+    this.firstName,
+    this.lastName,
+    this.address,
     this.businessName,
     this.specialty,
     this.quarter,
@@ -154,6 +160,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         phone: event.phone,
         password: event.password,
         role: event.role,
+        firstName: event.firstName,
+        lastName: event.lastName,
+        address: event.address,
         businessName: event.businessName,
         specialty: event.specialty,
         quarter: event.quarter,
