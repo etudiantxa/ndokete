@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -189,6 +190,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
 
   static String _formatImageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
+    if (url.startsWith('data:image')) return url;
     var formatted = url;
     if (!formatted.contains('/api/v1/') && formatted.contains('/uploads/')) {
       formatted = formatted.replaceAll('/uploads/', '/api/v1/uploads/');
@@ -204,47 +206,48 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
         source: source,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 80,
       );
 
       if (image != null && mounted) {
         setState(() => _isLoading = true);
 
-        final client = getIt<ApiClient>();
-        late final MultipartFile multipartFile;
-        final filename = image.name.isNotEmpty
-            ? image.name
-            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
         if (kIsWeb) {
           final bytes = await image.readAsBytes();
-          multipartFile = MultipartFile.fromBytes(
-            bytes,
-            filename: filename,
-          );
-        } else {
-          multipartFile = await MultipartFile.fromFile(
-            image.path,
-            filename: filename,
-          );
-        }
-
-        final formData = FormData.fromMap({
-          'file': multipartFile,
-        });
-
-        final response = await client.post('/uploads/image', data: formData);
-        final resData = response.data as Map;
-        final imageUrl = (resData['data'] != null && resData['data'] is Map)
-            ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
-            : resData['url'] as String? ?? '';
-
-        if (imageUrl.isNotEmpty) {
+          final base64String = base64Encode(bytes);
+          final dataUrl = 'data:image/jpeg;base64,$base64String';
           setState(() {
-            _imageUrls.add(imageUrl);
+            _imageUrls.add(dataUrl);
+            _isLoading = false;
           });
+        } else {
+          try {
+            final client = getIt<ApiClient>();
+            final multipartFile = await MultipartFile.fromFile(
+              image.path,
+              filename: image.name.isNotEmpty ? image.name : 'image.jpg',
+            );
+            final formData = FormData.fromMap({'file': multipartFile});
+            final response = await client.post('/uploads/image', data: formData);
+            final resData = response.data as Map;
+            final imageUrl = (resData['data'] != null && resData['data'] is Map)
+                ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
+                : resData['url'] as String? ?? '';
+
+            if (imageUrl.isNotEmpty) {
+              setState(() => _imageUrls.add(imageUrl));
+            } else {
+              throw Exception('URL vide');
+            }
+          } catch (_) {
+            final bytes = await image.readAsBytes();
+            final base64String = base64Encode(bytes);
+            final dataUrl = 'data:image/jpeg;base64,$base64String';
+            setState(() => _imageUrls.add(dataUrl));
+          }
+          setState(() => _isLoading = false);
         }
 
         if (mounted) {
@@ -258,6 +261,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
       }
     } catch (e) {
       if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur d\'envoi d\'image: $e'),
