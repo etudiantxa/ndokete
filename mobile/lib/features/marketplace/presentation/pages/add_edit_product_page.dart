@@ -214,46 +214,36 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
       if (image != null && mounted) {
         setState(() => _isLoading = true);
 
+        final client = getIt<ApiClient>();
+        late final MultipartFile multipartFile;
+        final filename = image.name.isNotEmpty
+            ? image.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
         if (kIsWeb) {
           final bytes = await image.readAsBytes();
-          final base64String = base64Encode(bytes);
-          final dataUrl = 'data:image/jpeg;base64,$base64String';
-          setState(() {
-            _imageUrls.add(dataUrl);
-            _isLoading = false;
-          });
+          multipartFile = MultipartFile.fromBytes(bytes, filename: filename);
         } else {
-          try {
-            final client = getIt<ApiClient>();
-            final multipartFile = await MultipartFile.fromFile(
-              image.path,
-              filename: image.name.isNotEmpty ? image.name : 'image.jpg',
-            );
-            final formData = FormData.fromMap({'file': multipartFile});
-            final response = await client.post('/uploads/image', data: formData);
-            final resData = response.data as Map;
-            final imageUrl = (resData['data'] != null && resData['data'] is Map)
-                ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
-                : resData['url'] as String? ?? '';
+          multipartFile = await MultipartFile.fromFile(image.path, filename: filename);
+        }
 
-            if (imageUrl.isNotEmpty) {
-              setState(() => _imageUrls.add(imageUrl));
-            } else {
-              throw Exception('URL vide');
-            }
-          } catch (_) {
-            final bytes = await image.readAsBytes();
-            final base64String = base64Encode(bytes);
-            final dataUrl = 'data:image/jpeg;base64,$base64String';
-            setState(() => _imageUrls.add(dataUrl));
-          }
-          setState(() => _isLoading = false);
+        final formData = FormData.fromMap({'file': multipartFile});
+        final response = await client.post('/uploads/image', data: formData);
+        final resData = response.data as Map;
+        final imageUrl = (resData['data'] != null && resData['data'] is Map)
+            ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
+            : resData['url'] as String? ?? '';
+
+        if (imageUrl.isNotEmpty) {
+          setState(() {
+            _imageUrls.add(imageUrl);
+          });
         }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('✓ Photo ajoutée avec succès !'),
+              content: Text('✓ Photo téléversée avec succès !'),
               backgroundColor: AppColors.success,
             ),
           );
@@ -261,10 +251,9 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur d\'envoi d\'image: $e'),
+            content: Text('Erreur d’envoi d’image : $e'),
             backgroundColor: AppColors.error,
           ),
         );
