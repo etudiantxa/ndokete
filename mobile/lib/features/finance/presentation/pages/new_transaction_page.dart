@@ -172,7 +172,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       'type': _type,
       'amount': amount,
       'category': _selectedCategory,
-      'orderId': _selectedOrderId,
+      if (_selectedOrderId != null && _selectedOrderId!.trim().isNotEmpty)
+        'orderId': _selectedOrderId,
       'date': _selectedDate.toIso8601String(),
       'localId': localId,
     };
