@@ -92,36 +92,25 @@ class _MarketplacePageState extends State<MarketplacePage> {
 
       final resMap = response.data as Map;
       final payload = resMap['data'];
-
-      if (_isArtisan && _selectedNav == 0) {
-        List<dynamic> list = [];
-        if (payload is List) {
-          list = payload;
-        } else if (payload is Map && payload['data'] is List) {
-          list = payload['data'] as List;
-        }
-        _allProducts = list;
-        _totalPages = 1;
-        _hasMorePages = false;
+      final meta = resMap['meta'] as Map?;
+      if (meta != null) {
+        _totalPages = meta['totalPages'] as int? ?? 1;
+        _hasMorePages = _currentPage < _totalPages;
       } else {
-        final meta = resMap['meta'] as Map?;
-        if (meta != null) {
-          _totalPages = meta['totalPages'] as int? ?? 1;
-          _hasMorePages = _currentPage < _totalPages;
-        }
+        _hasMorePages = false;
+      }
 
-        List<dynamic> newProducts = [];
-        if (payload is List) {
-          newProducts = payload;
-        } else if (payload is Map && payload['data'] is List) {
-          newProducts = payload['data'] as List;
-        }
+      List<dynamic> newProducts = [];
+      if (payload is List) {
+        newProducts = payload;
+      } else if (payload is Map && payload['data'] is List) {
+        newProducts = payload['data'] as List;
+      }
 
-        if (isLoadMore) {
-          _allProducts.addAll(newProducts);
-        } else {
-          _allProducts = newProducts;
-        }
+      if (isLoadMore) {
+        _allProducts.addAll(newProducts);
+      } else {
+        _allProducts = newProducts;
       }
 
       _applyFiltersAndSort();

@@ -77,9 +77,13 @@ export class ProductsService {
   }
 
   // Boutique de l'artisan (ses propres produits)
-  async getArtisanProducts(artisanId: string, search?: string, category?: string) {
+  async getArtisanProducts(artisanId: string, search?: string, category?: string, page = 1, limit = 12) {
+    const pageNum = Number(page) || 1;
+    const limitNum = Number(limit) || 12;
+    const skip = (pageNum - 1) * limitNum;
+
     const where: any = { artisanId };
-    if (category) {
+    if (category && category !== 'Tout') {
       where.category = category;
     }
     if (search) {
@@ -88,10 +92,35 @@ export class ProductsService {
         { description: { contains: search, mode: 'insensitive' } },
       ];
     }
-    return this.prisma.product.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
-    });
+
+    const [total, products] = await Promise.all([
+      this.prisma.product.count({ where }),
+      this.prisma.product.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limitNum,
+        include: {
+          artisan: {
+            select: { id: true, businessName: true, quarter: true, rating: true, profilePhoto: true },
+          },
+        },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum) || 1;
+
+    return {
+      success: true,
+      data: products,
+      meta: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages,
+      },
+      message: 'Produits de la boutique récupérés',
+    };
   }
 
   async getProductById(productId: string) {

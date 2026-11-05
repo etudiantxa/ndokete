@@ -37,12 +37,16 @@ export class ProductsController {
   @ApiOperation({ summary: 'Boutique de l\'artisan connecté' })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
   getMyShop(
     @CurrentUser('artisanId') artisanId: string,
     @Query('search') search?: string,
     @Query('category') category?: string,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
   ) {
-    return this.productsService.getArtisanProducts(artisanId, search, category);
+    return this.productsService.getArtisanProducts(artisanId, search, category, page, limit);
   }
 
   @ApiBearerAuth('access-token')
