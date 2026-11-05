@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { NotificationsGateway } from './notifications.gateway';
@@ -58,6 +58,13 @@ export class NotificationsService {
       data: { isRead: true },
     });
     return { message: 'Toutes les notifications marquées comme lues' };
+  }
+
+  async remove(userId: string, id: string) {
+    const notif = await this.prisma.notification.findFirst({ where: { id, userId } });
+    if (!notif) throw new NotFoundException('Notification non trouvée');
+    await this.prisma.notification.delete({ where: { id } });
+    return { success: true, message: 'Notification supprimée' };
   }
 
   async sendOrderNotification(artisanId: string, orderId: string, type: NotificationType) {

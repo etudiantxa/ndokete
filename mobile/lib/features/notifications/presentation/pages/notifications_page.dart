@@ -15,6 +15,7 @@ class NotificationsPage extends StatefulWidget {
 class _NotificationsPageState extends State<NotificationsPage> {
   List<dynamic> _notifications = [];
   bool _loading = true;
+  String _filter = 'all'; // 'all', 'unread', 'read'
 
   @override
   void initState() {
@@ -48,9 +49,40 @@ class _NotificationsPageState extends State<NotificationsPage> {
     } catch (_) {}
   }
 
+  Future<void> _deleteNotification(String id) async {
+    try {
+      final client = getIt<ApiClient>();
+      await client.delete('/notifications/$id');
+      setState(() {
+        _notifications.removeWhere((n) => (n as Map)['id'] == id);
+      });
+    } catch (_) {}
+  }
+
+  Widget _filterChip(String label, String value) {
+    final selected = _filter == value;
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.cardDark,
+      labelStyle: TextStyle(
+          color: selected ? Colors.black : AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
+          fontSize: 12),
+      onSelected: (_) => setState(() => _filter = value),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final unreadCount = _notifications.where((n) => !(n as Map)['isRead']).length;
+    final filtered = _notifications.where((n) {
+      final isRead = (n as Map)['isRead'] as bool? ?? false;
+      if (_filter == 'unread') return !isRead;
+      if (_filter == 'read') return isRead;
+      return true;
+    }).toList();
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
@@ -70,102 +102,133 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _notifications.isEmpty
-              ? const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          : Column(
+              children: [
+                // Filtres (Toutes, Non lues, Lues)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
                     children: [
-                      Icon(Icons.notifications_none, color: AppColors.textDisabled, size: 80),
-                      SizedBox(height: 16),
-                      Text('Aucune notification', style: TextStyle(color: AppColors.textSecondary)),
+                      _filterChip('Toutes', 'all'),
+                      const SizedBox(width: 8),
+                      _filterChip('Non lues ($unreadCount)', 'unread'),
+                      const SizedBox(width: 8),
+                      _filterChip('Lues', 'read'),
                     ],
                   ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _notifications.length,
-                  itemBuilder: (_, i) {
-                    final n = _notifications[i] as Map<String, dynamic>;
-                    final isRead = n['isRead'] as bool? ?? false;
-                    final createdAt = DateTime.tryParse(n['createdAt'] as String? ?? '');
-
-                    return GestureDetector(
-                      onTap: () async {
-                        if (!isRead) {
-                          final client = getIt<ApiClient>();
-                          await client.patch('/notifications/${n['id']}/read');
-                          setState(() => n['isRead'] = true);
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: isRead ? AppColors.cardDark : AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: isRead ? AppColors.dividerDark : AppColors.primary.withValues(alpha: 0.3),
+                ),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.notifications_none, color: AppColors.textDisabled, size: 80),
+                              SizedBox(height: 16),
+                              Text('Aucune notification', style: TextStyle(color: AppColors.textSecondary)),
+                            ],
                           ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: _typeColor(n['type'] as String).withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              child: Icon(
-                                _typeIcon(n['type'] as String),
-                                color: _typeColor(n['type'] as String),
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    n['title'] as String,
-                                    style: TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
-                                      fontSize: 14,
-                                    ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: filtered.length,
+                          itemBuilder: (_, i) {
+                            final n = filtered[i] as Map<String, dynamic>;
+                            final isRead = n['isRead'] as bool? ?? false;
+                            final createdAt = DateTime.tryParse(n['createdAt'] as String? ?? '');
+
+                            return GestureDetector(
+                              onTap: () async {
+                                if (!isRead) {
+                                  final client = getIt<ApiClient>();
+                                  await client.patch('/notifications/${n['id']}/read');
+                                  setState(() => n['isRead'] = true);
+                                }
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: isRead ? AppColors.cardDark : AppColors.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isRead ? AppColors.dividerDark : AppColors.primary.withValues(alpha: 0.3),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    n['body'] as String,
-                                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-                                  ),
-                                  if (createdAt != null) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      timeago.format(createdAt, locale: 'fr'),
-                                      style: const TextStyle(color: AppColors.textDisabled, fontSize: 11),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: _typeColor(n['type'] as String).withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(22),
+                                      ),
+                                      child: Icon(
+                                        _typeIcon(n['type'] as String),
+                                        color: _typeColor(n['type'] as String),
+                                        size: 22,
+                                      ),
                                     ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  n['title'] as String,
+                                                  style: TextStyle(
+                                                    color: AppColors.textPrimary,
+                                                    fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete_outline, color: AppColors.textSecondary, size: 18),
+                                                tooltip: 'Supprimer',
+                                                onPressed: () => _deleteNotification(n['id'] as String),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            n['body'] as String,
+                                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                                          ),
+                                          if (createdAt != null) ...[
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              timeago.format(createdAt, locale: 'fr'),
+                                              style: const TextStyle(color: AppColors.textDisabled, fontSize: 11),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    if (!isRead)
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.primary,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
                                   ],
-                                ],
-                              ),
-                            ),
-                            if (!isRead)
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
                                 ),
                               ),
-                          ],
+                            );
+                          },
                         ),
-                      ),
-                    );
-                  },
                 ),
+              ],
+            ),
     );
   }
 
