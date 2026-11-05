@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -6,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../auth/presentation/bloc/auth_bloc.dart';
 
 class MarketplacePage extends StatefulWidget {
   final int initialTab;
@@ -378,6 +380,34 @@ class _MarketplacePageState extends State<MarketplacePage> {
               onPressed: _loadMarketplaceOrders,
               icon: const Icon(Icons.refresh),
             ),
+          IconButton(
+            tooltip: 'Se déconnecter',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  backgroundColor: AppColors.cardDark,
+                  title: const Text('Déconnexion', style: TextStyle(color: AppColors.textPrimary)),
+                  content: const Text('Voulez-vous vraiment vous déconnecter ?', style: TextStyle(color: AppColors.textSecondary)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        context.read<AuthBloc>().add(const AuthLogoutRequested());
+                      },
+                      child: const Text('Se déconnecter', style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              );
+            },
+            icon: const Icon(Icons.logout, color: AppColors.error),
+          ),
         ],
       ),
       body: SafeArea(
