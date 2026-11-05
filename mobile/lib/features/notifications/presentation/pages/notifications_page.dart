@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
@@ -204,7 +205,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                           if (createdAt != null) ...[
                                             const SizedBox(height: 6),
                                             Text(
-                                              timeago.format(createdAt, locale: 'fr'),
+                                              '${DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(createdAt)} (${timeago.format(createdAt, locale: 'fr')})',
                                               style: const TextStyle(color: AppColors.textDisabled, fontSize: 11),
                                             ),
                                           ],
