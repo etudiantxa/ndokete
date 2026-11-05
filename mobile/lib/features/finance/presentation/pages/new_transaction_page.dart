@@ -70,7 +70,6 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
             .whereType<Map>()
             .map((order) => Map<String, dynamic>.from(order))
             .where((order) =>
-                order['transaction'] == null &&
                 order['status'] != 'LIVRE' &&
                 order['status'] != 'ANNULE')
             .toList();
