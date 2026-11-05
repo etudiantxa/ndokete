@@ -189,6 +189,21 @@ export class TransactionsService {
         localId: dto.localId,
       },
     });
+
+    // Si la transaction est liée à une commande et de type ENTREE, incrémenter l'acompte de la commande
+    if (dto.orderId && dto.type === 'ENTREE') {
+      const order = await this.prisma.order.findFirst({
+        where: { id: dto.orderId, artisanId: realArtisanId },
+      });
+      if (order) {
+        const updatedDeposit = order.deposit + dto.amount;
+        await this.prisma.order.update({
+          where: { id: dto.orderId },
+          data: { deposit: updatedDeposit },
+        });
+      }
+    }
+
     return { success: true, data: transaction, message: 'Transaction enregistrée' };
   }
 
