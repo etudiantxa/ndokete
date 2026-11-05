@@ -154,7 +154,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   }
 
   Future<void> _submit() async {
-    final amount = int.tryParse(_amountCtrl.text.trim());
+    final cleanAmountText = _amountCtrl.text.replaceAll(RegExp(r'\s+'), '').replaceAll(',', '').replaceAll('.', '').trim();
+    final amount = int.tryParse(cleanAmountText);
     if (amount == null || amount <= 0 || _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
