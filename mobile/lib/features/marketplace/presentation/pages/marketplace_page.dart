@@ -7,7 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
-import '../../auth/presentation/bloc/auth_bloc.dart';
+import 'package:ndokete/features/auth/presentation/bloc/auth_bloc.dart';
 
 class MarketplacePage extends StatefulWidget {
   final int initialTab;
