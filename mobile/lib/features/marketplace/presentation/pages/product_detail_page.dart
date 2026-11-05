@@ -342,7 +342,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   void _showCheckoutDialog(BuildContext context, Map<String, dynamic> product, int quantity) {
     final addressCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
+    final authState = context.read<AuthBloc>().state;
+    final userPhone = (authState is AuthAuthenticated) ? authState.user.phone : '';
+    final phoneCtrl = TextEditingController(text: userPhone);
     bool isSubmitting = false;
     final totalAmount = (product['price'] as num) * quantity;
 
