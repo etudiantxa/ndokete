@@ -605,11 +605,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
                                       childCount: _products.length,
                                     ),
                                     gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      childAspectRatio: 0.75,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: MediaQuery.of(context).size.width > 900 ? 4 : (MediaQuery.of(context).size.width > 600 ? 3 : 2),
+                                      childAspectRatio: 0.72,
+                                      crossAxisSpacing: 14,
+                                      mainAxisSpacing: 14,
                                     ),
                                   ),
                                 ),
