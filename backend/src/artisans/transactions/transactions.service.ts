@@ -176,6 +176,8 @@ export class TransactionsService {
 
   async create(userId: string, artisanId: string, dto: CreateTransactionDto) {
     const realArtisanId = await this.resolveArtisanId(userId, artisanId);
+    const validOrderId = dto.orderId && dto.orderId.trim() !== '' ? dto.orderId : undefined;
+
     const transaction = await this.prisma.transaction.create({
       data: {
         artisanId: realArtisanId,
@@ -184,21 +186,21 @@ export class TransactionsService {
         category: dto.category,
         description: dto.description,
         date: dto.date ? new Date(dto.date) : new Date(),
-        orderId: dto.orderId,
+        orderId: validOrderId,
         paymentMethod: dto.paymentMethod,
         localId: dto.localId,
       },
     });
 
-    // Si la transaction est liée à une commande et de type ENTREE, incrémenter l'acompte de la commande
-    if (dto.orderId && dto.type === 'ENTREE') {
+    // Si la transaction est liée à une commande valide et de type ENTREE, incrémenter l'acompte de la commande
+    if (validOrderId && dto.type === 'ENTREE') {
       const order = await this.prisma.order.findFirst({
-        where: { id: dto.orderId, artisanId: realArtisanId },
+        where: { id: validOrderId, artisanId: realArtisanId },
       });
       if (order) {
         const updatedDeposit = order.deposit + dto.amount;
         await this.prisma.order.update({
-          where: { id: dto.orderId },
+          where: { id: validOrderId },
           data: { deposit: updatedDeposit },
         });
       }
