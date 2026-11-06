@@ -69,9 +69,12 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
         _availableOrders = data
             .whereType<Map>()
             .map((order) => Map<String, dynamic>.from(order))
-            .where((order) =>
-                order['status'] != 'LIVRE' &&
-                order['status'] != 'ANNULE')
+            .where((order) {
+              final status = order['status'] as String? ?? '';
+              final amount = (order['amount'] as num?)?.toDouble() ?? 0.0;
+              final deposit = (order['deposit'] as num?)?.toDouble() ?? 0.0;
+              return status != 'LIVRE' && status != 'ANNULE' && deposit < amount;
+            })
             .toList();
         _ordersLoading = false;
       });
