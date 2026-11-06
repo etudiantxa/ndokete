@@ -49,7 +49,7 @@ class ProfileModel extends ProfileEntity {
       name: profileName,
       email: email,
       phone: json['phone'] as String?,
-      avatarUrl: artisan?['profilePhoto'] as String?,
+      avatarUrl: json['profilePhoto'] as String? ?? artisan?['profilePhoto'] as String? ?? client?['profilePhoto'] as String?,
       artisanType: _parseType(
           specialties != null && specialties.isNotEmpty
               ? specialties.first.toString()
