@@ -149,7 +149,7 @@ model Order {
   artisan     Artisan      @relation(fields: [artisanId], references: [id], onDelete: Cascade)
   customer    Customer     @relation(fields: [customerId], references: [id])
   payments    Payment[]
-  transaction Transaction?
+  transactions Transaction[]
 
   @@map("orders")
 }
@@ -191,7 +191,7 @@ model StockMovement {
 model Transaction {
   id            String          @id @default(uuid())
   artisanId     String
-  orderId       String?         @unique
+  orderId       String?
   type          TransactionType
   amount        Int
   category      String
