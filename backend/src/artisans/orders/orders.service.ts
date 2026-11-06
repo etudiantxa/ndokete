@@ -22,7 +22,7 @@ export class OrdersService {
       include: {
         customer: { select: { id: true, name: true, phone: true, isVip: true } },
         payments: { select: { id: true, amount: true, status: true, method: true } },
-        transaction: { select: { id: true } },
+        transactions: { select: { id: true, amount: true, category: true } },
       },
       orderBy: [{ isUrgent: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
     });
