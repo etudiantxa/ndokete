@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -95,9 +97,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
               onPressed: _markAllRead,
               child: const Text('Tout lire', style: TextStyle(color: AppColors.primary)),
             ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => context.push('/notifications/config'),
+          Builder(
+            builder: (context) {
+              final authState = context.read<AuthBloc>().state;
+              final isArtisan = authState is AuthAuthenticated && authState.user.role == 'ARTISAN';
+              if (!isArtisan) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'Configuration des rappels',
+                onPressed: () => context.push('/notifications/config'),
+              );
+            },
           ),
         ],
       ),
