@@ -25,6 +25,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   bool _hasReceipt = false;
   bool _ordersLoading = true;
   List<Map<String, dynamic>> _availableOrders = [];
+  final _currency = NumberFormat('#,###', 'fr_FR');
 
   final _incomeCategories = ['Vente', 'Acompte', 'Solde', 'Autre'];
   final _expenseCategories = [
