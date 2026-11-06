@@ -396,6 +396,13 @@ class _TreasuryPageState extends State<TreasuryPage> {
                                           color: AppColors.textSecondary,
                                           fontSize: 11),
                                     ),
+                                    if (tx['date'] != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(DateTime.parse(tx['date'].toString())),
+                                        style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
