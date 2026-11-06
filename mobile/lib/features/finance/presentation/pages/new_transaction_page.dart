@@ -226,15 +226,24 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       }
       if (mounted) {
         setState(() => _loading = false);
+        
+        String errorMessage = 'Impossible d’enregistrer la transaction';
+        if (error is DioException && error.response?.data != null) {
+          final data = error.response?.data;
+          if (data is Map && data['message'] != null) {
+            final msg = data['message'];
+            errorMessage = msg is List ? msg.join(', ') : msg.toString();
+          }
+        } else {
+          errorMessage = error.toString();
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(kIsWeb
-                ? 'Impossible d’enregistrer la transaction : $error'
-                : 'Transaction enregistrée hors ligne et en attente de synchronisation.'),
-            backgroundColor: kIsWeb ? AppColors.error : AppColors.warning,
+            content: Text(errorMessage),
+            backgroundColor: AppColors.error,
           ),
         );
-        if (!kIsWeb) context.pop();
       }
     }
   }
