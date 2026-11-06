@@ -20,7 +20,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
-        id: true, email: true, phone: true, role: true, isVerified: true, createdAt: true,
+        id: true, email: true, phone: true, role: true, isVerified: true, profilePhoto: true, createdAt: true,
         artisan: {
           select: {
             id: true, businessName: true, specialty: true, quarter: true,
@@ -66,42 +66,35 @@ export class UsersService {
       if (phoneOwner) throw new UnauthorizedException('Ce numéro est déjà utilisé');
     }
 
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.phone ? { phone: dto.phone } : {}),
+        ...(dto.profilePhoto !== undefined ? { profilePhoto: dto.profilePhoto } : {}),
+      },
+    });
+
     if (user.role === 'ARTISAN' && user.artisan) {
-      await this.prisma.$transaction([
-        this.prisma.user.update({
-          where: { id: userId },
-          data: dto.phone ? { phone: dto.phone } : {},
-        }),
-        this.prisma.artisan.update({
-          where: { id: user.artisan.id },
-          data: {
-            ...(dto.businessName !== undefined ? { businessName: dto.businessName } : {}),
-            ...(dto.bio !== undefined ? { description: dto.bio } : {}),
-            ...(dto.location !== undefined ? { quarter: dto.location } : {}),
-            ...(dto.profilePhoto !== undefined ? { profilePhoto: dto.profilePhoto } : {}),
-          },
-        }),
-      ]);
+      await this.prisma.artisan.update({
+        where: { id: user.artisan.id },
+        data: {
+          ...(dto.businessName !== undefined ? { businessName: dto.businessName } : {}),
+          ...(dto.bio !== undefined ? { description: dto.bio } : {}),
+          ...(dto.location !== undefined ? { quarter: dto.location } : {}),
+          ...(dto.profilePhoto !== undefined ? { profilePhoto: dto.profilePhoto } : {}),
+        },
+      });
     } else {
       const client = await this.prisma.client.findUnique({ where: { userId } });
-      const ops: any[] = [
-        this.prisma.user.update({
-          where: { id: userId },
-          data: dto.phone ? { phone: dto.phone } : {},
-        }),
-      ];
       if (client) {
-        ops.push(
-          this.prisma.client.update({
-            where: { id: client.id },
-            data: {
-              ...(dto.name !== undefined ? { name: dto.name } : {}),
-              ...(dto.location !== undefined ? { address: dto.location } : {}),
-            },
-          }),
-        );
+        await this.prisma.client.update({
+          where: { id: client.id },
+          data: {
+            ...(dto.name !== undefined ? { name: dto.name } : {}),
+            ...(dto.location !== undefined ? { address: dto.location } : {}),
+          },
+        });
       }
-      await this.prisma.$transaction(ops);
     }
 
     return this.getMe(userId);
