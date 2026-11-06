@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../common/prisma/prisma.service';
 import { PaymentMethod, TransactionType } from '@prisma/client';
 import { IsEnum, IsInt, IsISO8601, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
@@ -192,16 +192,21 @@ export class TransactionsService {
       },
     });
 
-    // Si la transaction est liée à une commande valide et de type ENTREE, incrémenter l'acompte de la commande
+    // Si la transaction est liée à une commande valide et de type ENTREE, incrémenter l'acompte de la commande avec vérification de dépassement
     if (validOrderId && dto.type === 'ENTREE') {
       const order = await this.prisma.order.findFirst({
         where: { id: validOrderId, artisanId: realArtisanId },
       });
       if (order) {
-        const updatedDeposit = order.deposit + dto.amount;
+        const potentialDeposit = order.deposit + dto.amount;
+        if (potentialDeposit > order.amount) {
+          throw new BadRequestException(
+            `Le montant versé (${dto.amount} FCFA) dépasse le solde restant dû (${order.amount - order.deposit} FCFA). Total commande : ${order.amount} FCFA.`
+          );
+        }
         await this.prisma.order.update({
           where: { id: validOrderId },
-          data: { deposit: updatedDeposit },
+          data: { deposit: potentialDeposit },
         });
       }
     }

@@ -170,6 +170,27 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       return;
     }
 
+    if (_selectedOrderId != null && _selectedOrderId!.trim().isNotEmpty) {
+      final selectedOrder = _availableOrders.firstWhere(
+        (o) => o['id'] == _selectedOrderId,
+        orElse: () => {},
+      );
+      if (selectedOrder.isNotEmpty) {
+        final total = (selectedOrder['amount'] as num?)?.toDouble() ?? 0.0;
+        final currentDeposit = (selectedOrder['deposit'] as num?)?.toDouble() ?? 0.0;
+        final remaining = total - currentDeposit;
+        if (amount > remaining) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Le montant (${_currency.format(amount)} F) dépasse le solde restant dû (${_currency.format(remaining)} F).'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+          return;
+        }
+      }
+    }
+
     setState(() => _loading = true);
     final localId = DateTime.now().millisecondsSinceEpoch.toString();
     final payload = {
