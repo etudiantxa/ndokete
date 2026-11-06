@@ -1135,7 +1135,12 @@ class _MarketplacePageState extends State<MarketplacePage> {
         final firstItem =
             items.isEmpty ? null : items.first as Map<String, dynamic>;
         final firstProduct = firstItem?['product'] as Map<String, dynamic>?;
+        final payments = order['payments'] as List? ?? [];
+        final isPaid = payments.any((p) => (p is Map) && p['status'] == 'PAYE');
         final createdAt = order['createdAt'] as String?;
+        final parsedDate = createdAt != null ? DateTime.tryParse(createdAt) : null;
+        final dateStr = parsedDate != null ? DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(parsedDate) : '';
+
         return GestureDetector(
           onTap: () => _showOrderDetails(order),
           child: Card(
@@ -1153,8 +1158,8 @@ class _MarketplacePageState extends State<MarketplacePage> {
               ),
               subtitle: Text(
                 '${firstProduct?['name'] ?? 'Produit'}${items.length > 1 ? ' et ${items.length - 1} autre(s)' : ''}'
-                '${createdAt == null ? '' : ' · ${DateFormat('dd/MM/yyyy').format(DateTime.parse(createdAt))}'}',
-                style: const TextStyle(color: AppColors.textSecondary),
+                '${dateStr.isEmpty ? '' : ' · $dateStr'}',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1165,10 +1170,27 @@ class _MarketplacePageState extends State<MarketplacePage> {
                     style: const TextStyle(
                         color: AppColors.primary, fontWeight: FontWeight.w600),
                   ),
-                  Text(
-                    order['status'] as String? ?? '',
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 10),
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isPaid) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text('✓ Payé', style: TextStyle(color: AppColors.success, fontSize: 9, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(
+                        order['status'] as String? ?? '',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 10),
+                      ),
+                    ],
                   ),
                 ],
               ),
