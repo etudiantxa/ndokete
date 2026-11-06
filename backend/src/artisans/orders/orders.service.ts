@@ -115,13 +115,35 @@ export class OrdersService {
       include: { customer: true },
     });
 
-    // Si la commande provient de la Marketplace, synchroniser son statut pour le client
+    // Si la commande provient de la Marketplace, synchroniser son statut pour le client et envoyer une notification
     if (dto.status && updated.orderNumber.startsWith('CMD-MKT-')) {
       const originalMktNumber = updated.orderNumber.replace('CMD-MKT-', '');
-      await this.prisma.marketplaceOrder.updateMany({
+      const mktOrder = await this.prisma.marketplaceOrder.findUnique({
         where: { orderNumber: originalMktNumber },
-        data: { status: dto.status as OrderStatus },
+        include: { client: true },
       });
+      if (mktOrder) {
+        await this.prisma.marketplaceOrder.update({
+          where: { id: mktOrder.id },
+          data: { status: dto.status as OrderStatus },
+        });
+
+        const statusLabels: Record<string, string> = {
+          EN_COURS: 'en cours de confection 🧵',
+          PRET: 'prêt pour la livraison / récupération ✨',
+          LIVRE: 'livré avec succès 📦',
+        };
+        const label = statusLabels[dto.status] || dto.status;
+        await this.prisma.notification.create({
+          data: {
+            userId: mktOrder.client.userId,
+            type: 'COMMANDE',
+            title: '📦 Mise à jour de commande',
+            body: `Votre commande #${mktOrder.orderNumber} est désormais ${label}.`,
+            data: { orderId: mktOrder.id },
+          },
+        });
+      }
     }
 
     return { data: updated, message: 'Commande mise à jour' };
