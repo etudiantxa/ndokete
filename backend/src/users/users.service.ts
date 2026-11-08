@@ -35,6 +35,8 @@ export class UsersService {
 
     let isOwner = true;
     let canManageFinances = true;
+    let artisanData = user.artisan;
+
     if (user.phone) {
       const cleanPhone = user.phone.replace(/[^0-9]/g, '');
       const allMembers = await this.prisma.teamMember.findMany();
@@ -42,11 +44,23 @@ export class UsersService {
       if (matchedMember) {
         isOwner = false;
         canManageFinances = matchedMember.canManageFinances;
+        const masterArtisan = await this.prisma.artisan.findUnique({
+          where: { id: matchedMember.artisanId },
+          select: {
+            id: true, businessName: true, specialty: true, quarter: true,
+            description: true, profilePhoto: true, subscription: true,
+            _count: { select: { customers: true, products: true } },
+          },
+        });
+        if (masterArtisan) {
+          artisanData = masterArtisan;
+        }
       }
     }
 
     return {
       ...user,
+      artisan: artisanData,
       isOwner,
       canManageFinances,
     };
