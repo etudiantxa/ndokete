@@ -29,6 +29,7 @@ class _StockPageState extends State<StockPage> {
     final unitCtrl = TextEditingController(text: 'm');
     final thresholdCtrl = TextEditingController(text: '5');
     String? selectedCategory = _categories.firstWhere((c) => c != 'Tout');
+    String? photoUrl;
     bool loading = false;
 
     showModalBottomSheet(
@@ -89,6 +90,40 @@ class _StockPageState extends State<StockPage> {
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: const InputDecoration(labelText: 'Seuil d\'alerte'),
               ),
+              const SizedBox(height: 12),
+              const Text('Photo de l’article (Optionnel)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  if (photoUrl != null && photoUrl!.isNotEmpty)
+                    Container(
+                      width: 50,
+                      height: 50,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover),
+                      ),
+                    ),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary),
+                      onPressed: () {
+                        const presets = [
+                          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800',
+                          'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800',
+                          'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fae?w=800',
+                        ];
+                        setSheetState(() {
+                          photoUrl = presets[DateTime.now().second % presets.length];
+                        });
+                      },
+                      icon: const Icon(Icons.add_a_photo_outlined),
+                      label: Text(photoUrl == null ? 'Choisir une photo pro' : 'Changer la photo'),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: loading ? null : () async {
@@ -101,6 +136,7 @@ class _StockPageState extends State<StockPage> {
                       'quantity': double.tryParse(quantityCtrl.text) ?? 0,
                       'unit': unitCtrl.text,
                       'alertThreshold': double.tryParse(thresholdCtrl.text) ?? 5,
+                      if (photoUrl != null) 'photo': photoUrl,
                     });
                     _loadStock();
                     if (ctx.mounted) Navigator.pop(ctx);
@@ -280,19 +316,24 @@ class _StockItemCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Image placeholder
+            // Image / Icone matière
             Container(
               width: 60,
               height: 60,
               decoration: BoxDecoration(
                 color: AppColors.surfaceDark,
                 borderRadius: BorderRadius.circular(12),
+                image: item['photo'] != null && item['photo'].toString().isNotEmpty
+                    ? DecorationImage(image: NetworkImage(item['photo']), fit: BoxFit.cover)
+                    : null,
               ),
-              child: Icon(
-                _categoryIcon(category),
-                color: AppColors.primary,
-                size: 28,
-              ),
+              child: item['photo'] == null || item['photo'].toString().isEmpty
+                  ? Icon(
+                      _categoryIcon(category),
+                      color: AppColors.primary,
+                      size: 28,
+                    )
+                  : null,
             ),
             const SizedBox(width: 12),
             Expanded(
