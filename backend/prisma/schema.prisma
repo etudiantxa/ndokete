@@ -183,6 +183,7 @@ model StockMovement {
   quantity    Float
   reason      String?
   orderId     String?
+  authorName  String?
   createdAt   DateTime          @default(now())
   stockItem   StockItem         @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
 

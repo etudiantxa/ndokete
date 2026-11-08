@@ -42,18 +42,19 @@ export class StockController {
 
   @Post()
   @ApiOperation({ summary: 'Ajouter un article de stock' })
-  create(@CurrentUser('artisanId') artisanId: string, @Body() dto: CreateStockItemDto) {
-    return this.stockService.create(artisanId, dto);
+  create(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Body() dto: CreateStockItemDto) {
+    return this.stockService.create(userId, artisanId, dto);
   }
 
   @Patch(':id/adjust')
   @ApiOperation({ summary: 'Ajuster le stock (entrée, sortie, ajustement)' })
   adjust(
+    @CurrentUser('id') userId: string,
     @CurrentUser('artisanId') artisanId: string,
     @Param('id') id: string,
     @Body() dto: AdjustStockDto,
   ) {
-    return this.stockService.adjustStock(artisanId, id, dto);
+    return this.stockService.adjustStock(userId, artisanId, id, dto);
   }
 
   @Patch(':id')

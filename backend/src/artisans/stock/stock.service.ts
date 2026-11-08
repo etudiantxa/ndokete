@@ -39,6 +39,14 @@ export class AdjustStockDto {
 export class StockService {
   constructor(private prisma: PrismaService) {}
 
+  async getAuthorName(userId: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { artisan: { select: { businessName: true } }, client: { select: { name: true } } },
+    });
+    return user?.artisan?.businessName || user?.client?.name || user?.email?.split('@')[0] || 'Atelier';
+  }
+
   async findAll(artisanId: string, category?: string, lowStock?: boolean) {
     const items = await this.prisma.stockItem.findMany({
       where: {
@@ -75,7 +83,8 @@ export class StockService {
     return item;
   }
 
-  async create(artisanId: string, dto: CreateStockItemDto) {
+  async create(userId: string, artisanId: string, dto: CreateStockItemDto) {
+    const authorName = await this.getAuthorName(userId);
     const item = await this.prisma.stockItem.create({
       data: {
         artisanId,
@@ -99,6 +108,7 @@ export class StockService {
           type: 'ENTREE',
           quantity: dto.quantity,
           reason: 'Stock initial',
+          authorName,
         },
       });
     }
@@ -106,7 +116,8 @@ export class StockService {
     return { data: item, message: 'Article de stock créé' };
   }
 
-  async adjustStock(artisanId: string, itemId: string, dto: AdjustStockDto) {
+  async adjustStock(userId: string, artisanId: string, itemId: string, dto: AdjustStockDto) {
+    const authorName = await this.getAuthorName(userId);
     const item = await this.prisma.stockItem.findFirst({
       where: { id: itemId, artisanId },
     });
@@ -137,6 +148,7 @@ export class StockService {
           quantity: dto.quantity,
           reason: dto.reason,
           orderId: dto.orderId,
+          authorName,
         },
       }),
     ]);

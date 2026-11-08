@@ -462,10 +462,12 @@ class _StockDetailPageState extends State<StockDetailPage> {
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500)),
                                 if (date != null)
-                                  Text(DateFormat('dd Oct yyyy').format(date),
-                                      style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 11)),
+                                  Text(
+                                    '${DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(date)}${mov['authorName'] != null ? ' · ${mov['authorName']}' : ''}',
+                                    style: const TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 11),
+                                  ),
                               ],
                             ),
                           ),
