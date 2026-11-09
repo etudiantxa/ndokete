@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -15,7 +16,7 @@ class _StockPageState extends State<StockPage> {
   List<dynamic> _items = [];
   bool _loading = true;
   String _selectedCategory = 'Tout';
-  final _categories = ['Tout', 'Tissus', 'Fils', 'Cuir', 'Perles'];
+  final List<String> _categories = ['Tout', 'Tissus', 'Fils', 'Cuir', 'Perles'];
 
   @override
   void initState() {
@@ -120,7 +121,6 @@ class _StockPageState extends State<StockPage> {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary),
                       onPressed: () {
-                        // Afficher les 4 types de photos de catégories
                         showModalBottomSheet(
                           context: ctx,
                           backgroundColor: AppColors.surfaceDark,
@@ -187,6 +187,37 @@ class _StockPageState extends State<StockPage> {
     );
   }
 
+  Future<void> _deleteItem(String itemId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        title: const Text('Supprimer cet article', style: TextStyle(color: AppColors.textPrimary)),
+        content: const Text('Voulez-vous vraiment supprimer cet article de l’inventaire ?', style: TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      final client = getIt<ApiClient>();
+      await client.delete('/artisans/stock/$itemId');
+      _loadStock();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Article supprimé du stock'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadStock([String? category]) async {
     setState(() => _loading = true);
     try {
@@ -208,23 +239,21 @@ class _StockPageState extends State<StockPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
-        title: const Text('Inventaire des Matières Premi...'),
+        title: const Text('Inventaire des Matières Premières'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Utilisez les catégories pour filtrer le stock.')),
-            ),
+            onPressed: () {},
           ),
           IconButton(
             icon: const Icon(Icons.filter_list),
-            onPressed: () => _loadStock(_selectedCategory == 'Tout' ? null : _selectedCategory),
+            onPressed: () {},
           ),
         ],
       ),
       body: Column(
         children: [
-          // Filtres catégories
+          // Filtres de catégories
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.all(16),
@@ -265,10 +294,14 @@ class _StockPageState extends State<StockPage> {
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: _items.length,
-                      itemBuilder: (_, i) => _StockItemCard(
-                        item: _items[i] as Map<String, dynamic>,
-                        onTap: () => context.push('/stock/${(_items[i] as Map)['id']}'),
-                      ),
+                      itemBuilder: (_, i) {
+                        final itemMap = _items[i] as Map<String, dynamic>;
+                        return _StockItemCard(
+                          item: itemMap,
+                          onTap: () => context.push('/stock/${itemMap['id']}'),
+                          onDelete: () => _deleteItem(itemMap['id'] as String),
+                        );
+                      },
                     ),
                   ),
           ),
@@ -307,8 +340,13 @@ class _StockPageState extends State<StockPage> {
 class _StockItemCard extends StatelessWidget {
   final Map<String, dynamic> item;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
-  const _StockItemCard({required this.item, required this.onTap});
+  const _StockItemCard({
+    required this.item,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   bool get _isLow {
     final qty = (item['quantity'] as num).toDouble();
@@ -333,6 +371,9 @@ class _StockItemCard extends StatelessWidget {
     final qty = item['quantity'];
     final unit = item['unit'] as String;
     final category = item['category'] as String;
+    final createdAt = DateTime.tryParse(item['createdAt'] as String? ?? '');
+    final dateStr = createdAt != null ? DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(createdAt) : '';
+    final author = item['authorName'] as String?;
 
     return GestureDetector(
       onTap: onTap,
@@ -386,9 +427,10 @@ class _StockItemCard extends StatelessWidget {
                                 fontSize: 14,
                               ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
-                              item['description'] as String? ?? category,
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                              '${item['category'] as String? ?? 'Matière'}${dateStr.isEmpty ? '' : ' · $dateStr'}${author != null ? ' ($author)' : ''}',
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
                             ),
                           ],
                         ),
@@ -400,6 +442,12 @@ class _StockItemCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                           fontSize: 15,
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                        tooltip: 'Supprimer cet article',
+                        onPressed: onDelete,
                       ),
                     ],
                   ),
@@ -440,17 +488,8 @@ class _StockItemCard extends StatelessWidget {
                             style: TextStyle(
                               color: _isCritical ? AppColors.error : AppColors.warning,
                               fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          '${(_stockPercentage * 100).round()}%',
-                          style: TextStyle(
-                            color: _isCritical ? AppColors.error : AppColors.warning,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -458,22 +497,6 @@ class _StockItemCard extends StatelessWidget {
                 ],
               ),
             ),
-
-            // Badge stockable
-            if (!_isLow) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'STOCKABLE',
-                  style: TextStyle(color: AppColors.success, fontSize: 9, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -497,24 +520,36 @@ class _NavTab extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _NavTab({required this.icon, required this.label, required this.selected, required this.onTap});
+  const _NavTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: selected ? AppColors.primary : AppColors.textSecondary, size: 22),
-            const SizedBox(height: 2),
-            Text(label, style: TextStyle(
+            Icon(
+              icon,
               color: selected ? AppColors.primary : AppColors.textSecondary,
-              fontSize: 10,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            )),
+              size: 22,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? AppColors.primary : AppColors.textSecondary,
+                fontSize: 10,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
           ],
         ),
       ),
