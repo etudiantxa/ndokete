@@ -399,7 +399,7 @@ class _TreasuryPageState extends State<TreasuryPage> {
                                     if (tx['date'] != null) ...[
                                       const SizedBox(height: 2),
                                       Text(
-                                        DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(DateTime.parse(tx['date'].toString())),
+                                        '${DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(DateTime.parse(tx['date'].toString()))}${tx['authorName'] != null ? ' · Par ${tx['authorName']}' : ''}',
                                         style: const TextStyle(color: AppColors.textDisabled, fontSize: 10),
                                       ),
                                     ],

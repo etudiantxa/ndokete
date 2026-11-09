@@ -28,6 +28,35 @@ export class CreateTransactionDto {
 export class TransactionsService {
   constructor(private prisma: PrismaService) {}
 
+  async getAuthorName(userId: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { artisan: { select: { businessName: true } }, client: { select: { name: true } } },
+    });
+    if (!user) return 'Atelier';
+
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(
+        (m) => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)),
+      );
+      if (matchedMember) {
+        return matchedMember.name;
+      }
+    }
+
+    if (user.artisan?.businessName) {
+      return user.artisan.businessName;
+    }
+
+    if (user.client?.name) {
+      return user.client.name;
+    }
+
+    return user.email.split('@')[0] || 'Atelier';
+  }
+
   async resolveArtisanId(userId: string, artisanId?: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -177,6 +206,7 @@ export class TransactionsService {
   async create(userId: string, artisanId: string, dto: CreateTransactionDto) {
     const realArtisanId = await this.resolveArtisanId(userId, artisanId);
     const validOrderId = dto.orderId && dto.orderId.trim() !== '' ? dto.orderId : undefined;
+    const authorName = await this.getAuthorName(userId);
 
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -185,6 +215,7 @@ export class TransactionsService {
         amount: dto.amount,
         category: dto.category,
         description: dto.description,
+        authorName,
         date: dto.date ? new Date(dto.date) : new Date(),
         orderId: validOrderId,
         paymentMethod: dto.paymentMethod,

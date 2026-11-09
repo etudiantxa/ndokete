@@ -167,6 +167,7 @@ model StockItem {
   supplier       String?
   supplierPhone  String?
   photo          String?
+  authorName     String?
   syncStatus     SyncStatus      @default(SYNCED)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -198,6 +199,7 @@ model Transaction {
   amount        Int
   category      String
   description   String?
+  authorName    String?
   date          DateTime        @default(now())
   receipt       String?
   paymentMethod PaymentMethod?
