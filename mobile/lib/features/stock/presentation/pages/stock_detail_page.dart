@@ -147,6 +147,42 @@ class _StockDetailPageState extends State<StockDetailPage> {
     }
   }
 
+  Future<void> _deleteStockItem() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        title: const Text('Supprimer l’article', style: TextStyle(color: AppColors.textPrimary)),
+        content: const Text('Voulez-vous vraiment supprimer cet article de l’inventaire ?', style: TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      await getIt<ApiClient>().delete('/artisans/stock/${widget.itemId}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Article supprimé de l’inventaire'), backgroundColor: AppColors.success),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur de suppression : $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _adjustQtyCtrl.dispose();
@@ -274,10 +310,23 @@ class _StockDetailPageState extends State<StockDetailPage> {
     final qty = (item['quantity'] as num).toDouble();
     final threshold = (item['alertThreshold'] as num).toDouble();
     final movements = item['movements'] as List? ?? [];
+    final createdAt = DateTime.tryParse(item['createdAt'] as String? ?? '');
+    final createdStr = createdAt != null ? DateFormat('dd MMM yyyy à HH:mm', 'fr_FR').format(createdAt) : '';
+    final authorName = item['authorName'] as String?;
+    final photo = item['photo'] as String?;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      appBar: AppBar(title: const Text('Détails Matière')),
+      appBar: AppBar(
+        title: const Text('Détails Matière'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            tooltip: 'Supprimer l’article',
+            onPressed: _deleteStockItem,
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -285,13 +334,19 @@ class _StockDetailPageState extends State<StockDetailPage> {
             Container(
               width: double.infinity,
               height: 180,
-              color: AppColors.cardDark,
+              decoration: BoxDecoration(
+                color: AppColors.cardDark,
+                image: photo != null && photo.isNotEmpty
+                    ? DecorationImage(image: NetworkImage(photo), fit: BoxFit.cover, colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.3), BlendMode.darken))
+                    : null,
+              ),
               child: Stack(
                 children: [
-                  const Center(
-                    child: Icon(Icons.texture,
-                        color: AppColors.textDisabled, size: 80),
-                  ),
+                  if (photo == null || photo.isEmpty)
+                    const Center(
+                      child: Icon(Icons.texture,
+                          color: AppColors.textDisabled, size: 80),
+                    ),
                   Positioned(
                     bottom: 16,
                     left: 20,
@@ -322,6 +377,13 @@ class _StockDetailPageState extends State<StockDetailPage> {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
+                        if (createdStr.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ajouté le $createdStr${authorName != null ? ' par $authorName' : ''}',
+                            style: const TextStyle(color: Colors.white70, fontSize: 11),
+                          ),
+                        ],
                       ],
                     ),
                   ),
