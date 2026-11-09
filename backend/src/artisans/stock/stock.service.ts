@@ -44,7 +44,30 @@ export class StockService {
       where: { id: userId },
       include: { artisan: { select: { businessName: true } }, client: { select: { name: true } } },
     });
-    return user?.artisan?.businessName || user?.client?.name || user?.email?.split('@')[0] || 'Atelier';
+    if (!user) return 'Atelier';
+
+    // 1. Si c'est un membre d'équipe / apprenti
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(
+        (m) => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)),
+      );
+      if (matchedMember) {
+        return matchedMember.name;
+      }
+    }
+
+    // 2. Si c'est le propriétaire de l'atelier
+    if (user.artisan?.businessName) {
+      return user.artisan.businessName;
+    }
+
+    if (user.client?.name) {
+      return user.client.name;
+    }
+
+    return user.email.split('@')[0] || 'Atelier';
   }
 
   async findAll(artisanId: string, category?: string, lowStock?: boolean) {
@@ -97,6 +120,7 @@ export class StockService {
         supplier: dto.supplier,
         supplierPhone: dto.supplierPhone,
         photo: dto.photo,
+        authorName,
       },
     });
 
