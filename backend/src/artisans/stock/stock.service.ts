@@ -120,7 +120,6 @@ export class StockService {
         supplier: dto.supplier,
         supplierPhone: dto.supplierPhone,
         photo: dto.photo,
-        authorName,
       },
     });
 
