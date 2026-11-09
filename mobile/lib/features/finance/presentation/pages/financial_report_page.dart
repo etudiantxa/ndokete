@@ -62,40 +62,51 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        margin: const pw.EdgeInsets.all(28),
         build: (context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            // En-tête du document PDF
+            // En-tête Exécutif VIP
             pw.Container(
-              padding: const pw.EdgeInsets.all(16),
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(20),
               decoration: pw.BoxDecoration(
-                color: PdfColors.amber50,
-                borderRadius: pw.BorderRadius.circular(8),
-                border: pw.Border.all(color: PdfColors.amber300),
+                color: PdfColor.fromHex('#1E293B'),
+                borderRadius: pw.BorderRadius.circular(10),
               ),
               child: pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.center,
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Container(
-                    width: 36,
-                    height: 36,
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.amber400,
-                      borderRadius: pw.BorderRadius.circular(6),
-                    ),
-                    child: pw.Center(
-                      child: pw.Text('N', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
-                    ),
-                  ),
-                  pw.SizedBox(width: 12),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  pw.Row(
                     children: [
-                      pw.Text(artisanName, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+                      pw.Container(
+                        width: 42,
+                        height: 42,
+                        decoration: pw.BoxDecoration(
+                          color: PdfColor.fromHex('#F59E0B'),
+                          borderRadius: pw.BorderRadius.circular(8),
+                        ),
+                        child: pw.Center(
+                          child: pw.Text('N', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                        ),
+                      ),
+                      pw.SizedBox(width: 14),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(artisanName, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                          pw.SizedBox(height: 3),
+                          pw.Text('RAPPORT FINANCIER MENSUEL - ${period.toUpperCase()}', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#F59E0B'), fontWeight: pw.FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('ÉDITION OFFICIELLE', style: pw.TextStyle(fontSize: 8, color: PdfColor.fromHex('#94A3B8'), fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 2),
-                      pw.Text('Rapport d\'activité mensuel - $period', style: const pw.TextStyle(fontSize: 11, color: PdfColors.grey800)),
-                      pw.Text('Généré le $today', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+                      pw.Text(today, style: const pw.TextStyle(fontSize: 9, color: PdfColors.white)),
                     ],
                   ),
                 ],
@@ -103,90 +114,117 @@ class _FinancialReportPageState extends State<FinancialReportPage> {
             ),
             pw.SizedBox(height: 20),
 
-            // Résumé Financier
-            pw.Container(
-              padding: const pw.EdgeInsets.all(16),
-              decoration: pw.BoxDecoration(
-                borderRadius: pw.BorderRadius.circular(8),
-                border: pw.Border.all(color: PdfColors.grey300),
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text('Total des Revenus', style: const pw.TextStyle(fontSize: 12, color: PdfColors.black)),
-                      pw.Text(amount(totalIncome), style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
-                    ],
-                  ),
-                  pw.SizedBox(height: 10),
-                  pw.Divider(color: PdfColors.grey200),
-                  pw.SizedBox(height: 10),
-                  pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text('Total des Dépenses', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
-                      pw.Text(amount(totalExpenses), style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.red700)),
-                    ],
-                  ),
-                  pw.SizedBox(height: 12),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(12),
+            // Cartes KPIs
+            pw.Row(
+              children: [
+                pw.Expanded(
+                  child: pw.Container(
+                    padding: const pw.EdgeInsets.all(14),
                     decoration: pw.BoxDecoration(
-                      color: PdfColors.green50,
-                      borderRadius: pw.BorderRadius.circular(6),
-                      border: pw.Border.all(color: PdfColors.green300),
+                      color: PdfColor.fromHex('#F8FAFC'),
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
                     ),
-                    child: pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('Bénéfice Net', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green900)),
-                        pw.Text(amount(netProfit), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.green900)),
+                        pw.Text('RECETTES', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#64748B'), fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        pw.Text(amount(totalIncome), style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#0F172A'))),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                pw.SizedBox(width: 12),
+                pw.Expanded(
+                  child: pw.Container(
+                    padding: const pw.EdgeInsets.all(14),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#FEF2F2'),
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColor.fromHex('#FCA5A5')),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('DÉPENSES', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#991B1B'), fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        pw.Text(amount(totalExpenses), style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#DC2626'))),
+                      ],
+                    ),
+                  ),
+                ),
+                pw.SizedBox(width: 12),
+                pw.Expanded(
+                  child: pw.Container(
+                    padding: const pw.EdgeInsets.all(14),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#ECFDF5'),
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColor.fromHex('#6EE7B7')),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Text('BÉNÉFICE NET', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#065F46'), fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 6),
+                        pw.Text(amount(netProfit), style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#047857'))),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 24),
 
-            // Tableau des Transactions du mois
-            if (transactions.isNotEmpty) ...[
-              pw.Text('Détail des Transactions du Mois', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 8),
+            // Journal des Transactions
+            pw.Text('JOURNAL DES TRANSACTIONS DU MOIS', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#1E293B'))),
+            pw.SizedBox(height: 8),
+            if (transactions.isNotEmpty)
               pw.TableHelper.fromTextArray(
-                headers: const ['Date', 'Catégorie', 'Type', 'Montant'],
-                data: transactions.take(15).map((t) {
+                headers: const ['Date', 'Catégorie', 'Type', 'Montant Net'],
+                data: transactions.take(20).map((t) {
                   final tx = t as Map<String, dynamic>;
-                  final date = tx['date'] != null ? DateFormat('dd/MM/yyyy', 'fr_FR').format(DateTime.parse(tx['date'].toString())) : '';
+                  final date = tx['date'] != null ? DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(DateTime.parse(tx['date'].toString())) : '';
                   final isIncome = tx['type'] == 'ENTREE';
                   return [
                     date,
                     tx['category'] ?? '',
-                    isIncome ? 'Recette' : 'Dépense',
+                    isIncome ? 'Recette (+)' : 'Dépense (-)',
                     '${isIncome ? '+' : '-'}${amount(tx['amount'])}',
                   ];
                 }).toList(),
-                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.black, fontSize: 10),
-                headerDecoration: const pw.BoxDecoration(color: PdfColors.amber100),
-                cellStyle: const pw.TextStyle(fontSize: 9),
-                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                border: pw.TableBorder.all(color: PdfColors.grey300),
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 9),
+                headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#1E293B')),
+                cellStyle: const pw.TextStyle(fontSize: 9, color: PdfColors.black),
+                cellAlignment: pw.Alignment.centerLeft,
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                border: pw.TableBorder.all(color: PdfColor.fromHex('#CBD5E1')),
+              )
+            else
+              pw.Container(
+                padding: const pw.EdgeInsets.all(16),
+                decoration: pw.BoxDecoration(color: PdfColor.fromHex('#F1F5F9'), borderRadius: pw.BorderRadius.circular(6)),
+                child: pw.Center(child: pw.Text('Aucune transaction enregistrée pour cette période.', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#64748B')))),
               ),
-              pw.SizedBox(height: 20),
-            ],
 
             pw.Spacer(),
 
-            // Pied de page officiel
-            pw.Divider(color: PdfColors.grey300),
-            pw.SizedBox(height: 6),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('NDOKETE - Solution de gestion pour artisans', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
-                pw.Text('Document officiel certifié', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
-              ],
+            // Pied de page certifié
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColor.fromHex('#F8FAFC'),
+                borderRadius: pw.BorderRadius.circular(6),
+                border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('DOCUMENT COMPTABLE CERTIFIÉ PAR NDOKETE - PLATEFORME SAAS ARTISANAT', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#64748B'))),
+                  pw.Text('CONFIDENTIEL', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#D97706'))),
+                ],
+              ),
             ),
           ],
         ),
