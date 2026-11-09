@@ -28,8 +28,14 @@ class _StockPageState extends State<StockPage> {
     final quantityCtrl = TextEditingController();
     final unitCtrl = TextEditingController(text: 'm');
     final thresholdCtrl = TextEditingController(text: '5');
+    final Map<String, String> categoryPhotos = {
+      'Tissus': 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800',
+      'Fils': 'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800',
+      'Cuir': 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fae?w=800',
+      'Perles': 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800',
+    };
     String? selectedCategory = _categories.firstWhere((c) => c != 'Tout');
-    String? photoUrl;
+    String? photoUrl = categoryPhotos[selectedCategory];
     bool loading = false;
 
     showModalBottomSheet(
@@ -62,7 +68,12 @@ class _StockPageState extends State<StockPage> {
                 decoration: const InputDecoration(labelText: 'Catégorie'),
                 items: _categories.where((c) => c != 'Tout').map((c) =>
                     DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (v) => setSheetState(() => selectedCategory = v),
+                onChanged: (v) => setSheetState(() {
+                  selectedCategory = v;
+                  if (v != null && categoryPhotos.containsKey(v)) {
+                    photoUrl = categoryPhotos[v];
+                  }
+                }),
               ),
               const SizedBox(height: 12),
               Row(children: [
@@ -91,7 +102,7 @@ class _StockPageState extends State<StockPage> {
                 decoration: const InputDecoration(labelText: 'Seuil d\'alerte'),
               ),
               const SizedBox(height: 12),
-              const Text('Photo de l’article (Optionnel)', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              const Text('Photo de l’article par catégorie', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -109,17 +120,38 @@ class _StockPageState extends State<StockPage> {
                     child: OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary),
                       onPressed: () {
-                        const presets = [
-                          'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800',
-                          'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800',
-                          'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fae?w=800',
-                        ];
-                        setSheetState(() {
-                          photoUrl = presets[DateTime.now().second % presets.length];
-                        });
+                        // Afficher les 4 types de photos de catégories
+                        showModalBottomSheet(
+                          context: ctx,
+                          backgroundColor: AppColors.surfaceDark,
+                          builder: (sheetCtx) => Container(
+                            padding: const EdgeInsets.all(20),
+                            child: Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              children: categoryPhotos.entries.map((entry) => GestureDetector(
+                                onTap: () {
+                                  setSheetState(() => photoUrl = entry.value);
+                                  Navigator.pop(sheetCtx);
+                                },
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(entry.value, width: 70, height: 70, fit: BoxFit.cover),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(entry.key, style: const TextStyle(color: AppColors.textPrimary, fontSize: 11)),
+                                  ],
+                                ),
+                              )).toList(),
+                            ),
+                          ),
+                        );
                       },
-                      icon: const Icon(Icons.add_a_photo_outlined),
-                      label: Text(photoUrl == null ? 'Choisir une photo pro' : 'Changer la photo'),
+                      icon: const Icon(Icons.photo_library_outlined),
+                      label: const Text('Choisir parmi les 4 photos types'),
                     ),
                   ),
                 ],
