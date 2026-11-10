@@ -60,9 +60,11 @@ class _MarketplacePageState extends State<MarketplacePage> {
     try {
       final response = await getIt<ApiClient>().get('/users/me');
       final user = (response.data as Map)['data'] as Map<String, dynamic>;
-      if (mounted) setState(() => _isArtisan = user['role'] == 'ARTISAN');
+      final isArtisanRole = user['role'] == 'ARTISAN' || ApiClient.inspectingArtisanId != null;
+      if (mounted) setState(() => _isArtisan = isArtisanRole);
     } catch (_) {
-      // Public discovery remains available without a signed-in artisan profile.
+      final isArtisanRole = ApiClient.inspectingArtisanId != null;
+      if (mounted) setState(() => _isArtisan = isArtisanRole);
     }
     _loadProducts();
   }
