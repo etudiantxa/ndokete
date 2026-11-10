@@ -296,19 +296,72 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     final pdf = pw.Document();
     final amount = plan == 'PREMIUM' ? '5 000 FCFA' : plan == 'PREMIUM_PLUS' ? '10 000 FCFA' : '0 FCFA';
     final operatorName = method == 'WAVE' ? 'Wave Mobile Money' : 'Orange Money';
+    final today = DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(DateTime.now());
+    final ref = 'REC-${DateTime.now().millisecondsSinceEpoch}';
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        margin: const pw.EdgeInsets.all(28),
         build: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            // En-tête VIP
             pw.Container(
-              padding: const pw.EdgeInsets.all(16),
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(20),
               decoration: pw.BoxDecoration(
-                color: PdfColor.fromHex('#F5A623'),
+                color: PdfColor.fromHex('#1E293B'),
+                borderRadius: pw.BorderRadius.circular(10),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Row(
+                    children: [
+                      pw.Container(
+                        width: 42,
+                        height: 42,
+                        decoration: pw.BoxDecoration(
+                          color: PdfColor.fromHex('#F59E0B'),
+                          borderRadius: pw.BorderRadius.circular(8),
+                        ),
+                        child: pw.Center(
+                          child: pw.Text('N', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                        ),
+                      ),
+                      pw.SizedBox(width: 14),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text('NDOKETE PRO', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                          pw.SizedBox(height: 3),
+                          pw.Text('REÇU OFFICIEL DE PAIEMENT - Ref: $ref', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#F59E0B'), fontWeight: pw.FontWeight.bold)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('REÇU ABONNEMENT', style: pw.TextStyle(fontSize: 8, color: PdfColor.fromHex('#94A3B8'), fontWeight: pw.FontWeight.bold)),
+                      pw.SizedBox(height: 2),
+                      pw.Text(today, style: const pw.TextStyle(fontSize: 9, color: PdfColors.white)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            // Émetteur & Détails
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(14),
+              decoration: pw.BoxDecoration(
+                color: PdfColor.fromHex('#F8FAFC'),
                 borderRadius: pw.BorderRadius.circular(8),
+                border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
               ),
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -316,94 +369,84 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text('NDOKETE PRO', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                      pw.Text('ÉMETTEUR :', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#64748B'), fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 4),
-                      pw.Text('Plateforme SaaS & Marketplace pour Artisans', style: const pw.TextStyle(fontSize: 10, color: PdfColors.white)),
+                      pw.Text('NDOKETE S.A.', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#0F172A'))),
+                      pw.Text('Dakar, Sénégal · contact@ndokete.sn', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#475569'))),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('RECU DE PAIEMENT', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                      pw.Text('DATE DE RÈGLEMENT :', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#64748B'), fontWeight: pw.FontWeight.bold)),
                       pw.SizedBox(height: 4),
-                      pw.Text('Ref: REC-${DateTime.now().millisecondsSinceEpoch}', style: const pw.TextStyle(fontSize: 9, color: PdfColors.white)),
+                      pw.Text(today, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#0F172A'))),
                     ],
                   ),
                 ],
               ),
             ),
-            pw.SizedBox(height: 30),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('EMETTEUR :', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
-                    pw.SizedBox(height: 4),
-                    pw.Text('NDOKETE S.A.', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
-                    pw.Text('Dakar, Senegal', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
-                    pw.Text('contact@ndokete.sn', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                  children: [
-                    pw.Text('DATE DE REGLEMENT :', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
-                    pw.SizedBox(height: 4),
-                    pw.Text(DateFormat('dd/MM/yyyy a HH:mm').format(DateTime.now()), style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
-                  ],
-                ),
+            pw.SizedBox(height: 20),
+
+            // Tableau de Règlement
+            pw.Table.fromTextArray(
+              headers: ['Description du Plan', 'Moyen de Paiement', 'Montant (FCFA)'],
+              data: [
+                ['Abonnement Pro - Plan $plan', operatorName, amount],
               ],
-            ),
-            pw.SizedBox(height: 30),
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
-              children: [
-                pw.TableRow(
-                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                  children: [
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Description du Plan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Moyen de Paiement', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Montant', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
-                  ],
-                ),
-                pw.TableRow(
-                  children: [
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text('Abonnement Pro - Plan $plan', style: const pw.TextStyle(fontSize: 11))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text(operatorName, style: const pw.TextStyle(fontSize: 11))),
-                    pw.Padding(padding: const pw.EdgeInsets.all(10), child: pw.Text(amount, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11))),
-                  ],
-                ),
-              ],
+              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+              headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#1E293B')),
+              cellStyle: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(3.8),
+                1: const pw.FlexColumnWidth(2.5),
+                2: const pw.FlexColumnWidth(2.0),
+              },
+              cellPadding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight},
+              border: pw.TableBorder.all(color: PdfColor.fromHex('#CBD5E1')),
             ),
             pw.SizedBox(height: 20),
+
+            // Statut & Montant Réglé
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.end,
               children: [
                 pw.Container(
-                  padding: const pw.EdgeInsets.all(12),
+                  padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: pw.BoxDecoration(
-                    color: PdfColor.fromHex('#E8F5E9'),
-                    borderRadius: pw.BorderRadius.circular(6),
-                    border: pw.Border.all(color: PdfColors.green, width: 1),
+                    color: PdfColor.fromHex('#ECFDF5'),
+                    borderRadius: pw.BorderRadius.circular(8),
+                    border: pw.Border.all(color: PdfColor.fromHex('#6EE7B7')),
                   ),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
-                      pw.Text('STATUT : PAYE', style: pw.TextStyle(color: PdfColors.green800, fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                      pw.Text('STATUT : REGLÉ & CONFIRMÉ', style: pw.TextStyle(color: PdfColor.fromHex('#065F46'), fontWeight: pw.FontWeight.bold, fontSize: 11)),
                       pw.SizedBox(height: 4),
-                      pw.Text('Total Regle : $amount', style: pw.TextStyle(color: PdfColors.green900, fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                      pw.Text('Total Réglé : $amount', style: pw.TextStyle(color: PdfColor.fromHex('#047857'), fontWeight: pw.FontWeight.bold, fontSize: 14)),
                     ],
                   ),
                 ),
               ],
             ),
             pw.Spacer(),
-            pw.Divider(color: PdfColors.grey300),
-            pw.SizedBox(height: 10),
-            pw.Center(
-              child: pw.Text('Merci pour votre confiance. NDOKETE - Solution SaaS pour Artisans Senegalais.', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
+
+            // Pied de page
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                color: PdfColor.fromHex('#F8FAFC'),
+                borderRadius: pw.BorderRadius.circular(6),
+                border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('MERCI POUR VOTRE CONFIANCE ! - NDOKETE SÉCURITÉ & SAAS', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#64748B'))),
+                  pw.Text('REÇU CERTIFIÉ', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#D97706'))),
+                ],
+              ),
             ),
           ],
         ),

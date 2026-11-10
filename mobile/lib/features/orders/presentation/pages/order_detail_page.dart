@@ -253,114 +253,173 @@ Géré avec la plateforme NDOKETE 🇸🇳
     final deposit = (order['deposit'] as num?)?.toDouble() ?? 0;
     final balance = amount - deposit;
     final createdAt = order['createdAt'] as String?;
+    final dateStr = createdAt != null ? DateFormat('dd/MM/yyyy à HH:mm', 'fr_FR').format(DateTime.parse(createdAt)) : '';
 
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(28),
         build: (pw.Context context) {
-          return pw.Container(
-            padding: const pw.EdgeInsets.all(32),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Row(
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // En-tête Exécutif VIP
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(20),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#1E293B'),
+                  borderRadius: pw.BorderRadius.circular(10),
+                ),
+                child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    pw.Row(
                       children: [
-                        pw.Text('NDOKETE', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.orange800)),
-                        pw.SizedBox(height: 4),
-                        pw.Text('Plateforme de Gestion & Marketplace pour Artisans', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                        pw.Container(
+                          width: 42,
+                          height: 42,
+                          decoration: pw.BoxDecoration(
+                            color: PdfColor.fromHex('#F59E0B'),
+                            borderRadius: pw.BorderRadius.circular(8),
+                          ),
+                          child: pw.Center(
+                            child: pw.Text('N', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                          ),
+                        ),
+                        pw.SizedBox(width: 14),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Text('NDOKETE - GESTION D\'ATELIER', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.white)),
+                            pw.SizedBox(height: 3),
+                            pw.Text('FACTURE DE COMMANDE - Réf : $orderNum', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#F59E0B'), fontWeight: pw.FontWeight.bold)),
+                          ],
+                        ),
                       ],
                     ),
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
-                        pw.Text('FACTURE', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                        pw.SizedBox(height: 4),
-                        pw.Text('Réf : $orderNum', style: const pw.TextStyle(fontSize: 12)),
-                        if (createdAt != null)
-                          pw.Text('Date : ${DateFormat('dd/MM/yyyy').format(DateTime.parse(createdAt))}', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                        pw.Text('FACTURE OFFICIELLE', style: pw.TextStyle(fontSize: 8, color: PdfColor.fromHex('#94A3B8'), fontWeight: pw.FontWeight.bold)),
+                        pw.SizedBox(height: 2),
+                        pw.Text(dateStr, style: const pw.TextStyle(fontSize: 9, color: PdfColors.white)),
                       ],
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 30),
-                pw.Divider(color: PdfColors.orange800, thickness: 2),
-                pw.SizedBox(height: 20),
+              ),
+              pw.SizedBox(height: 20),
 
-                pw.Text('FACTURÉ À :', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700)),
-                pw.SizedBox(height: 6),
-                pw.Text(customerName, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                if (customerPhone.isNotEmpty)
-                  pw.Text('Téléphone : $customerPhone', style: const pw.TextStyle(fontSize: 12)),
-                pw.SizedBox(height: 30),
-
-                pw.Table.fromTextArray(
-                  headers: ['Description / Article', 'Statut', 'Montant (FCFA)'],
-                  data: [
-                    [title, _formatStatusLabel(order['status'] as String?), '${_currency.format(amount)} FCFA'],
-                  ],
-                  border: pw.TableBorder.all(color: PdfColors.grey400, width: 1),
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 11),
-                  headerDecoration: const pw.BoxDecoration(color: PdfColors.orange800),
-                  rowDecoration: const pw.BoxDecoration(color: PdfColors.grey50),
-                  cellStyle: const pw.TextStyle(fontSize: 10),
-                  columnWidths: {
-                    0: const pw.FlexColumnWidth(3.8),
-                    1: const pw.FlexColumnWidth(2.0),
-                    2: const pw.FlexColumnWidth(2.2),
-                  },
-                  cellPadding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight},
+              // Section Client
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(14),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#F8FAFC'),
+                  borderRadius: pw.BorderRadius.circular(8),
+                  border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
                 ),
-                pw.SizedBox(height: 20),
-
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.end,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.SizedBox(
-                      width: 250,
-                      child: pw.Column(
-                        children: [
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text('Montant Total :', style: const pw.TextStyle(fontSize: 12)),
-                              pw.Text('${_currency.format(amount)} FCFA', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                          pw.SizedBox(height: 6),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text('Acompte versé :', style: const pw.TextStyle(fontSize: 12)),
-                              pw.Text('${_currency.format(deposit)} FCFA', style: pw.TextStyle(fontSize: 12, color: PdfColors.green800)),
-                            ],
-                          ),
-                          pw.Divider(thickness: 1),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text('Reste à payer :', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold)),
-                              pw.Text('${_currency.format(balance)} FCFA', style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.red800)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
+                    pw.Text('FACTURÉ À :', style: pw.TextStyle(fontSize: 9, color: PdfColor.fromHex('#64748B'), fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 4),
+                    pw.Text(customerName, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#0F172A'))),
+                    if (customerPhone.isNotEmpty) ...[
+                      pw.SizedBox(height: 2),
+                      pw.Text('Téléphone : $customerPhone', style: pw.TextStyle(fontSize: 10, color: PdfColor.fromHex('#475569'))),
+                    ],
                   ],
                 ),
-                pw.Spacer(),
-                pw.Divider(color: PdfColors.grey400),
-                pw.Center(
-                  child: pw.Text('Merci pour votre confiance ! - Généré via NDOKETE (Sénégal)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Tableau des Articles
+              pw.Table.fromTextArray(
+                headers: ['Description / Article', 'Statut', 'Montant (FCFA)'],
+                data: [
+                  [title, _formatStatusLabel(order['status'] as String?), '${_currency.format(amount)} FCFA'],
+                ],
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white, fontSize: 10),
+                headerDecoration: pw.BoxDecoration(color: PdfColor.fromHex('#1E293B')),
+                cellStyle: const pw.TextStyle(fontSize: 10, color: PdfColors.black),
+                columnWidths: {
+                  0: const pw.FlexColumnWidth(3.8),
+                  1: const pw.FlexColumnWidth(2.0),
+                  2: const pw.FlexColumnWidth(2.2),
+                },
+                cellPadding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                cellAlignments: {0: pw.Alignment.centerLeft, 1: pw.Alignment.center, 2: pw.Alignment.centerRight},
+                border: pw.TableBorder.all(color: PdfColor.fromHex('#CBD5E1')),
+              ),
+              pw.SizedBox(height: 20),
+
+              // Récapitulatif Réglement
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.end,
+                children: [
+                  pw.Container(
+                    width: 260,
+                    padding: const pw.EdgeInsets.all(14),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColor.fromHex('#F8FAFC'),
+                      borderRadius: pw.BorderRadius.circular(8),
+                      border: pw.Border.all(color: PdfColor.fromHex('#CBD5E1')),
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text('Montant Total :', style: const pw.TextStyle(fontSize: 11, color: PdfColors.black)),
+                            pw.Text('${_currency.format(amount)} FCFA', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.black)),
+                          ],
+                        ),
+                        pw.SizedBox(height: 6),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text('Acompte versé :', style: pw.TextStyle(fontSize: 11, color: PdfColor.fromHex('#047857'))),
+                            pw.Text('${_currency.format(deposit)} FCFA', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#047857'))),
+                          ],
+                        ),
+                        pw.SizedBox(height: 6),
+                        pw.Divider(color: PdfColor.fromHex('#CBD5E1')),
+                        pw.SizedBox(height: 6),
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text('Reste à payer :', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: balance > 0 ? PdfColor.fromHex('#DC2626') : PdfColor.fromHex('#047857'))),
+                            pw.Text('${_currency.format(balance)} FCFA', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: balance > 0 ? PdfColor.fromHex('#DC2626') : PdfColor.fromHex('#047857'))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              pw.Spacer(),
+
+              // Pied de page Officiel
+              pw.Container(
+                padding: const pw.EdgeInsets.all(12),
+                decoration: pw.BoxDecoration(
+                  color: PdfColor.fromHex('#F8FAFC'),
+                  borderRadius: pw.BorderRadius.circular(6),
+                  border: pw.Border.all(color: PdfColor.fromHex('#E2E8F0')),
                 ),
-              ],
-            ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('MERCI POUR VOTRE CONFIANCE ! - NDOKETE SÉNÉGAL', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#64748B'))),
+                    pw.Text('FACTURE CERTIFIÉE', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColor.fromHex('#D97706'))),
+                  ],
+                ),
+              ),
+            ],
           );
         },
       ),
