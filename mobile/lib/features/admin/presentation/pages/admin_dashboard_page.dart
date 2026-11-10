@@ -147,6 +147,26 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.secondary,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  Navigator.pop(sheetCtx);
+                  ApiClient.inspectingArtisanId = artisan['id'] as String?;
+                  ApiClient.inspectingArtisanName = artisan['businessName'] as String?;
+                  context.go('/dashboard');
+                },
+                icon: const Icon(Icons.remove_red_eye_outlined, size: 18),
+                label: const Text('👁️ Inspecter cet atelier (Mode Admin)', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -416,6 +436,39 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
+                  if (ApiClient.inspectingArtisanId != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.secondary),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.remove_red_eye, color: AppColors.secondary, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '👁️ Mode Inspection : Vous consultez l’atelier "${ApiClient.inspectingArtisanName ?? 'Artisan'}"',
+                              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.secondary, foregroundColor: Colors.black),
+                            onPressed: () {
+                              setState(() {
+                                ApiClient.inspectingArtisanId = null;
+                                ApiClient.inspectingArtisanName = null;
+                              });
+                            },
+                            child: const Text('Quitter', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   Row(
                     children: [
                       Expanded(

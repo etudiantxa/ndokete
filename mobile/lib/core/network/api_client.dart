@@ -6,6 +6,9 @@ class ApiClient {
   static const String localUrl = 'http://10.0.2.2:4000/api/v1';
   static const String remoteUrl = 'https://api.ndokete.com/api/v1';
 
+  static String? inspectingArtisanId;
+  static String? inspectingArtisanName;
+
   // Par défaut : True en mode Debug (Local Docker), False en mode Release (En ligne Render)
   static final ValueNotifier<bool> useLocalServer = ValueNotifier<bool>(kDebugMode);
 
@@ -63,6 +66,9 @@ class _AuthInterceptor extends Interceptor {
     final token = await storage.read(key: 'access_token');
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    if (ApiClient.inspectingArtisanId != null) {
+      options.headers['x-artisan-id'] = ApiClient.inspectingArtisanId;
     }
     handler.next(options);
   }
