@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/wolof_dictionary.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/admin_inspection_banner.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -162,6 +163,7 @@ class _DashboardPageState extends State<DashboardPage> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        const AdminInspectionBanner(),
         const SizedBox(height: 8),
         // KPI card principale
         _KpiCard(

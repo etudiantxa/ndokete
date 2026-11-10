@@ -14,6 +14,11 @@ export class RolesGuard implements CanActivate {
     ]);
     if (!requiredRoles) return true;
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.includes(user?.role);
+    if (!user) return false;
+
+    // Le Super-Admin a un accès universel à toutes les routes pour le mode inspection
+    if (user.role === 'ADMIN') return true;
+
+    return requiredRoles.includes(user.role);
   }
 }
