@@ -65,7 +65,7 @@ export class TransactionsService {
     if (!user) throw new ForbiddenException('Utilisateur non trouvé');
 
     // 0. Si l'utilisateur est un ADMIN et qu'un artisanId d'inspection est fourni
-    if (user.role === 'ADMIN' && artisanId) {
+    if ((user.role === 'ADMIN' || user.role?.toUpperCase() === 'ADMIN') && artisanId && artisanId !== 'undefined' && artisanId !== 'null') {
       return artisanId;
     }
 
