@@ -37,7 +37,7 @@ export class ArtisansService {
         }),
         // Commandes en cours
         this.prisma.order.count({
-          where: { artisanId, status: { in: ['EN_ATTENTE', 'EN_COURS'] } },
+          where: { artisanId, status: { in: ['EN_ATTENTE', 'EN_COURS', 'PRET'] } },
         }),
         // Note moyenne
         this.prisma.review.aggregate({

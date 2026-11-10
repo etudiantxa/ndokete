@@ -15,7 +15,7 @@ export class UsersController {
 
   @Get('me')
   @ApiOperation({ summary: 'Informations de l\'utilisateur connecté' })
-  getMe(@CurrentUser('id') userId: string, @Headers('x-artisan-id') headerArtisanId?: string) {
+  getMe(@CurrentUser('id') userId: string, @CurrentUser('artisanId') headerArtisanId?: string) {
     return this.usersService.getMe(userId, headerArtisanId);
   }
 
