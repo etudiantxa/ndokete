@@ -43,4 +43,11 @@ export class AnalyticsController {
   ) {
     return this.analyticsService.updateArtisanPlan(artisanId, plan);
   }
+
+  @Roles('ADMIN')
+  @Patch('admin/artisans/:artisanId/toggle-status')
+  @ApiOperation({ summary: 'Activer ou suspendre le compte d\'un artisan' })
+  toggleStatus(@Param('artisanId') artisanId: string) {
+    return this.analyticsService.toggleArtisanStatus(artisanId);
+  }
 }

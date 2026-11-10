@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 
 @Injectable()
@@ -89,7 +89,7 @@ export class AnalyticsService {
   async getAdminArtisans() {
     const artisans = await this.prisma.artisan.findMany({
       include: {
-        user: { select: { email: true, phone: true, isVerified: true, createdAt: true } },
+        user: { select: { email: true, phone: true, isActive: true, isVerified: true, createdAt: true } },
         subscription: true,
         _count: { select: { customers: true, products: true, orders: true } },
       },
@@ -104,6 +104,7 @@ export class AnalyticsService {
       phone: a.user.phone,
       quarter: a.quarter,
       specialty: a.specialty,
+      isActive: a.user.isActive ?? true,
       plan: a.subscription?.plan ?? 'FREE',
       subscriptionStatus: a.subscription?.status ?? 'INACTIVE',
       customersCount: a._count.customers,
@@ -111,6 +112,26 @@ export class AnalyticsService {
       ordersCount: a._count.orders,
       createdAt: a.createdAt,
     }));
+  }
+
+  async toggleArtisanStatus(artisanId: string) {
+    const artisan = await this.prisma.artisan.findUnique({
+      where: { id: artisanId },
+      include: { user: true },
+    });
+    if (!artisan) throw new NotFoundException('Artisan non trouvé');
+
+    const newActiveState = !artisan.user.isActive;
+    await this.prisma.user.update({
+      where: { id: artisan.userId },
+      data: { isActive: newActiveState },
+    });
+
+    return {
+      success: true,
+      isActive: newActiveState,
+      message: newActiveState ? 'Compte artisan réactivé avec succès' : 'Compte artisan suspendu avec succès',
+    };
   }
 
   async updateArtisanPlan(artisanId: string, plan: 'FREE' | 'PREMIUM' | 'PREMIUM_PLUS') {

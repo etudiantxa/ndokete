@@ -35,6 +35,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final plan = artisan['plan'] as String? ?? 'FREE';
     final isPremium = plan != 'FREE';
     final phone = artisan['phone'] as String? ?? '';
+    final isActive = artisan['isActive'] as bool? ?? true;
 
     showModalBottomSheet(
       context: context,
@@ -160,7 +161,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             ),
             const SizedBox(height: 10),
 
-            if (phone.isNotEmpty)
+            if (phone.isNotEmpty) ...[
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
@@ -180,10 +181,48 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   label: const Text('Contacter sur WhatsApp', style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
+              const SizedBox(height: 10),
+            ],
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isActive ? AppColors.error : AppColors.success,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () async {
+                  Navigator.pop(sheetCtx);
+                  await _toggleArtisanStatus(artisan['id'] as String);
+                },
+                icon: Icon(isActive ? Icons.block : Icons.check_circle_outline, size: 18),
+                label: Text(isActive ? 'Suspendre le compte artisan' : 'Réactiver le compte artisan', style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _toggleArtisanStatus(String artisanId) async {
+    try {
+      final response = await getIt<ApiClient>().patch('/analytics/admin/artisans/$artisanId/toggle-status');
+      final msg = (response.data as Map)['message'] as String? ?? 'Statut mis à jour';
+      _loadAdminData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('✓ $msg'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
   }
 
   String _selectedPlanFilter = 'TOUT';
