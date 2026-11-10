@@ -16,7 +16,7 @@ export class UsersService {
     return { message: 'Token FCM mis à jour' };
   }
 
-  async getMe(userId: string) {
+  async getMe(userId: string, headerArtisanId?: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -37,7 +37,19 @@ export class UsersService {
     let canManageFinances = true;
     let artisanData = user.artisan;
 
-    if (user.phone) {
+    if (user.role === 'ADMIN' && headerArtisanId) {
+      const masterArtisan = await this.prisma.artisan.findUnique({
+        where: { id: headerArtisanId },
+        select: {
+          id: true, businessName: true, specialty: true, quarter: true,
+          description: true, profilePhoto: true, subscription: true,
+          _count: { select: { customers: true, products: true } },
+        },
+      });
+      if (masterArtisan) {
+        artisanData = masterArtisan;
+      }
+    } else if (user.phone) {
       const cleanPhone = user.phone.replace(/[^0-9]/g, '');
       const allMembers = await this.prisma.teamMember.findMany();
       const matchedMember = allMembers.find(m => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)));
