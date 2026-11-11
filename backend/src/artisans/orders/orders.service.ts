@@ -162,6 +162,11 @@ export class OrdersService {
       include: { customer: true },
     });
 
+    // Si la commande est annulée, supprimer ses transactions financières de la trésorerie
+    if (dto.status === 'ANNULE') {
+      await this.prisma.transaction.deleteMany({ where: { orderId } });
+    }
+
     // Si la commande provient de la Marketplace, synchroniser son statut pour le client et envoyer une notification
     if (dto.status && updated.orderNumber.startsWith('CMD-MKT-')) {
       const originalMktNumber = updated.orderNumber.replace('CMD-MKT-', '');
@@ -204,10 +209,8 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Commande non trouvée');
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.transaction.updateMany({
-        where: { orderId },
-        data: { orderId: null },
-      });
+      // Supprimer entièrement les transactions financières associées à cette commande
+      await tx.transaction.deleteMany({ where: { orderId } });
       await tx.payment.deleteMany({ where: { orderId } });
       await tx.order.delete({ where: { id: orderId } });
       await tx.customer.updateMany({
