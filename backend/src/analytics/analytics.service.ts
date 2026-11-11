@@ -152,12 +152,30 @@ export class AnalyticsService {
   async deleteClient(clientId: string) {
     const client = await this.prisma.client.findUnique({
       where: { id: clientId },
+      include: { cart: { include: { items: true } } },
     });
     if (!client) throw new NotFoundException('Client non trouvé');
 
     await this.prisma.$transaction(async (tx) => {
+      if (client.cart) {
+        await tx.cartItem.deleteMany({ where: { cartId: client.cart.id } });
+        await tx.cart.delete({ where: { id: client.cart.id } });
+      }
+
+      await tx.review.deleteMany({ where: { clientId } });
+
+      const mktOrders = await tx.marketplaceOrder.findMany({ where: { clientId } });
+      for (const order of mktOrders) {
+        await tx.marketplaceOrderItem.deleteMany({ where: { orderId: order.id } });
+        await tx.payment.deleteMany({ where: { marketplaceOrderId: order.id } });
+      }
+      await tx.marketplaceOrder.deleteMany({ where: { clientId } });
+
       await tx.client.delete({ where: { id: clientId } });
-      await tx.user.delete({ where: { id: client.userId } });
+
+      if (client.userId) {
+        await tx.user.delete({ where: { id: client.userId } }).catch(() => {});
+      }
     });
 
     return { success: true, message: 'Client et toutes ses données supprimés définitivement' };
