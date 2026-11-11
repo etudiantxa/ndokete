@@ -51,8 +51,9 @@ export class AnalyticsService {
   }
 
   async getAdminKPIs() {
-    const [totalArtisans, premiumArtisans, totalRevenue, churnRisk] = await Promise.all([
+    const [totalArtisans, totalClients, premiumArtisans, totalRevenue, churnRisk] = await Promise.all([
       this.prisma.artisan.count(),
+      this.prisma.client.count(),
       this.prisma.subscription.count({
         where: { plan: { in: ['PREMIUM', 'PREMIUM_PLUS'] }, status: 'ACTIVE' },
       }),
@@ -78,6 +79,7 @@ export class AnalyticsService {
 
     return {
       totalArtisans,
+      totalClients,
       premiumArtisans,
       freePct: totalArtisans > 0 ? Math.round(((totalArtisans - premiumArtisans) / totalArtisans) * 100) : 100,
       totalCommissions: totalRevenue._sum.commission ?? 0,

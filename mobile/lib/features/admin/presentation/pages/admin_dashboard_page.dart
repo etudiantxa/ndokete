@@ -508,12 +508,29 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _KpiCard(
+                          title: 'Clients Inscrits',
+                          value: '${_kpis?['totalClients'] ?? 0}',
+                          subtitle: 'Sur la plateforme',
+                          icon: Icons.people_outline,
+                          color: AppColors.info,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _KpiCard(
                           title: 'Inactivité (Risk)',
                           value: '${_kpis?['churnRisk'] ?? 0}',
                           subtitle: 'Sans commande (30j)',
                           icon: Icons.warning_amber_rounded,
                           color: AppColors.warning,
                         ),
+                      ),
+                      Expanded(
+                        child: Container(),
                       ),
                     ],
                   ),
