@@ -69,6 +69,22 @@ export class OrdersService {
       include: { customer: true },
     });
 
+    // Pour les commandes manuelles d'atelier, enregistrer automatiquement l'acompte dans la trésorerie
+    if (dto.deposit && dto.deposit > 0 && !orderNumber.startsWith('CMD-MKT-')) {
+      await this.prisma.transaction.create({
+        data: {
+          artisanId,
+          type: 'ENTREE',
+          amount: dto.deposit,
+          category: 'Acompte',
+          description: `Acompte versé pour la commande ${orderNumber} (${dto.title})`,
+          orderId: order.id,
+          date: new Date(),
+          paymentMethod: 'WAVE',
+        },
+      });
+    }
+
     // Mettre à jour le compteur client et le montant total dépensé
     await this.prisma.customer.update({
       where: { id: dto.customerId },
