@@ -166,7 +166,7 @@ export class AnalyticsService {
 
       const mktOrders = await tx.marketplaceOrder.findMany({ where: { clientId } });
       for (const order of mktOrders) {
-        await tx.marketplaceOrderItem.deleteMany({ where: { orderId: order.id } });
+        await tx.marketplaceOrderItem.deleteMany({ where: { marketplaceOrderId: order.id } });
         await tx.payment.deleteMany({ where: { marketplaceOrderId: order.id } });
       }
       await tx.marketplaceOrder.deleteMany({ where: { clientId } });
