@@ -40,7 +40,36 @@ export class OrdersService {
     return order;
   }
 
-  async create(artisanId: string, dto: CreateOrderDto) {
+  async getAuthorName(userId: string): Promise<string> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { artisan: { select: { businessName: true } }, client: { select: { name: true } } },
+    });
+    if (!user) return 'Atelier';
+
+    if (user.phone) {
+      const cleanPhone = user.phone.replace(/[^0-9]/g, '');
+      const allMembers = await this.prisma.teamMember.findMany();
+      const matchedMember = allMembers.find(
+        (m) => m.phone.replace(/[^0-9]/g, '').endsWith(cleanPhone.slice(-9)),
+      );
+      if (matchedMember) {
+        return matchedMember.name;
+      }
+    }
+
+    if (user.artisan?.businessName) {
+      return user.artisan.businessName;
+    }
+
+    if (user.client?.name) {
+      return user.client.name;
+    }
+
+    return user.email.split('@')[0] || 'Atelier';
+  }
+
+  async create(userId: string, artisanId: string, dto: CreateOrderDto) {
     // Vérifier le client appartient à l'artisan
     const customer = await this.prisma.customer.findFirst({
       where: { id: dto.customerId, artisanId },
@@ -71,6 +100,7 @@ export class OrdersService {
 
     // Pour les commandes manuelles d'atelier, enregistrer automatiquement l'acompte dans la trésorerie
     if (dto.deposit && dto.deposit > 0 && !orderNumber.startsWith('CMD-MKT-')) {
+      const authorName = await this.getAuthorName(userId);
       await this.prisma.transaction.create({
         data: {
           artisanId,
@@ -78,6 +108,7 @@ export class OrdersService {
           amount: dto.deposit,
           category: 'Acompte',
           description: `Acompte versé pour la commande ${orderNumber} (${dto.title})`,
+          authorName,
           orderId: order.id,
           date: new Date(),
           paymentMethod: 'WAVE',

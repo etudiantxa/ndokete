@@ -44,8 +44,8 @@ export class OrdersController {
 
   @Post()
   @ApiOperation({ summary: 'Créer une nouvelle commande' })
-  create(@CurrentUser('artisanId') artisanId: string, @Body() dto: CreateOrderDto) {
-    return this.ordersService.create(artisanId, dto);
+  create(@CurrentUser('id') userId: string, @CurrentUser('artisanId') artisanId: string, @Body() dto: CreateOrderDto) {
+    return this.ordersService.create(userId, artisanId, dto);
   }
 
   @Patch(':id')
