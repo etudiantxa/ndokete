@@ -148,4 +148,27 @@ export class AnalyticsService {
 
     return { data: sub, message: `Plan modifié vers ${plan}` };
   }
+
+  async getAdminClients() {
+    const clients = await this.prisma.client.findMany({
+      include: {
+        user: { select: { email: true, phone: true, isVerified: true, isActive: true, createdAt: true } },
+        _count: { select: { marketplaceOrders: true, reviews: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return clients.map((c) => ({
+      id: c.id,
+      userId: c.userId,
+      name: c.name || 'Client',
+      email: c.user.email,
+      phone: c.user.phone,
+      address: c.address,
+      isActive: c.user.isActive ?? true,
+      ordersCount: c._count.marketplaceOrders,
+      reviewsCount: c._count.reviews,
+      createdAt: c.createdAt,
+    }));
+  }
 }

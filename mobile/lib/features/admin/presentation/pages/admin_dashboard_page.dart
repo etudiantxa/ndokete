@@ -19,6 +19,8 @@ class AdminDashboardPage extends StatefulWidget {
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Map<String, dynamic>? _kpis;
   List<dynamic> _artisans = [];
+  List<dynamic> _clients = [];
+  String _adminTab = 'artisans'; // 'artisans' or 'clients'
   bool _loading = true;
   final _currency = NumberFormat('#,###', 'fr_FR');
   int _selectedTab = 0;
@@ -263,6 +265,18 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }).toList();
   }
 
+  List<dynamic> get _filteredClients {
+    return _clients.where((c) {
+      if (_searchQuery.isEmpty) return true;
+      final name = (c['name'] ?? '').toString().toLowerCase();
+      final email = (c['email'] ?? '').toString().toLowerCase();
+      final phone = (c['phone'] ?? '').toString().toLowerCase();
+      return name.contains(_searchQuery) ||
+          email.contains(_searchQuery) ||
+          phone.contains(_searchQuery);
+    }).toList();
+  }
+
   Widget _filterChip(String label, String value) {
     final selected = _selectedPlanFilter == value;
     return ChoiceChip(
@@ -284,9 +298,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _loadAdminData() async {
     try {
       final client = getIt<ApiClient>();
-      final [kpisResp, artisansResp] = await Future.wait([
+      final [kpisResp, artisansResp, clientsResp] = await Future.wait([
         client.get('/analytics/admin'),
         client.get('/analytics/admin/artisans'),
+        client.get('/analytics/admin/clients'),
       ]);
 
       if (mounted) {
@@ -295,6 +310,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               (kpisResp.data as Map<String, dynamic>);
           _artisans = (artisansResp.data as Map)['data'] as List? ??
               (artisansResp.data as List? ?? []);
+          _clients = (clientsResp.data as Map)['data'] as List? ??
+              (clientsResp.data as List? ?? []);
           _loading = false;
         });
       }
@@ -539,10 +556,23 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   Row(
                     children: [
                       ChoiceChip(
-                        label: const Text('Artisans (Gestion)'),
-                        selected: _selectedTab == 0,
+                        label: Text('Artisans (${_artisans.length})'),
+                        selected: _adminTab == 'artisans' && _selectedTab == 0,
                         selectedColor: AppColors.primary,
-                        onSelected: (_) => setState(() => _selectedTab = 0),
+                        onSelected: (_) => setState(() {
+                          _adminTab = 'artisans';
+                          _selectedTab = 0;
+                        }),
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: Text('Clients (${_clients.length})'),
+                        selected: _adminTab == 'clients' && _selectedTab == 0,
+                        selectedColor: AppColors.primary,
+                        onSelected: (_) => setState(() {
+                          _adminTab = 'clients';
+                          _selectedTab = 0;
+                        }),
                       ),
                       const SizedBox(width: 8),
                       ChoiceChip(
@@ -555,7 +585,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  if (_selectedTab == 0) ...[
+                  if (_selectedTab == 0 && _adminTab == 'artisans') ...[
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -697,6 +727,77 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                         ),
                       );
                     }),
+                  ] else if (_selectedTab == 0 && _adminTab == 'clients') ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Liste des Clients Inscrits :',
+                            style: TextStyle(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15)),
+                        Text('${_filteredClients.length} client(s)',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _searchCtrl,
+                      onChanged: (v) =>
+                          setState(() => _searchQuery = v.trim().toLowerCase()),
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Rechercher par nom, email ou téléphone...',
+                        hintStyle: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13),
+                        prefixIcon: const Icon(Icons.search,
+                            color: AppColors.textSecondary),
+                        filled: true,
+                        fillColor: AppColors.cardDark,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ..._filteredClients.map((c) => Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardDark,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.dividerDark),
+                          ),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                backgroundColor: AppColors.surfaceDark,
+                                child: Icon(Icons.person_outline, color: AppColors.primary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(c['name'] ?? 'Client', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                                    const SizedBox(height: 2),
+                                    Text('${c['email'] ?? ''} · ${c['phone'] ?? ''}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                                    if (c['address'] != null && c['address'].toString().isNotEmpty)
+                                      Text('Adresse : ${c['address']}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text('${c['ordersCount'] ?? 0} commande(s)', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        )),
                   ] else ...[
                     Container(
                       padding: const EdgeInsets.all(16),

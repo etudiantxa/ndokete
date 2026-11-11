@@ -35,6 +35,13 @@ export class AnalyticsController {
   }
 
   @Roles('ADMIN')
+  @Get('admin/clients')
+  @ApiOperation({ summary: 'Liste de tous les clients inscrits pour l\'admin' })
+  getAdminClients() {
+    return this.analyticsService.getAdminClients();
+  }
+
+  @Roles('ADMIN')
   @Patch('admin/artisans/:artisanId/plan')
   @ApiOperation({ summary: 'Changer manuellement le plan d\'un artisan' })
   updateArtisanPlan(
