@@ -295,6 +295,43 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     _loadAdminData();
   }
 
+  Future<void> _deleteClient(String clientId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        title: const Text('Supprimer définitivement ce client', style: TextStyle(color: AppColors.textPrimary)),
+        content: const Text('Voulez-vous vraiment supprimer définitivement ce client et toutes ses données associées (compte, commandes, avis) ?', style: TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer définitivement', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    try {
+      final client = getIt<ApiClient>();
+      await client.delete('/analytics/admin/clients/$clientId');
+      _loadAdminData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✓ Client et toutes ses données supprimés définitivement'), backgroundColor: AppColors.success),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
+
   Future<void> _loadAdminData() async {
     try {
       final client = getIt<ApiClient>();
@@ -793,6 +830,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text('${c['ordersCount'] ?? 0} commande(s)', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+                                  const SizedBox(height: 4),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                                    tooltip: 'Supprimer définitivement',
+                                    onPressed: () => _deleteClient(c['id'] as String),
+                                  ),
                                 ],
                               ),
                             ],

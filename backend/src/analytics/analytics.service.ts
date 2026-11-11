@@ -149,6 +149,20 @@ export class AnalyticsService {
     return { data: sub, message: `Plan modifié vers ${plan}` };
   }
 
+  async deleteClient(clientId: string) {
+    const client = await this.prisma.client.findUnique({
+      where: { id: clientId },
+    });
+    if (!client) throw new NotFoundException('Client non trouvé');
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.client.delete({ where: { id: clientId } });
+      await tx.user.delete({ where: { id: client.userId } });
+    });
+
+    return { success: true, message: 'Client et toutes ses données supprimés définitivement' };
+  }
+
   async getAdminClients() {
     const clients = await this.prisma.client.findMany({
       include: {

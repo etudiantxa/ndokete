@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -56,5 +56,12 @@ export class AnalyticsController {
   @ApiOperation({ summary: 'Activer ou suspendre le compte d\'un artisan' })
   toggleStatus(@Param('artisanId') artisanId: string) {
     return this.analyticsService.toggleArtisanStatus(artisanId);
+  }
+
+  @Roles('ADMIN')
+  @Delete('admin/clients/:clientId')
+  @ApiOperation({ summary: 'Supprimer définitivement un client et toutes ses données' })
+  deleteClient(@Param('clientId') clientId: string) {
+    return this.analyticsService.deleteClient(clientId);
   }
 }
