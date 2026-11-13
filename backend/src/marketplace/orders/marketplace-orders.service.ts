@@ -190,6 +190,21 @@ export class MarketplaceOrdersService {
             },
           },
         });
+
+        // Notifier les administrateurs de la plateforme
+        const admins = await tx.user.findMany({ where: { role: 'ADMIN' } });
+        for (const admin of admins) {
+          await tx.notification.create({
+            data: {
+              userId: admin.id,
+              type: 'COMMANDE',
+              channel: 'IN_APP',
+              title: '🛍️ Nouvelle commande Marketplace',
+              body: `Commande #${mktOrder.orderNumber} passée par ${clientName} (Total: ${totalAmount} FCFA).`,
+              data: { marketplaceOrderId: mktOrder.id },
+            },
+          });
+        }
       }
 
       return mktOrder;

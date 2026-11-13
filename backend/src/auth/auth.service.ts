@@ -72,6 +72,31 @@ export class AuthService {
       });
     }
 
+    // Notifier tous les administrateurs de la plateforme
+    const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
+    for (const admin of admins) {
+      if (dto.role === Role.ARTISAN) {
+        await this.prisma.notification.create({
+          data: {
+            userId: admin.id,
+            type: 'NOUVEAU_AVIS',
+            title: '🏪 Nouvel artisan inscrit',
+            body: `Atelier "${dto.businessName ?? 'Inconnu'}" (${dto.email}) vient de s'inscrire sur la plateforme.`,
+          },
+        });
+      } else if (dto.role === Role.CLIENT) {
+        const fullName = `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim();
+        await this.prisma.notification.create({
+          data: {
+            userId: admin.id,
+            type: 'NOUVEAU_AVIS',
+            title: '👤 Nouveau client inscrit',
+            body: `Le client "${fullName.length > 0 ? fullName : dto.email}" vient de s'inscrire sur la plateforme.`,
+          },
+        });
+      }
+    }
+
     const tokens = await this.generateTokens(
       user.id,
       user.email,
