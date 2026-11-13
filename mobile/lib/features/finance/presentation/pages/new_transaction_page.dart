@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
@@ -22,11 +24,79 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
   String _type = 'ENTREE';
   String? _selectedCategory;
   String? _selectedOrderId;
+  String? _receiptUrl;
   bool _loading = false;
   bool _hasReceipt = false;
   bool _ordersLoading = true;
   List<Map<String, dynamic>> _availableOrders = [];
   final _currency = NumberFormat('#,###', 'fr_FR');
+
+  Future<void> _pickReceiptImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 80,
+      );
+
+      if (image != null && mounted) {
+        setState(() => _loading = true);
+        if (kIsWeb) {
+          final bytes = await image.readAsBytes();
+          final base64String = base64Encode(bytes);
+          setState(() {
+            _receiptUrl = 'data:image/jpeg;base64,$base64String';
+            _hasReceipt = true;
+            _loading = false;
+          });
+        } else {
+          try {
+            final client = getIt<ApiClient>();
+            final multipartFile = await MultipartFile.fromFile(
+              image.path,
+              filename: image.name.isNotEmpty ? image.name : 'receipt.jpg',
+            );
+            final formData = FormData.fromMap({'file': multipartFile});
+            final response = await client.post('/uploads/image', data: formData);
+            final resData = response.data as Map;
+            final imageUrl = (resData['data'] != null && resData['data'] is Map)
+                ? resData['data']['url'] as String? ?? resData['url'] as String? ?? ''
+                : resData['url'] as String? ?? '';
+            setState(() {
+              _receiptUrl = imageUrl;
+              _hasReceipt = true;
+            });
+          } catch (_) {
+            final bytes = await image.readAsBytes();
+            final base64String = base64Encode(bytes);
+            setState(() {
+              _receiptUrl = 'data:image/jpeg;base64,$base64String';
+              _hasReceipt = true;
+            });
+          }
+          setState(() => _loading = false);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✓ Justificatif ajouté avec succès !'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e'), backgroundColor: AppColors.error),
+        );
+      }
+    }
+  }
 
   final _incomeCategories = ['Vente', 'Acompte', 'Solde', 'Autre'];
   final _expenseCategories = [
@@ -201,6 +271,8 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
       'category': _selectedCategory,
       if (_selectedOrderId != null && _selectedOrderId!.trim().isNotEmpty)
         'orderId': _selectedOrderId,
+      if (_receiptUrl != null && _receiptUrl!.isNotEmpty)
+        'receipt': _receiptUrl,
       'date': _selectedDate.toIso8601String(),
       'localId': localId,
     };
@@ -492,7 +564,7 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                     letterSpacing: 0.5)),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => setState(() => _hasReceipt = !_hasReceipt),
+              onTap: _pickReceiptImage,
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -500,34 +572,51 @@ class _NewTransactionPageState extends State<NewTransactionPage> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color:
-                        _hasReceipt ? AppColors.success : AppColors.dividerDark,
-                    style: _hasReceipt ? BorderStyle.solid : BorderStyle.none,
+                        (_receiptUrl != null && _receiptUrl!.isNotEmpty) ? AppColors.success : AppColors.dividerDark,
+                    style: (_receiptUrl != null && _receiptUrl!.isNotEmpty) ? BorderStyle.solid : BorderStyle.none,
                   ),
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      _hasReceipt
-                          ? Icons.check_circle
-                          : Icons.camera_alt_outlined,
-                      color: _hasReceipt
-                          ? AppColors.success
-                          : AppColors.textDisabled,
-                      size: 32,
-                    ),
+                    if (_receiptUrl != null && _receiptUrl!.isNotEmpty && _receiptUrl!.startsWith('data:image'))
+                      Container(
+                        height: 60,
+                        width: 60,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(image: MemoryImage(base64Decode(_receiptUrl!.split(',').last)), fit: BoxFit.cover),
+                        ),
+                      )
+                    else if (_receiptUrl != null && _receiptUrl!.isNotEmpty)
+                      Container(
+                        height: 60,
+                        width: 60,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          image: DecorationImage(image: NetworkImage(_receiptUrl!), fit: BoxFit.cover),
+                        ),
+                      )
+                    else
+                      const Icon(
+                        Icons.camera_alt_outlined,
+                        color: AppColors.textDisabled,
+                        size: 32,
+                      ),
                     const SizedBox(height: 8),
                     Text(
-                      _hasReceipt
-                          ? 'Justificatif ajouté'
-                          : 'Prendre une photo du reçu',
+                      (_receiptUrl != null && _receiptUrl!.isNotEmpty)
+                          ? 'Justificatif ajouté (Appuyer pour changer)'
+                          : 'Prendre une photo du reçu (ou choisir)',
                       style: TextStyle(
-                        color: _hasReceipt
+                        color: (_receiptUrl != null && _receiptUrl!.isNotEmpty)
                             ? AppColors.success
                             : AppColors.textDisabled,
                         fontSize: 13,
                       ),
                     ),
-                    if (!_hasReceipt)
+                    if (_receiptUrl == null || _receiptUrl!.isEmpty)
                       const Text(
                         'Facture, ticket ou papier libre',
                         style: TextStyle(
