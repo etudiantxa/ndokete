@@ -4,12 +4,14 @@ import 'dart:js' as js;
 
 class SpeechHelper {
   static dynamic _recognition;
+  static bool _isManuallyStopped = false;
 
   static void listen({
     required void Function(String text) onResult,
     required void Function(bool isListening) onStatus,
   }) {
     try {
+      _isManuallyStopped = false;
       if (_recognition != null) {
         _recognition.callMethod('stop', []);
       }
@@ -50,6 +52,12 @@ class SpeechHelper {
       _recognition.callMethod('addEventListener', [
         'end',
         (html.Event event) {
+          if (!_isManuallyStopped) {
+            try {
+              _recognition.callMethod('start', []);
+              return;
+            } catch (_) {}
+          }
           onStatus(false);
         }
       ]);
@@ -57,6 +65,12 @@ class SpeechHelper {
       _recognition.callMethod('addEventListener', [
         'error',
         (html.Event event) {
+          if (!_isManuallyStopped) {
+            try {
+              _recognition.callMethod('start', []);
+              return;
+            } catch (_) {}
+          }
           onStatus(false);
         }
       ]);
@@ -70,6 +84,7 @@ class SpeechHelper {
 
   static void stop() {
     try {
+      _isManuallyStopped = true;
       _recognition?.callMethod('stop', []);
       _recognition = null;
     } catch (_) {}

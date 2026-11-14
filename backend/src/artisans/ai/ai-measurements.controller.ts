@@ -14,7 +14,7 @@ class ParseTranscriptDto {
 @ApiTags('ai-measurements')
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ARTISAN')
+@Roles('ARTISAN', 'ADMIN')
 @Controller('artisans/ai')
 export class AiMeasurementsController {
   constructor(private aiService: AiMeasurementsService) {}
