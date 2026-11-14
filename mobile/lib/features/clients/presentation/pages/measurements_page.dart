@@ -371,6 +371,15 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                         size: 28),
                     tooltip: isListeningSpeech ? 'Arrêter la dictée' : 'Dicter vos mesures à la voix',
                     onPressed: () {
+                      if (!kIsWeb) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('💡 Sur mobile, utilisez les boutons tactiles rapides ci-dessous pour ajouter vos mesures en 1 clic !'),
+                            backgroundColor: AppColors.primary,
+                          ),
+                        );
+                        return;
+                      }
                       if (isListeningSpeech) {
                         SpeechHelper.stop();
                         setSheetState(() => isListeningSpeech = false);
