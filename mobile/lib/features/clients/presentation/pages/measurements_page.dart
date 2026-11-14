@@ -49,6 +49,66 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
     _loadCustomer();
   }
 
+  void _showParsedMeasurementsPopup(Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.auto_awesome, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Mesures Détectées par l’IA', style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: SizedBox(
+          width: 300,
+          child: ListView(
+            shrinkWrap: true,
+            children: data.entries.map((e) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(e.key.toUpperCase(), style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text('${e.value} cm', style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            )).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.black),
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              setState(() {
+                for (final entry in data.entries) {
+                  if (_controllers.containsKey(entry.key)) {
+                    _controllers[entry.key]?.text = entry.value.toString();
+                  }
+                }
+                _editing = true;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('✓ ${data.length} mesure(s) appliquée(s) avec succès !'),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+            },
+            child: const Text('Appliquer au formulaire', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _loadCustomer() async {
     try {
       final client = getIt<ApiClient>();
@@ -335,10 +395,10 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
               const SizedBox(height: 10),
               Text(
                 isListeningSpeech
-                    ? '🔴 Écoute IA en cours... Parlez maintenant (ex: Cou 36, poitrine 98, longueur boubou 140)'
+                    ? '✨ Écoute active... Parlez maintenant (ex: Cou 36, poitrine 98, longueur boubou 140)'
                     : '💡 Astuce : Cliquez sur le micro 🎙️ pour dicter vos mesures à haute voix, ou utilisez les raccourcis :',
                 style: TextStyle(
-                  color: isListeningSpeech ? AppColors.error : AppColors.textSecondary,
+                  color: isListeningSpeech ? AppColors.primary : AppColors.textSecondary,
                   fontSize: 12,
                   fontWeight: isListeningSpeech ? FontWeight.bold : FontWeight.normal,
                   height: 1.3,
@@ -395,18 +455,18 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isListeningSpeech ? AppColors.error.withValues(alpha: 0.2) : AppColors.secondary.withValues(alpha: 0.15),
+                      color: isListeningSpeech ? AppColors.primary.withValues(alpha: 0.2) : AppColors.secondary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isListeningSpeech ? AppColors.error : AppColors.secondary),
+                      border: Border.all(color: isListeningSpeech ? AppColors.primary : AppColors.secondary, width: isListeningSpeech ? 2 : 1),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(isListeningSpeech ? Icons.stop_circle : Icons.mic, color: isListeningSpeech ? AppColors.error : AppColors.secondary, size: 20),
+                        Icon(isListeningSpeech ? Icons.mic_rounded : Icons.mic, color: isListeningSpeech ? AppColors.primary : AppColors.secondary, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          isListeningSpeech ? '🔴 Dictée en cours... Touchez pour arrêter' : '🎙️ Touchez ici pour dicter à haute voix',
-                          style: TextStyle(color: isListeningSpeech ? AppColors.error : AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
+                          isListeningSpeech ? '✨ Écoute active... Parlez à haute voix' : '🎙️ Touchez ici pour dicter à haute voix',
+                          style: TextStyle(color: isListeningSpeech ? AppColors.primary : AppColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ],
                     ),
@@ -450,20 +510,10 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
                       final data = (resp.data as Map)['data'] as Map<String, dynamic>? ?? {};
 
                       if (data.isNotEmpty) {
-                        for (final entry in data.entries) {
-                          if (_controllers.containsKey(entry.key)) {
-                            _controllers[entry.key]?.text = entry.value.toString();
-                          }
-                        }
+                        setSheetState(() => isAnalyzing = false);
                         if (ctx.mounted) Navigator.pop(sheetCtx);
                         if (mounted) {
-                          setState(() => _editing = true);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('✓ ${data.length} mesure(s) extraite(s) et remplies par l\'IA !'),
-                              backgroundColor: AppColors.success,
-                            ),
-                          );
+                          _showParsedMeasurementsPopup(data);
                         }
                       } else {
                         setSheetState(() => isAnalyzing = false);
