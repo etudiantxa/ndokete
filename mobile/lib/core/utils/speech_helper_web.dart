@@ -1,8 +1,9 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import 'dart:js' as js;
 
 class SpeechHelper {
-  static html.SpeechRecognition? _recognition;
+  static dynamic _recognition;
 
   static void listen({
     required void Function(String text) onResult,
@@ -10,41 +11,57 @@ class SpeechHelper {
   }) {
     try {
       if (_recognition != null) {
-        _recognition!.stop();
+        _recognition.callMethod('stop', []);
       }
-      _recognition = html.SpeechRecognition();
-      _recognition!.lang = 'fr-FR';
-      _recognition!.continuous = true;
-      _recognition!.interimResults = true;
 
-      _recognition!.onResult.listen((event) {
-        String fullText = '';
-        final results = event.results;
-        if (results != null) {
-          for (var i = 0; i < results.length; i++) {
-            final res = results[i];
-            if (res != null) {
-              final alt = res.item(0);
-              if (alt != null && alt.transcript != null && alt.transcript!.isNotEmpty) {
-                fullText += (fullText.isEmpty ? '' : ' ') + alt.transcript!;
+      final speechRecClass = js.context['SpeechRecognition'] ?? js.context['webkitSpeechRecognition'];
+      if (speechRecClass == null) {
+        onStatus(false);
+        return;
+      }
+
+      _recognition = js.JsObject(speechRecClass, []);
+      _recognition['lang'] = 'fr-FR';
+      _recognition['continuous'] = true;
+      _recognition['interimResults'] = true;
+
+      _recognition.callMethod('addEventListener', [
+        'result',
+        (html.Event event) {
+          final jsEvent = js.JsObject.fromBrowserObject(event);
+          final results = jsEvent['results'];
+          String fullText = '';
+          if (results != null) {
+            for (var i = 0; i < results['length']; i++) {
+              final res = results.callMethod('item', [i]);
+              final alt = res.callMethod('item', [0]);
+              final transcript = alt['transcript'];
+              if (transcript != null && transcript.toString().isNotEmpty) {
+                fullText += (fullText.isEmpty ? '' : ' ') + transcript.toString();
               }
             }
           }
+          if (fullText.isNotEmpty) {
+            onResult(fullText);
+          }
         }
-        if (fullText.isNotEmpty) {
-          onResult(fullText);
+      ]);
+
+      _recognition.callMethod('addEventListener', [
+        'end',
+        (html.Event event) {
+          onStatus(false);
         }
-      });
+      ]);
 
-      _recognition!.onEnd.listen((_) {
-        onStatus(false);
-      });
+      _recognition.callMethod('addEventListener', [
+        'error',
+        (html.Event event) {
+          onStatus(false);
+        }
+      ]);
 
-      _recognition!.onError.listen((_) {
-        onStatus(false);
-      });
-
-      _recognition!.start();
+      _recognition.callMethod('start', []);
       onStatus(true);
     } catch (_) {
       onStatus(false);
@@ -53,7 +70,7 @@ class SpeechHelper {
 
   static void stop() {
     try {
-      _recognition?.stop();
+      _recognition?.callMethod('stop', []);
       _recognition = null;
     } catch (_) {}
   }
