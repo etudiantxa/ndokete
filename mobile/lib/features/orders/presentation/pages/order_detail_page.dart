@@ -8,6 +8,7 @@ import 'package:pdf/pdf.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/ndokete_delete_dialog.dart';
 
 class OrderDetailPage extends StatefulWidget {
   final String orderId;
@@ -105,41 +106,27 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   }
 
   Future<void> _deleteOrder() async {
-    final confirmed = await showDialog<bool>(
+    await showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.cardDark,
-        title: const Text('Supprimer cette commande ?',
-            style: TextStyle(color: AppColors.textPrimary)),
-        content: const Text(
-          'La commande et ses paiements seront supprimés. Les transactions comptables liées seront conservées sans lien avec cette commande.',
-          style: TextStyle(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Supprimer',
-                style: TextStyle(color: AppColors.error)),
-          ),
-        ],
+      builder: (ctx) => NdoketeDeleteDialog(
+        title: 'Supprimer cette commande ?',
+        message: 'La commande et ses paiements associés seront supprimés définitivement. La trésorerie s’ajustera automatiquement.',
+        onConfirm: () async {
+          try {
+            await getIt<ApiClient>().delete('/artisans/orders/${widget.orderId}');
+            if (mounted) context.pop(true);
+          } catch (error) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('Suppression impossible : $error'),
+                    backgroundColor: AppColors.error),
+              );
+            }
+          }
+        },
       ),
     );
-    if (confirmed != true) return;
-    try {
-      await getIt<ApiClient>().delete('/artisans/orders/${widget.orderId}');
-      if (mounted) context.pop(true);
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Suppression impossible : $error'),
-              backgroundColor: AppColors.error),
-        );
-      }
-    }
   }
 
   String _whatsappNumber(String phone) {

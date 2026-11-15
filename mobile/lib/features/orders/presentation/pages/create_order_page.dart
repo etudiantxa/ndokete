@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/storage/hive_service.dart';
+import '../../../../core/widgets/ndokete_form_header.dart';
 
 class CreateOrderPage extends StatefulWidget {
   const CreateOrderPage({super.key});
@@ -146,6 +147,12 @@ class _CreateOrderPageState extends State<CreateOrderPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const NdoketeFormHeader(
+                title: 'Nouvelle Commande d\'Atelier',
+                subtitle: 'Enregistrez les détails et l\'acompte versé',
+                icon: Icons.receipt_long_outlined,
+              ),
+              const SizedBox(height: 20),
               // Client
               const _SectionLabel('Client'),
               TextFormField(
