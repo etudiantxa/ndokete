@@ -6,6 +6,18 @@ export class AiMeasurementsService {
     const measurements: Record<string, number> = {};
     let cleanText = text.toLowerCase();
 
+    // Normaliser les accents français (é, è, à, ê, etc.)
+    cleanText = cleanText
+      .replace(/[éèêë]/g, 'e')
+      .replace(/[àâä]/g, 'a')
+      .replace(/[îï]/g, 'i')
+      .replace(/[ôö]/g, 'o')
+      .replace(/[ùûü]/g, 'u')
+      .replace(/ç/g, 'c');
+
+    // Corrections de dictée vocale courantes (ex: "cours" -> "cou")
+    cleanText = cleanText.replace(/\bcours\b/g, 'cou');
+
     // Dictionnaire des nombres et mots clés Wolof & Français
     const wolofNumbers: Record<string, string> = {
       'teemeer': '100', 'téeméer': '100', 'temeer': '100',
@@ -23,7 +35,16 @@ export class AiMeasurementsService {
 
     const extract = (keywords: string[]) => {
       for (const kw of keywords) {
-        const regex = new RegExp(`${kw}[^0-9]{0,15}(\\d+(?:[\\.,]\\d+)?)`, 'i');
+        const normKw = kw
+          .toLowerCase()
+          .replace(/[éèêë]/g, 'e')
+          .replace(/[àâä]/g, 'a')
+          .replace(/[îï]/g, 'i')
+          .replace(/[ôö]/g, 'o')
+          .replace(/[ùûü]/g, 'u')
+          .replace(/ç/g, 'c');
+
+        const regex = new RegExp(`${normKw}[^0-9]{0,15}(\\d+(?:[\\.,]\\d+)?)`, 'i');
         const match = cleanText.match(regex);
         if (match && match[1]) {
           return parseFloat(match[1].replace(',', '.'));
@@ -34,14 +55,14 @@ export class AiMeasurementsService {
 
     const mapping = [
       { keys: ['cou', 'tour de cou', 'tuuru kow'], field: 'cou' },
-      { keys: ['epaule', 'épaules', 'largeur epaule', 'baari'], field: 'epaule' },
+      { keys: ['epaule', 'epaules', 'largeur epaule', 'baari'], field: 'epaule' },
       { keys: ['poitrine', 'tour de poitrine', 'buste', 'potrin', 'pótrin'], field: 'poitrine' },
       { keys: ['bras', 'longueur bras', 'manche', 'loxo'], field: 'longueurBras' },
       { keys: ['boubou', 'longueur boubou'], field: 'longueurBoubou' },
       { keys: ['taille', 'tour de taille', 'biir'], field: 'taille' },
       { keys: ['bassin', 'hanche', 'hanches', 'gon'], field: 'bassin' },
       { keys: ['pantalon', 'longueur pantalon', 'jupe', 'longueur jupe'], field: 'longPantalon' },
-      { keys: ['entrejambe'], field: 'entrejambe' },
+      { keys: ['entrejambe', 'entre jambes', 'entre jambe'], field: 'entrejambe' },
       { keys: ['pointure', 'pointure chaussures', 'pied'], field: 'pointure' },
     ];
 
