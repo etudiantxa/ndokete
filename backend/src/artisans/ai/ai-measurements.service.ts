@@ -1,21 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AiMeasurementsService {
+  constructor(private config: ConfigService) {}
+
   parseText(text: string) {
     const measurements: Record<string, number> = {};
     let cleanText = text.toLowerCase();
 
-    // Normaliser les accents français (é, è, à, ê, etc.)
+    // Normaliser les accents et la ponctuation
     cleanText = cleanText
       .replace(/[éèêë]/g, 'e')
       .replace(/[àâä]/g, 'a')
       .replace(/[îï]/g, 'i')
       .replace(/[ôö]/g, 'o')
       .replace(/[ùûü]/g, 'u')
-      .replace(/ç/g, 'c');
+      .replace(/ç/g, 'c')
+      .replace(/[\.,\/#!$%\^&\*;:{}=\-_`~()?]/g, ' ');
 
-    // Corrections de dictée vocale courantes (ex: "cours" -> "cou")
+    // Corrections de dictée vocale courantes en atelier (ex: "cours" -> "cou")
     cleanText = cleanText.replace(/\bcours\b/g, 'cou');
 
     // Dictionnaire des nombres et mots clés Wolof & Français
@@ -33,50 +37,50 @@ export class AiMeasurementsService {
       cleanText = cleanText.replace(new RegExp(wWord, 'g'), digit);
     }
 
-    const extract = (keywords: string[]) => {
-      for (const kw of keywords) {
-        const normKw = kw
-          .toLowerCase()
-          .replace(/[éèêë]/g, 'e')
-          .replace(/[àâä]/g, 'a')
-          .replace(/[îï]/g, 'i')
-          .replace(/[ôö]/g, 'o')
-          .replace(/[ùûü]/g, 'u')
-          .replace(/ç/g, 'c');
-
-        const regex = new RegExp(`${normKw}[^0-9]{0,15}(\\d+(?:[\\.,]\\d+)?)`, 'i');
-        const match = cleanText.match(regex);
-        if (match && match[1]) {
-          return parseFloat(match[1].replace(',', '.'));
-        }
-      }
-      return null;
+    // Dictionnaire de synonymes enrichi (tolérant aux variations phonétiques et au jargon d'atelier)
+    const synonyms: Record<string, string[]> = {
+      cou: ['cou', 'cours', 'col', 'kow', 'tour de cou'],
+      epaule: ['epaule', 'epaules', 'epole', 'epol', 'baari', 'epau'],
+      poitrine: ['poitrine', 'poitrin', 'buste', 'potrin', 'poitrn', 'poitr'],
+      longueurBras: ['bras', 'longueur bras', 'manche', 'longueur manche', 'loxo', 'm'],
+      longueurBoubou: ['boubou', 'longueur boubou', 'manteau', 'grand boubou', 'longueur du boubou'],
+      taille: ['taille', 'tour de taille', 'biir', 't'],
+      bassin: ['bassin', 'hanche', 'hanches', 'gon', 'bass'],
+      longPantalon: ['pantalon', 'longueur pantalon', 'jupe', 'longueur jupe', 'longueurs pantalon', 'longueur zip', 'zip', 'pant'],
+      entrejambe: ['entrejambe', 'entre jambes', 'entre jambe', 'jambe'],
+      pointure: ['pointure', 'pointure chaussures', 'pied', 'point'],
     };
 
-    const mapping = [
-      { keys: ['cou', 'tour de cou', 'tuuru kow'], field: 'cou' },
-      { keys: ['epaule', 'epaules', 'largeur epaule', 'baari'], field: 'epaule' },
-      { keys: ['poitrine', 'tour de poitrine', 'buste', 'potrin', 'pótrin'], field: 'poitrine' },
-      { keys: ['bras', 'longueur bras', 'manche', 'loxo'], field: 'longueurBras' },
-      { keys: ['boubou', 'longueur boubou'], field: 'longueurBoubou' },
-      { keys: ['taille', 'tour de taille', 'biir'], field: 'taille' },
-      { keys: ['bassin', 'hanche', 'hanches', 'gon'], field: 'bassin' },
-      { keys: ['pantalon', 'longueur pantalon', 'jupe', 'longueur jupe'], field: 'longPantalon' },
-      { keys: ['entrejambe', 'entre jambes', 'entre jambe'], field: 'entrejambe' },
-      { keys: ['pointure', 'pointure chaussures', 'pied'], field: 'pointure' },
-    ];
+    const words = cleanText.split(/\s+/).filter(w => w.length > 0);
 
-    for (const item of mapping) {
-      const val = extract(item.keys);
-      if (val !== null) {
-        measurements[item.field] = val;
+    // Algorithme d'analyse contextuelle et de proximité (Tokenisation & Proximity Matcher)
+    for (let i = 0; i < words.length; i++) {
+      const num = parseFloat(words[i]);
+      if (!isNaN(num)) {
+        // Chercher dans les 3 mots précédents le mot-clé de mesure le plus proche
+        let matchedField: string | null = null;
+        for (let j = Math.max(0, i - 3); j < i; j++) {
+          const candidateWord = words[j];
+          for (const [field, keys] of Object.entries(synonyms)) {
+            if (keys.some(k => candidateWord.includes(k) || k.includes(candidateWord))) {
+              matchedField = field;
+              break;
+            }
+          }
+          if (matchedField) break;
+        }
+
+        // Si aucun mot-clé immédiat n'est trouvé en amont, on peut aussi l'associer séquentiellement ou par ordre d'apparition si pertinent
+        if (matchedField && !measurements[matchedField]) {
+          measurements[matchedField] = num;
+        }
       }
     }
 
     return {
       success: true,
       data: measurements,
-      message: `${Object.keys(measurements).length} mesure(s) extraite(s) en Français/Wolof par l'IA`,
+      message: `${Object.keys(measurements).length} mesure(s) extraite(s) par l'IA contextuelle d'atelier`,
     };
   }
 }
