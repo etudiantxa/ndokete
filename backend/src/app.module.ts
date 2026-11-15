@@ -17,8 +17,10 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { PrismaModule } from './common/prisma/prisma.module';
+import { AppController } from './app.controller';
 
 @Module({
+  controllers: [AppController],
   imports: [
     // Configuration avec validation Joi
     ConfigModule.forRoot({
