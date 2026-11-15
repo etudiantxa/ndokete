@@ -89,8 +89,12 @@ class _MeasurementsPageState extends State<MeasurementsPage> {
               Navigator.pop(dialogCtx);
               setState(() {
                 for (final entry in data.entries) {
-                  if (_controllers.containsKey(entry.key)) {
-                    _controllers[entry.key]?.text = entry.value.toString();
+                  final matchingKey = _controllers.keys.firstWhere(
+                    (k) => k.toLowerCase() == entry.key.toLowerCase(),
+                    orElse: () => '',
+                  );
+                  if (matchingKey.isNotEmpty && _controllers.containsKey(matchingKey)) {
+                    _controllers[matchingKey]?.text = entry.value.toString();
                   }
                 }
                 _editing = true;

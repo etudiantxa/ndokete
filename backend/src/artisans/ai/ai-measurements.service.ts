@@ -42,7 +42,7 @@ export class AiMeasurementsService {
       cou: ['cou', 'cours', 'col', 'kow', 'tour de cou'],
       epaule: ['epaule', 'epaules', 'epole', 'epol', 'baari', 'epau'],
       poitrine: ['poitrine', 'poitrin', 'buste', 'potrin', 'poitrn', 'poitr'],
-      longueurBras: ['bras', 'longueur bras', 'manche', 'longueur manche', 'loxo', 'm'],
+      longueurBras: ['bras', 'longueur bras', 'longueur du bras', 'manche', 'longueur manche', 'loxo', 'm'],
       longueurBoubou: ['boubou', 'longueur boubou', 'manteau', 'grand boubou', 'longueur du boubou', 'longueur boubou'],
       taille: ['taille', 'tour de taille', 'biir', 't'],
       bassin: ['bassin', 'hanche', 'hanches', 'gon', 'bass'],
