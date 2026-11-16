@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/wolof_dictionary.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/ndokete_logout_dialog.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../bloc/profile_bloc.dart';
 import '../../domain/entities/profile_entity.dart';
@@ -1315,7 +1316,10 @@ class _ActionSection extends StatelessWidget {
             label: 'Se déconnecter',
             color: AppColors.error,
             onTap: () {
-              outerCtx.read<AuthBloc>().add(const AuthLogoutRequested());
+              showDialog(
+                context: outerCtx,
+                builder: (ctx) => const NdoketeLogoutDialog(),
+              );
             },
           ),
         ],

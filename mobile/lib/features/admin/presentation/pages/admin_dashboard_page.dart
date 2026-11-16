@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/ndokete_logout_dialog.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 
 class AdminDashboardPage extends StatefulWidget {
@@ -475,8 +476,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
             icon: const Icon(Icons.logout, color: AppColors.error),
             tooltip: 'Se déconnecter',
             onPressed: () {
-              context.read<AuthBloc>().add(const AuthLogoutRequested());
-              context.go('/login');
+              showDialog(
+                context: context,
+                builder: (ctx) => const NdoketeLogoutDialog(),
+              );
             },
           ),
         ],
