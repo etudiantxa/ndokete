@@ -32,6 +32,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       exception instanceof Error ? exception.stack : String(exception),
     );
 
+    response.header('Access-Control-Allow-Origin', request.headers.origin || '*');
+    response.header('Access-Control-Allow-Credentials', 'true');
+
     response.status(status).json({
       success: false,
       statusCode: status,

@@ -14,6 +14,18 @@ async function bootstrap() {
   // Logger Winston
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
+  // Middleware CORS preflight universel pour intercepter toutes les requêtes OPTIONS
+  app.use((req: any, res: any, next: any) => {
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD');
+      res.header('Access-Control-Allow-Headers', req.headers['access-control-request-headers'] || '*');
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.status(204).send();
+    }
+    next();
+  });
+
   // Sécurité & CORS permissif pour le web et mobile
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.enableCors({
