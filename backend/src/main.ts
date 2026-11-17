@@ -18,8 +18,8 @@ async function bootstrap() {
   app.use(helmet({ crossOriginResourcePolicy: false }));
   app.enableCors({
     origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With', 'x-artisan-id', 'X-Artisan-Id'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: '*',
     credentials: true,
   });
 
