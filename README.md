@@ -172,6 +172,14 @@ lib/
 | Premium | 5 000 FCFA/mois | Illimité | Illimité |
 | Premium Plus | 10 000 FCFA/mois | Illimité + Coaching | Illimité |
 
+## Architecture de Production & Hébergement
+
+| Partie | Hébergeur | Détails & Précautions |
+|--------|-----------|------------------------|
+| **Web** | Netlify | Frontend Flutter Web, domaine `ndokete.com`, HTTPS (Gratuit dans les limites de l’offre Netlify : crédits de build et bande passante mensuels). |
+| **API** | Render | Backend NestJS (Docker), gardé éveillé par UptimeRobot (ping `/api/v1/health`), déploiements manuels (*Auto-Deploy: Off*). |
+| **Base de Données** | Render PostgreSQL | **⚠️ Attention (Expiration 30 jours)** : La base PostgreSQL gratuite sur Render expire au bout de 30 jours. Risque majeur de perte de données. Prévoir des exports réguliers (`pg_dump`) et planifier une migration vers une base permanente gratuite (ex: Supabase ou Neon). |
+
 ---
 
 ## Prochaines étapes suggérées
