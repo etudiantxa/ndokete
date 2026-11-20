@@ -68,4 +68,25 @@ describe('TransactionsService', () => {
       expect(result).toEqual('artisan-owner-123');
     });
   });
+
+  describe('getTreasurySummary calculations', () => {
+    it('should correctly calculate total income, total expenses, and net profit', async () => {
+      mockPrismaService.user.findUnique.mockResolvedValue({
+        id: 'user-1',
+        role: 'ARTISAN',
+        artisan: { id: 'artisan-owner-123' },
+      });
+      mockPrismaService.transaction.aggregate
+        .mockResolvedValueOnce({ _sum: { amount: 500000 } }) // income
+        .mockResolvedValueOnce({ _sum: { amount: 150000 } }); // expenses
+      mockPrismaService.transaction.findMany.mockResolvedValue([]);
+
+      const response = await service.getTreasurySummary('user-1', undefined, 'month');
+
+      expect(response.data.totalIncome).toEqual(500000);
+      expect(response.data.totalExpenses).toEqual(150000);
+      expect(response.data.netProfit).toEqual(350000);
+      expect(response.data.healthScore).toEqual('EXCELLENT');
+    });
+  });
 });
