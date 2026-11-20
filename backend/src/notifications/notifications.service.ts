@@ -155,4 +155,27 @@ export class NotificationsService {
       this.logger.error('Erreur push notification Firebase', error);
     }
   }
+
+  async sendGeneralNotification(userId: string, title: string, body: string, data?: Record<string, string>) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { id: true, fcmToken: true } });
+    if (!user) return;
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        userId,
+        type: 'SYSTEME',
+        channel: 'IN_APP',
+        title,
+        body,
+        data,
+      },
+    });
+
+    if (user.fcmToken) {
+      await this.sendPushNotification(user.fcmToken, title, body, data);
+    }
+
+    this.gateway.sendToUser(userId, 'notification', notification);
+    return notification;
+  }
 }

@@ -12,6 +12,7 @@ import { PrismaService } from '../common/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { Role } from '@prisma/client';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwt: JwtService,
     private config: ConfigService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -72,28 +74,31 @@ export class AuthService {
       });
     }
 
-    // Notifier tous les administrateurs de la plateforme
+    // 1. Envoyer une notification push de bienvenue au nouvel utilisateur
+    await this.notificationsService.sendGeneralNotification(
+      user.id,
+      'Bienvenue sur NDOKETE 🇸🇳',
+      dto.role === Role.ARTISAN
+        ? `Votre atelier "${dto.businessName}" est bien enregistré. Gérez vos commandes et votre trésorerie en toute simplicité !`
+        : 'Votre compte client est bien créé. Découvrez les meilleurs artisans et commandez sur la Marketplace !',
+    );
+
+    // 2. Notifier tous les administrateurs de la plateforme (In-app + Push Firebase)
     const admins = await this.prisma.user.findMany({ where: { role: 'ADMIN' } });
     for (const admin of admins) {
       if (dto.role === Role.ARTISAN) {
-        await this.prisma.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'NOUVEAU_AVIS',
-            title: '🏪 Nouvel artisan inscrit',
-            body: `Atelier "${dto.businessName ?? 'Inconnu'}" (${dto.email}) vient de s'inscrire sur la plateforme.`,
-          },
-        });
+        await this.notificationsService.sendGeneralNotification(
+          admin.id,
+          '🏪 Nouvel artisan inscrit',
+          `Atelier "${dto.businessName ?? 'Inconnu'}" (${dto.email}) vient de s'inscrire sur la plateforme.`,
+        );
       } else if (dto.role === Role.CLIENT) {
         const fullName = `${dto.firstName ?? ''} ${dto.lastName ?? ''}`.trim();
-        await this.prisma.notification.create({
-          data: {
-            userId: admin.id,
-            type: 'NOUVEAU_AVIS',
-            title: '👤 Nouveau client inscrit',
-            body: `Le client "${fullName.length > 0 ? fullName : dto.email}" vient de s'inscrire sur la plateforme.`,
-          },
-        });
+        await this.notificationsService.sendGeneralNotification(
+          admin.id,
+          '👤 Nouveau client inscrit',
+          `Le client "${fullName.length > 0 ? fullName : dto.email}" vient de s'inscrire sur la plateforme.`,
+        );
       }
     }
 
